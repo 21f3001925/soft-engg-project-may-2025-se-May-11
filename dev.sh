@@ -3,8 +3,7 @@
 # Start Flask + Vue together; ctrl-c stops both
 (
   cd backend
-  poetry shell
-  flask run
+  poetry run flask --app app run --debug
 ) &
 (
   cd frontend
