@@ -17,6 +17,9 @@ packages = [
     { include = "app.py" }
 ]
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.2"
+
 [mypy]
 python_version = "3.13"
 plugins = ["pydantic.mypy"]

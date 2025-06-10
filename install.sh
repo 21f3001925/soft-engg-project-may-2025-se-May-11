@@ -11,6 +11,7 @@ fi
 echo "Installing backend dependencies..."
 cd backend
 poetry install
+poetry run pre-commit install
 cd ..
 
 # Install frontend dependencies
