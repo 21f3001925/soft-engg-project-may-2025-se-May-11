@@ -10,12 +10,14 @@ defineProps({
 <template>
   <div class="schedule-item">
     <div class="schedule-time">{{ schedule.time }}</div>
-    <div class="schedule-type" :class="schedule.type">
-      {{ schedule.type }}
-    </div>
+
     <div class="schedule-details">
       <h4>{{ schedule.name }}</h4>
       <p v-if="schedule.details">{{ schedule.details }}</p>
+    </div>
+
+    <div class="schedule-type" :class="schedule.type">
+      {{ schedule.type }}
     </div>
   </div>
 </template>
