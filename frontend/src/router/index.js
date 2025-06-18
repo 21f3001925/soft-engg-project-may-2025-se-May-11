@@ -1,6 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-const routes = [];
+const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: import('../views/Login.vue'),
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/Register.vue'),
+  },
+  {
+    path: '/',
+    name: 'Dashboard',
+    component: import('../views/Dashboard.vue'),
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
