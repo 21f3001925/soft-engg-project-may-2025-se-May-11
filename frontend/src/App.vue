@@ -1,20 +1,39 @@
 <script setup>
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
+const router = useRouter();
 const route = useRoute();
+
 const showNav = computed(() => {
   return !['Login', 'Register'].includes(route.name);
 });
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  router.push('/login');
+};
 </script>
 
 <template>
-  <div v-if="showNav" id="nav">
-    <router-link to="/">Home</router-link>
+  <div class="app">
+    <nav v-if="showNav" id="nav">
+      <div class="nav-content">
+        <div class="nav-left">
+          <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+          <router-link to="/news" class="nav-link">News</router-link>
+          <router-link to="/events" class="nav-link">Events</router-link>
+        </div>
+        <div class="nav-right">
+          <button class="logout-button" @click="handleLogout">Logout</button>
+        </div>
+      </div>
+    </nav>
+    <main>
+      <router-view />
+    </main>
   </div>
-  <main>
-    <router-view />
-  </main>
 </template>
 
 <style scoped>
@@ -30,6 +49,21 @@ const showNav = computed(() => {
 #nav a.router-link-exact-active {
   color: #42b983;
 }
+
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.logout-button {
+  background-color: #dc3545;
+  border: none;
+  color: #eeeeee;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 main {
   padding: 1rem;
 }
