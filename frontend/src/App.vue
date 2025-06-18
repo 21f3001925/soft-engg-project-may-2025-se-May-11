@@ -1,8 +1,15 @@
-<script setup></script>
+<script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const showNav = computed(() => {
+  return !['Login', 'Register'].includes(route.name);
+});
+</script>
 
 <template>
-  <div id="nav">
-    <router-link to="/login">Login</router-link> | <router-link to="/register">Register</router-link> |
+  <div v-if="showNav" id="nav">
     <router-link to="/">Home</router-link>
   </div>
   <main>
