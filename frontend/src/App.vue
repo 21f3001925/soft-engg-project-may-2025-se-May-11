@@ -1,30 +1,70 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+const router = useRouter();
+const route = useRoute();
+
+const showNav = computed(() => {
+  return !['Login', 'Register'].includes(route.name);
+});
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  router.push('/login');
+};
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div class="app">
+    <nav v-if="showNav" id="nav">
+      <div class="nav-content">
+        <div class="nav-left">
+          <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+          <router-link to="/news" class="nav-link">News</router-link>
+          <router-link to="/events" class="nav-link">Events</router-link>
+        </div>
+        <div class="nav-right">
+          <button class="logout-button" @click="handleLogout">Logout</button>
+        </div>
+      </div>
+    </nav>
+    <main>
+      <router-view />
+    </main>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+#nav {
+  padding: 30px;
+  text-align: center;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+#nav a {
+  font-weight: bold;
+  color: #2c4e50;
+  margin: 0 10px;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+#nav a.router-link-exact-active {
+  color: #42b983;
+}
+
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.logout-button {
+  background-color: #dc3545;
+  border: none;
+  color: #eeeeee;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+main {
+  padding: 1rem;
 }
 </style>
