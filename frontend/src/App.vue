@@ -24,6 +24,7 @@ const handleLogout = () => {
           <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
           <router-link to="/news" class="nav-link">News</router-link>
           <router-link to="/events" class="nav-link">Events</router-link>
+          <router-link to="/medications" class="nav-link">Medications</router-link>
         </div>
         <div class="nav-right">
           <button class="logout-button" @click="handleLogout">Logout</button>
@@ -57,6 +58,7 @@ const handleLogout = () => {
 }
 
 .logout-button {
+  display: flex;
   background-color: #dc3545;
   border: none;
   color: #eeeeee;

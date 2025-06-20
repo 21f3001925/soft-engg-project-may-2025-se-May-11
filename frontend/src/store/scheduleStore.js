@@ -8,7 +8,11 @@ export const useScheduleStore = defineStore('schedule', {
       loading: false,
       error: null,
     },
-    // you can more state objects here
+    allMedications: {
+      items: [],
+      loading: false,
+      error: null,
+    },
   }),
 
   getters: {
@@ -31,6 +35,19 @@ export const useScheduleStore = defineStore('schedule', {
         this.schedule.error = error;
       } finally {
         this.schedule.loading = false;
+      }
+    },
+
+    async fetchAllMedications() {
+      this.allMedications.loading = true;
+      this.allMedications.error = null;
+      try {
+        const response = await mockApiService.getAllMedications();
+        this.allMedications.items = response.data;
+      } catch (error) {
+        this.allMedications.error = error;
+      } finally {
+        this.allMedications.loading = false;
       }
     },
   },

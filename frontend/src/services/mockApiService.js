@@ -28,4 +28,13 @@ export default {
       }, 500);
     });
   },
+
+  getAllMedications() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const allMedications = mockSchedules.filter((item) => item.type === 'medication');
+        resolve({ data: allMedications });
+      }, 500);
+    });
+  },
 };
