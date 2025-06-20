@@ -25,7 +25,7 @@ function addMedications() {
   console.log('Add medication button clicked!');
 }
 
-function deleteMedications() {
+function deleteMedication() {
   console.log('Delete medication button clicked!');
 }
 </script>
