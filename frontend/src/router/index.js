@@ -3,6 +3,7 @@ import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Medications from '../views/Medications.vue';
+import Appointments from '../views/Appointments.vue';
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/medications',
     name: 'Medications',
     component: Medications,
+  },
+  {
+    path: '/appointments',
+    name: 'Appointments',
+    component: Appointments,
   },
 ];
 
