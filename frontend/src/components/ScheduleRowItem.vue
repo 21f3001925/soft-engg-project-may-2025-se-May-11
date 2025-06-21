@@ -4,6 +4,18 @@ defineProps({
     type: Object,
     required: true,
   },
+  customClass: {
+    type: String,
+    default: '',
+  },
+  hideType: {
+    type: Boolean,
+    default: false,
+  },
+  compactLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 </script>
 
@@ -11,12 +23,18 @@ defineProps({
   <div class="schedule-item">
     <div class="schedule-time">{{ schedule.time }}</div>
 
-    <div class="schedule-details">
-      <h4>{{ schedule.name }}</h4>
+    <div :class="['schedule-details', { compact: compactLayout }]">
+      <!-- <h4>{{ schedule.name }}</h4> -->
+      <h4 :class="customClass">{{ schedule.name }}</h4>
+
       <p v-if="schedule.details">{{ schedule.details }}</p>
+
+      <div class="schedule-actions">
+        <slot></slot>
+      </div>
     </div>
 
-    <div class="schedule-type" :class="schedule.type">
+    <div v-if="!hideType" class="schedule-type" :class="schedule.type">
       {{ schedule.type }}
     </div>
   </div>
@@ -57,6 +75,18 @@ defineProps({
 
 .schedule-details {
   flex: 1;
+}
+
+.schedule-details.compact {
+  display: flex; /* New layout only when compactLayout is true */
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.schedule-actions {
+  display: flex; /* Make buttons side by side */
+  gap: 0.5rem; /* Space between buttons */
 }
 
 .schedule-details h4 {
