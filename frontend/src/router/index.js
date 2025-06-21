@@ -4,6 +4,7 @@ import Register from '../views/Register.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Medications from '../views/Medications.vue';
 import Appointments from '../views/Appointments.vue';
+import Profile from '../views/Profile.vue';
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/appointments',
     name: 'Appointments',
     component: Appointments,
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
   },
 ];
 
