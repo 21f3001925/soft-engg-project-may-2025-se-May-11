@@ -9,9 +9,7 @@ onMounted(async () => {
   await scheduleStore.fetchSchedules();
 });
 
-const appointments = computed(() =>
-  scheduleStore.schedule.items.filter(item => item.type === 'appointment')
-);
+const appointments = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'appointment'));
 
 function editAppointment(item) {
   console.log('Edit appointment button:', item);
@@ -43,16 +41,16 @@ function addAppointment() {
         v-for="item in appointments"
         :key="item.id"
         :schedule="item"
-        :hideType="true"
-        :compactLayout="true"
+        :hide-type="true"
+        :compact-layout="true"
       >
-        <button @click="editAppointment(item)" class="edit-button">Edit</button>
-        <button @click="cancelAppointment(item)" class="cancel-button">Cancel</button>
+        <button class="edit-button" @click="editAppointment(item)">Edit</button>
+        <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
       </ScheduleRowItem>
     </div>
 
     <div class="action-bar">
-      <button @click="addAppointment" class="add-button">Add Appointment</button>
+      <button class="add-button" @click="addAppointment">Add Appointment</button>
     </div>
   </div>
 </template>

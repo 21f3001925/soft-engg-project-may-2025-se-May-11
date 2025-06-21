@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
-import StatCard from '../components/StatCard.vue';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 
 const scheduleStore = useScheduleStore();
@@ -48,18 +47,18 @@ function deleteMedication() {
       v-for="schedule in medications"
       :key="schedule.id"
       :schedule="schedule"
-      :hideType="true"
-      :compactLayout="true"
+      :hide-type="true"
+      :compact-layout="true"
     >
       <!-- Buttons passed from parent to this row -->
-      <button @click="markAsTaken(schedule)" class="mark-as-taken-button">Mark as taken</button>
-      <button @click="editMedications(schedule)" class="edit-button">Edit</button>
-      <button @click="deleteMedication(schedule)" class="delete-button">Delete</button>
+      <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
+      <button class="edit-button" @click="editMedications(schedule)">Edit</button>
+      <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
     </ScheduleRowItem>
   </div>
 
   <div>
-    <button @click="addMedications(schedule)" class="add-button">Add Medication</button>
+    <button class="add-button" @click="addMedications(schedule)">Add Medication</button>
     <div></div>
   </div>
 </template>
