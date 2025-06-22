@@ -31,14 +31,18 @@ const contactEmergency = () => {
     </div>
 
     <div class="card friends-list">
-      <h3>Your Friends</h3>
-      <ul>
-        <li v-for="friend in friends" :key="friend.id">{{ friend }}</li>
-      </ul>
+      <h3 style="margin-top: 1px">Your Friends</h3>
+      <hr />
+      <br />
+      <div>
+        <div v-for="friend in friends" :key="friend.id" class="friend-item">{{ friend }}</div>
+      </div>
     </div>
 
     <div class="card user-stats">
-      <h3>Your stats</h3>
+      <h3 style="margin-top: 1px">Your stats</h3>
+      <hr />
+      <br />
       <ul>
         <li>Topics Liked: {{ stats.topicsLiked }}</li>
         <li>Comments Posted: {{ stats.commentsPosted }}</li>
@@ -87,12 +91,22 @@ const contactEmergency = () => {
 .friend-list ul,
 .user-stats ul {
   list-style: none;
+  align-items: center;
+  text-align: center;
   padding: 0px;
+  margin: 0px;
 }
 
 .friend-list li,
 .user-stats li {
   margin-bottom: 8px;
+  align-items: center;
+  text-align: center;
+}
+
+.friend-item:hover {
+  color: #4fc3f7; /* Light blue on hover */
+  cursor: pointer; /* Optional if you want it to feel interactive */
 }
 
 .user-avatar {
