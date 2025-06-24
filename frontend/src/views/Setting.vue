@@ -4,7 +4,7 @@
   <div class="settings-page">
     <ul class="settings-list">
       <li>
-        <RouterLink to="/settings/profile-pic">Update Profile Picture</RouterLink>
+        <RouterLink to="/settings/font-size">Change font size</RouterLink>
       </li>
       <li>
         <RouterLink to="/settings/change-password">Change Password</RouterLink>
@@ -13,7 +13,7 @@
         <RouterLink to="/settings/notifications">Notification Preferences</RouterLink>
       </li>
       <li>
-        <RouterLink to="/settings/account">Account Info</RouterLink>
+        <RouterLink to="/settings/theme">Change theme</RouterLink>
       </li>
     </ul>
   </div>
