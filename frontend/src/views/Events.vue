@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 
 const events = ref([
-  { id: 2, title: 'Yoga Class', date: '2025-06-16', location:'Adyar', reminder: false },
-  { id: 3, title: 'Community Meeting', date: '2025-06-20', location:'T Nager', reminder: false }
+  { id: 2, title: 'Yoga Class', date: '2025-06-16', location: 'Adyar', reminder: false },
+  { id: 3, title: 'Community Meeting', date: '2025-06-20', location: 'T Nager', reminder: false },
 ]);
 
 function markaRemainder(id) {
@@ -17,7 +17,6 @@ function deleteEvent(id) {
 function addEvent() {
   console.log('Add new event button');
 }
-
 </script>
 
 <template>
@@ -28,19 +27,19 @@ function addEvent() {
     </div>
 
     <div v-else class="event-grid">
-  <div v-for="event in events" :key="event.id" class="event-card">
-    <div class="event-details-grid">
-    <div class="event-title">{{ event.title }}</div>
-    <div class="event-date">{{ event.date }}</div>
-    <div class="event-location">{{ event.location }}</div>
-  </div>
+      <div v-for="event in events" :key="event.id" class="event-card">
+        <div class="event-details-grid">
+          <div class="event-title">{{ event.title }}</div>
+          <div class="event-date">{{ event.date }}</div>
+          <div class="event-location">{{ event.location }}</div>
+        </div>
 
-    <div class="event-actions">
-      <button class="set-remainder-button" @click="markaRemainder(event.id)">Set a Remainder</button>
-      <button class="delete-button" @click="deleteEvent(event.id)">Delete</button>
+        <div class="event-actions">
+          <button class="set-remainder-button" @click="markaRemainder(event.id)">Set a Remainder</button>
+          <button class="delete-button" @click="deleteEvent(event.id)">Delete</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <div class="action-bar">
       <button class="add-button" @click="addEvent">Add New Event</button>
@@ -109,7 +108,6 @@ function addEvent() {
   margin-left: 1rem;
 }
 
-
 .reminder-button {
   background-color: #45ff07;
   padding: 6px 12px;
@@ -147,4 +145,3 @@ function addEvent() {
   color: #999;
 }
 </style>
-

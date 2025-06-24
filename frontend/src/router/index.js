@@ -60,7 +60,7 @@ const routes = [
     path: '/setting',
     name: 'Setting',
     component: Setting,
-  }
+  },
 ];
 
 const router = createRouter({
