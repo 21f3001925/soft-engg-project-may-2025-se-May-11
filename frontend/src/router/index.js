@@ -6,6 +6,8 @@ import Medications from '../views/Medications.vue';
 import Appointments from '../views/Appointments.vue';
 import News from '../views/News.vue';
 import Profile from '../views/Profile.vue';
+import Events from '../views/Events.vue';
+import Setting from '../views/Setting.vue';
 
 const routes = [
   {
@@ -49,6 +51,16 @@ const routes = [
     name: 'Profile',
     component: Profile,
   },
+  {
+    path: '/events',
+    name: 'Events',
+    component: Events,
+  },
+  {
+    path: '/setting',
+    name: 'Setting',
+    component: Setting,
+  }
 ];
 
 const router = createRouter({
