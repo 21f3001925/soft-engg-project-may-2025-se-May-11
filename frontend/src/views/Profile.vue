@@ -1,5 +1,6 @@
 <script setup>
 import { useUserStore } from '../store/userStore';
+import catImg from '../assets/cat.png';
 
 const userStore = useUserStore();
 
@@ -15,11 +16,7 @@ const contactEmergency = () => {
 <template>
   <div class="profile-page">
     <div class="card user-profile">
-      <img
-        class="user-avatar"
-        src="/home/rishit/soft-engg-project-may-2025-se-May-11/frontend/src/assets/cat.png"
-        alt="User Avatar"
-      />
+      <img class="user-avatar" :src="catImg" alt="User Avatar" />
       <div class="user-info">
         <p><strong>Name:</strong> {{ user.username }}</p>
         <p><strong>Age:</strong> {{ user.age }}</p>
