@@ -28,7 +28,6 @@ To get the entire application up and running for development, follow these steps
 - **[Python](https://www.python.org/)**. **Python version 3.13.0 or higher is required** for the backend.
 - **[Poetry](https://python-poetry.org/)** for the backend.
 
-
 ### 1. Installation
 
 We have a convenient script to install all dependencies for both the frontend and backend. Run it from the root of the project:
