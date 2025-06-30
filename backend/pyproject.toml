@@ -1,25 +1,26 @@
-[project]
-name = "backend"
+[tool.poetry]
+name = "senior-citizen-backend"
 version = "0.1.0"
 description = "Flask API for the senior-citizen app"
-authors = [
-    {name = "RNA"}
-]
+authors = ["RNA <your.email@example.com>"]
 readme = "README.md"
-package-mode = false
-requires-python = ">=3.13"
-dependencies = [
-    "flask==3.1.1",
-    "gunicorn (>=23.0.0,<24.0.0)"
-]
-
-[tool.poetry]
 packages = [
     { include = "app.py" }
 ]
 
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+flask = "^3.1.1"
+gunicorn = ">=23.0.0,<24.0.0"
+sqlalchemy = ">=1.4"
+flask_jwt_extended = "^4.6.0"
+bcrypt = "^4.1.2"
+
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
+black = "*"
+ruff = "*"
+
 
 [mypy]
 python_version = "3.13"
