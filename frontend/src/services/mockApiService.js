@@ -1,10 +1,10 @@
 const mockSchedules = [
-  { id: 1, type: 'medication', name: 'Meta', time: '08:00 AM', taken: true },
-  { id: 1, type: 'appointment', name: 'Hangout', time: '08:00 PM', details: 'Cafe' },
-  { id: 2, type: 'medication', name: 'Gandalf', time: '08:00 AM', taken: false },
-  { id: 3, type: 'appointment', name: 'Check-up with Mr.Raju', time: '11:30 AM', details: 'Room 201' },
-  { id: 4, type: 'medication', name: 'Aspirin', time: '08:00 PM', taken: false },
-  { id: 5, type: 'appointment', name: 'Game Night', time: '7:30 PM', details: 'Community Center' },
+  { id: 1, type: 'event', name: 'Hangout', time: '08:00 PM', details: 'Cafe' },
+  { id: 2, type: 'medication', name: 'Meta', time: '08:00 AM', taken: true },
+  { id: 3, type: 'medication', name: 'Gandalf', time: '08:00 AM', taken: false },
+  { id: 4, type: 'appointment', name: 'Check-up with Mr.Raju', time: '11:30 AM', details: 'Room 201' },
+  { id: 5, type: 'medication', name: 'Aspirin', time: '08:00 PM', taken: false },
+  { id: 6, type: 'event', name: 'Game Night', time: '7:30 PM', details: 'Community Center' },
 ];
 
 let mockEmergencyContacts = [
@@ -81,6 +81,38 @@ export default {
           mockEmergencyContacts[index] = { ...contact };
         }
         resolve({ data: contact });
+      }, 500);
+    });
+  },
+
+  addAppointment(event) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newEvent = { ...event, id: Date.now(), type: 'appointment' };
+        mockSchedules.push(newEvent);
+        resolve({ data: newEvent });
+      }, 500);
+    });
+  },
+
+  updateAppointment(event) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const index = mockSchedules.findIndex((e) => e.id === event.id);
+        if (index !== -1) {
+          mockSchedules[index] = { ...event };
+        }
+        resolve({ data: event });
+      }, 500);
+    });
+  },
+
+  deleteAppointment(id) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const index = mockSchedules.findIndex((e) => e.id === id);
+        if (index !== -1) mockSchedules.splice(index, 1);
+        resolve({ status: 200 });
       }, 500);
     });
   },

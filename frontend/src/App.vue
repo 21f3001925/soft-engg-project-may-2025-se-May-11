@@ -31,6 +31,7 @@ const handleLogout = () => {
           <router-link to="/profile" class="nav-link">Profile</router-link>
           <router-link to="/setting" class="nav-link">Setting</router-link>
           <router-link to="/caregiver-dashboard" class="nav-link">Caregiver Dashboard</router-link>
+          <router-link to="/service-provider" class="nav-link">ServiceProvider Dashboard</router-link>
         </div>
         <div class="nav-right">
           <button class="logout-button" @click="handleLogout">Logout</button>

@@ -1,15 +1,19 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
+import { useRouter } from 'vue-router';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 
 const scheduleStore = useScheduleStore();
+const router = useRouter();
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
 });
 
-const appointments = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'appointment'));
+const appointments = computed(() =>
+  scheduleStore.schedule.items.filter((item) => item.type === 'appointment' || item.type === 'event'),
+);
 
 function editAppointment(item) {
   console.log('Edit appointment button:', item);
@@ -19,14 +23,14 @@ function cancelAppointment(item) {
   console.log('Cancel appointment button:', item);
 }
 
-function addAppointment() {
-  console.log('Add new appointment button');
+function goToeventsPage() {
+  router.push('/events');
 }
 </script>
 
 <template>
   <div class="appointments">
-    <h1>Your Appointments</h1>
+    <h1>Your Appointments and Events</h1>
 
     <div v-if="scheduleStore.schedule.loading" class="loading">Loading appointments...</div>
 
@@ -50,7 +54,7 @@ function addAppointment() {
     </div>
 
     <div class="action-bar">
-      <button class="add-button" @click="addAppointment">Add Appointment</button>
+      <button class="add-button" @click="goToeventsPage">Explore Events</button>
     </div>
   </div>
 </template>

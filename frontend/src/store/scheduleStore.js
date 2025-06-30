@@ -17,7 +17,7 @@ export const useScheduleStore = defineStore('schedule', {
 
   getters: {
     upcomingAppointments: (state) => {
-      return state.schedule.items.filter((item) => item.type === 'appointment' && !item.taken);
+      return state.schedule.items.filter((item) => item.type === 'appointment' || item.type === 'event');
     },
     medications: (state) => {
       return state.schedule.items.filter((item) => item.type === 'medication');

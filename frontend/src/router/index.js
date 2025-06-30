@@ -13,6 +13,7 @@ import SeniorMedications from '../views/SeniorMedications.vue';
 import SeniorAppointments from '../views/SeniorAppointments.vue';
 import SeniorEmergencyContacts from '../views/SeniorEmergencyContacts.vue';
 import AccessibilitySettings from '../views/AccessibilitySettings.vue';
+import ServiceProviderDashboard from '../views/ServiceProviderDashboard.vue';
 
 const routes = [
   {
@@ -100,6 +101,11 @@ const routes = [
     path: '/settings/accessibility',
     name: AccessibilitySettings,
     component: AccessibilitySettings,
+  },
+  {
+    path: '/service-provider',
+    name: ServiceProviderDashboard,
+    component: ServiceProviderDashboard,
   },
 ];
 

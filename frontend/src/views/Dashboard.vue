@@ -16,7 +16,7 @@ onMounted(async () => {
     <h1>Dashboard</h1>
 
     <div class="stats-section">
-      <StatCard title="Upcoming Appointments" :value="scheduleStore.upcomingAppointments.length" />
+      <StatCard title="Upcoming Appointments/Events" :value="scheduleStore.upcomingAppointments.length" />
       <StatCard title="Medications" :value="scheduleStore.medications.length" />
     </div>
 

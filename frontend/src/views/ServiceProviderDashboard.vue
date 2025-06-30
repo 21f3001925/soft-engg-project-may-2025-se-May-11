@@ -1,54 +1,44 @@
 <script setup>
-import { onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
-import { useCaregiverStore } from '../store/caregiverStore';
 
 const scheduleStore = useScheduleStore();
-const route = useRoute();
-const seniorId = parseInt(route.params.id);
-const caregiverStore = useCaregiverStore();
+const selectedItem = ref(null); // for editing
+const showAddModal = ref(false);
+const showEditModal = ref(false);
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
 });
 
-const appointments = computed(() =>
-  scheduleStore.schedule.items.filter(
-    (item) => (item.type === 'appointment' || item.type === 'event') && item.id === seniorId,
-  ),
-);
+const appointments = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
 
-const seniorName = computed(() => {
-  const senior = caregiverStore.assignedSeniors.find((s) => s.id === seniorId);
-  return senior ? senior.name : 'Senior';
-});
-
-function editAppointment(item) {
-  console.log('Edit appointment button:', item);
+function openAddModal() {
+  selectedItem.value = null;
+  showAddModal.value = true;
 }
 
-function cancelAppointment(item) {
-  console.log('Cancel appointment button:', item);
+function openEditModal(item) {
+  selectedItem.value = { ...item };
+  showEditModal.value = true;
 }
 
-function addAppointment() {
-  console.log('Add new appointment button');
+function deleteEvent(item) {
+  // Delete logic will be added later
+  console.log('Delete event', item);
 }
 </script>
 
 <template>
   <div class="appointments">
-    <h1>{{ seniorName }} Appointments</h1>
+    <h1>Manage Local Events</h1>
 
-    <div v-if="scheduleStore.schedule.loading" class="loading">Loading appointments...</div>
-
+    <div v-if="scheduleStore.schedule.loading" class="loading">Loading events...</div>
     <div v-else-if="scheduleStore.schedule.error" class="error">
       {{ scheduleStore.schedule.error }}
     </div>
-
-    <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
+    <div v-else-if="appointments.length === 0" class="empty">No events scheduled</div>
 
     <div v-else class="appointment-list">
       <ScheduleRowItem
@@ -58,14 +48,16 @@ function addAppointment() {
         :hide-type="true"
         :compact-layout="true"
       >
-        <button class="edit-button" @click="editAppointment(item)">Edit</button>
-        <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
+        <button class="edit-button" @click="openEditModal(item)">Edit</button>
+        <button class="cancel-button" @click="deleteEvent(item)">Delete</button>
       </ScheduleRowItem>
     </div>
 
     <div class="action-bar">
-      <button class="add-button" @click="addAppointment">Add Appointment</button>
+      <button class="add-button" @click="openAddModal">Add New Event</button>
     </div>
+
+    <!-- TODO: Add modals for add/edit -->
   </div>
 </template>
 
