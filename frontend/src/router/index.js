@@ -8,6 +8,11 @@ import News from '../views/News.vue';
 import Profile from '../views/Profile.vue';
 import Events from '../views/Events.vue';
 import Setting from '../views/Setting.vue';
+import CaregiverDashboard from '../views/CaregiverDashboard.vue';
+import SeniorMedications from '../views/SeniorMedications.vue';
+import SeniorAppointments from '../views/SeniorAppointments.vue';
+import SeniorEmergencyContacts from '../views/SeniorEmergencyContacts.vue';
+import AccessibilitySettings from '../views/AccessibilitySettings.vue';
 
 const routes = [
   {
@@ -60,6 +65,41 @@ const routes = [
     path: '/setting',
     name: 'Setting',
     component: Setting,
+  },
+  {
+    path: '/settings/notifications',
+    name: 'notifications',
+    component: Setting,
+  },
+  {
+    path: '/settings/change-password',
+    name: 'change-password',
+    component: Setting,
+  },
+  {
+    path: '/caregiver-dashboard',
+    name: 'CaregiverDashboard',
+    component: CaregiverDashboard,
+  },
+  {
+    path: '/caregiver/seniors/:id/medications',
+    name: 'SeniorMedications',
+    component: SeniorMedications,
+  },
+  {
+    path: '/caregiver/seniors/:id/appointments',
+    name: 'SeniorAppointments',
+    component: SeniorAppointments,
+  },
+  {
+    path: '/caregiver/seniors/:id/emergency-contacts',
+    name: 'SeniorEmergencyContacts',
+    component: SeniorEmergencyContacts,
+  },
+  {
+    path: '/settings/accessibility',
+    name: AccessibilitySettings,
+    component: AccessibilitySettings,
   },
 ];
 
