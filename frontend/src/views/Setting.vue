@@ -1,18 +1,29 @@
 <!-- <script setup></script>
 <template>
-  <h1>Settings</h1>
-  <div class="settings-page">
-    <ul class="settings-list">
-      <li>
-        <RouterLink to="/settings/accessibility">Accessibility Settings</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="/settings/change-password">Change Password</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="/settings/notifications">Notification Preferences</RouterLink>
-      </li>
-    </ul>
+  <div class="accessibility-settings">
+    <h2>Accessibility Settings</h2>
+
+    <div class="setting">
+      <label>Font Size: </label>
+      <select v-model="userStore.accessibility.fontSize">
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+      </select>
+    </div>
+
+    <div class="setting">
+      <label>Dark Mode:</label>
+      <input type="checkbox" :checked="userStore.accessibility.darkMode" @change="toggleDarkMode" />
+    </div>
+  </div>
+  <br />
+  <div class="notification-preference">
+    <h2>Notification Preferences</h2>
+  </div>
+  <br />
+  <div class="change-password">
+    <h2>Change Password</h2>
   </div>
 </template>
 
