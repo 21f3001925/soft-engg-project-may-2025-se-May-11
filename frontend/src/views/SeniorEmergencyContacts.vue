@@ -3,12 +3,17 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEmergencyStore } from '../store/emergencyStore';
 import { useCaregiverStore } from '../store/caregiverStore';
+import EmergencyContactForm from '../components/EmergencyContactForm.vue';
 
 const emergencyStore = useEmergencyStore();
 const caregiverStore = useCaregiverStore();
 const route = useRoute();
 
 const seniorId = parseInt(route.params.id);
+const selectedContact = ref(null);
+const showModal = ref(false);
+const isEdit = ref(false);
+const toastMessage = ref('');
 
 onMounted(async () => {
   await caregiverStore.fetchSeniors?.();
@@ -23,15 +28,43 @@ const seniorName = computed(() => {
 });
 
 function addContact() {
-  console.log('Add contact button clicked');
+  selectedContact.value = null;
+  isEdit.value = false;
+  showModal.value = true;
 }
 
 function editContact(contact) {
-  console.log('Edit contact button clicked');
+  selectedContact.value = { ...contact };
+  isEdit.value = true;
+  showModal.value = true;
 }
 
 function deleteContact(contactId) {
-  console.log('Delete contact button clicked');
+  emergencyStore.contacts = emergencyStore.contacts.filter((c) => c.id !== contactId);
+  showToast('Contact deleted');
+}
+
+function handleSubmit(newContact) {
+  if (isEdit.value) {
+    const index = emergencyStore.contacts.findIndex((c) => c.id === newContact.id);
+    if (index !== -1) {
+      emergencyStore.contacts[index] = { ...newContact };
+      showToast('Contact updated');
+    }
+  } else {
+    emergencyStore.contacts.push({
+      ...newContact,
+      id: Date.now(),
+      seniorId,
+    });
+    showToast('Contact added');
+  }
+  showModal.value = false;
+}
+
+function showToast(msg) {
+  toastMessage.value = msg;
+  setTimeout(() => (toastMessage.value = ''), 2000);
 }
 </script>
 
@@ -52,6 +85,16 @@ function deleteContact(contactId) {
     </ul>
 
     <button class="add-btn" @click="addContact">Add Emergency Contact</button>
+
+    <EmergencyContactForm
+      v-if="showModal"
+      :model-value="selectedContact"
+      :is-edit="isEdit"
+      @submit="handleSubmit"
+      @close="showModal = false"
+    />
+
+    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>
 </template>
 
@@ -64,6 +107,7 @@ function deleteContact(contactId) {
 
 h1 {
   margin-bottom: 1rem;
+  color: #1480be;
 }
 
 .empty {
@@ -80,10 +124,11 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0e0e0e;
+  background-color: #f9f9f9;
   padding: 0.75rem 1rem;
   margin: 0.5rem 0;
   border-radius: 8px;
+  color: black;
 }
 
 .buttons {
@@ -106,5 +151,44 @@ button:hover {
   margin-top: 1.5rem;
   background-color: #4caf50;
   color: white;
+}
+
+/* Toast styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>

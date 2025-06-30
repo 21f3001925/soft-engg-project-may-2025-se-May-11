@@ -1,49 +1,54 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, computed, ref } from 'vue';
+import { useScheduleStore } from '../store/scheduleStore';
 
-const events = ref([
-  { id: 2, title: 'Yoga Class', date: '2025-06-16', location: 'Adyar', reminder: false },
-  { id: 3, title: 'Community Meeting', date: '2025-06-20', location: 'T Nager', reminder: false },
-]);
+const scheduleStore = useScheduleStore();
+const toastMessage = ref('');
 
-function markaRemainder(id) {
-  console.log('Set a remainder button clicked', id);
+onMounted(async () => {
+  await scheduleStore.fetchSchedules();
+});
+
+const events = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
+
+function setReminder(item) {
+  showToast(`Reminder set for: "${item.name}"`);
 }
 
-function deleteEvent(id) {
-  console.log('Delete event button clicked', id);
+function deleteEvent(item) {
+  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((e) => e.id !== item.id);
+  showToast(`Deleted: "${item.name}"`);
 }
 
-function addEvent() {
-  console.log('Add new event button');
+function showToast(message) {
+  toastMessage.value = message;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
 }
 </script>
 
 <template>
   <div class="events-page">
-    <h1 style="text-align: center">Upcoming Events</h1>
-    <div v-if="events.length === 0" class="no-events">
-      <p>No upcoming events. Click below to add one!</p>
-    </div>
+    <h1>Upcoming Events</h1>
 
-    <div v-else class="event-grid">
+    <div v-if="events.length === 0" class="empty">No upcoming events. Click below to add one!</div>
+
+    <div v-else class="event-list">
       <div v-for="event in events" :key="event.id" class="event-card">
-        <div class="event-details-grid">
-          <div class="event-title">{{ event.title }}</div>
-          <div class="event-date">{{ event.date }}</div>
-          <div class="event-location">{{ event.location }}</div>
+        <div class="event-info">
+          <div class="event-title">{{ event.name }}</div>
+          <div class="event-date">{{ event.time }}</div>
+          <div class="event-location">{{ event.details }}</div>
         </div>
-
         <div class="event-actions">
-          <button class="set-remainder-button" @click="markaRemainder(event.id)">Set a Remainder</button>
-          <button class="delete-button" @click="deleteEvent(event.id)">Delete</button>
+          <button class="reminder-button" @click="setReminder(event)">Set Reminder</button>
+          <button class="delete-button" @click="deleteEvent(event)">Delete</button>
         </div>
       </div>
     </div>
 
-    <div class="action-bar">
-      <button class="add-button" @click="addEvent">Add New Event</button>
-    </div>
+    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>
 </template>
 
@@ -54,43 +59,51 @@ function addEvent() {
   margin: 0 auto;
 }
 
-.events-page h1 {
+h1 {
   margin-bottom: 2rem;
   color: #1480be;
   font-size: 2rem;
+  text-align: center;
 }
 
-.event-grid {
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
+
+.event-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  background-color: rgb(251, 247, 247);
+  background-color: white;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(14, 14, 14, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+.event-card {
+  display: flex;
+  justify-content: space-between;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  align-items: center;
+  transition: box-shadow 0.2s ease;
 }
 
 .event-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.event-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f9f9f9;
-  color: black;
-  border: 1px solid #ddd;
-  padding: 1rem;
-  border-radius: 8px;
-  transition: box-shadow 0.2s ease;
-}
-
-.event-details-grid {
+.event-info {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr; /* title, date, location */
-  align-items: center;
+  grid-template-columns: 2fr 1fr 1fr;
   gap: 1rem;
+  width: 100%;
 }
 
 .event-title,
@@ -99,21 +112,21 @@ function addEvent() {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #111;
 }
 
 .event-actions {
   display: flex;
-  flex-direction: row;
   gap: 0.5rem;
   margin-left: 1rem;
 }
 
 .reminder-button {
-  background-color: #45ff07;
+  background-color: green;
+  color: white;
   padding: 6px 12px;
   border: none;
   border-radius: 5px;
-  color: #080808;
   cursor: pointer;
 }
 
@@ -139,9 +152,41 @@ function addEvent() {
   cursor: pointer;
 }
 
-.empty {
-  text-align: center;
-  padding: 2rem;
-  color: #999;
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>

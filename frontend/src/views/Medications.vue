@@ -1,9 +1,11 @@
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import MedicationForm from '../components/MedicationForm.vue';
 
 const scheduleStore = useScheduleStore();
+const toastMessage = ref('');
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
@@ -12,24 +14,61 @@ onMounted(async () => {
 
 const medications = computed(() => scheduleStore.allMedications.items);
 
-function editMedications() {
-  console.log('Edit button clicked!');
-}
-
-function markAsTaken() {
-  console.log('Mark as taken button clicked!');
-}
+const showModal = ref(false);
+const selectedMedication = ref(null);
+const isEdit = ref(false);
 
 function addMedications() {
-  console.log('Add medication button clicked!');
+  selectedMedication.value = null;
+  isEdit.value = false;
+  showModal.value = true;
 }
 
-function deleteMedication() {
-  console.log('Delete medication button clicked!');
+function editMedications(item) {
+  selectedMedication.value = item;
+  isEdit.value = true;
+  showModal.value = true;
+}
+
+function deleteMedication(item) {
+  scheduleStore.allMedications.items = scheduleStore.allMedications.items.filter((m) => m.id !== item.id);
+  showToast(`Deleted "${item.name}"`);
+}
+
+function markAsTaken(item) {
+  item.taken = true;
+  showToast(`Marked "${item.name}" as taken`);
+}
+
+function handleFormSubmit(medication) {
+  if (isEdit.value) {
+    const index = scheduleStore.allMedications.items.findIndex((m) => m.id === medication.id);
+    if (index !== -1) {
+      scheduleStore.allMedications.items[index] = { ...medication };
+      showToast(`Updated "${medication.name}"`);
+    }
+  } else {
+    scheduleStore.allMedications.items.push({
+      ...medication,
+      id: Date.now(),
+      type: 'medication',
+    });
+    showToast(`Added "${medication.name}"`);
+  }
+  showModal.value = false;
+}
+
+function showToast(message) {
+  toastMessage.value = message;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
 }
 </script>
 
 <template>
+  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+
   <div class="medications">
     <h1 style="text-align: center">Your Medications</h1>
   </div>
@@ -50,7 +89,6 @@ function deleteMedication() {
       :hide-type="true"
       :compact-layout="true"
     >
-      <!-- Buttons passed from parent to this row -->
       <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
       <button class="edit-button" @click="editMedications(schedule)">Edit</button>
       <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
@@ -58,18 +96,19 @@ function deleteMedication() {
   </div>
 
   <div>
-    <button class="add-button" @click="addMedications(schedule)">Add Medication</button>
-    <div></div>
+    <button class="add-button" @click="addMedications">Add Medication</button>
   </div>
+
+  <MedicationForm
+    v-if="showModal"
+    :model-value="selectedMedication"
+    :is-edit="isEdit"
+    @submit="handleFormSubmit"
+    @close="showModal = false"
+  />
 </template>
 
 <style scoped>
-.medication-style {
-  color: #1480be;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
 .medications {
   padding: 2rem;
   max-width: 1200px;
@@ -83,16 +122,7 @@ function deleteMedication() {
   margin-top: 1px;
 }
 
-.med-stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
 .med-schedule-list {
-  display: flex;
-  flex-direction: column;
   display: flex;
   flex-direction: column;
   background-color: white;
@@ -127,15 +157,47 @@ function deleteMedication() {
   margin-top: 15px;
   margin-left: 236px;
   background-color: rgb(81, 188, 231);
-  text-decoration-color: black;
 }
 
 .delete-button {
   background-color: red;
 }
 
-.schedule-actions {
-  display: flex;
-  gap: 0.5rem;
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>

@@ -2,11 +2,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import EventForm from '../components/EventForm.vue';
 
 const scheduleStore = useScheduleStore();
-const selectedItem = ref(null); // for editing
-const showAddModal = ref(false);
-const showEditModal = ref(false);
+const selectedItem = ref(null);
+const showModal = ref(false);
+const isEdit = ref(false);
+const toastMessage = ref('');
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
@@ -16,17 +18,44 @@ const appointments = computed(() => scheduleStore.schedule.items.filter((item) =
 
 function openAddModal() {
   selectedItem.value = null;
-  showAddModal.value = true;
+  isEdit.value = false;
+  showModal.value = true;
 }
 
 function openEditModal(item) {
   selectedItem.value = { ...item };
-  showEditModal.value = true;
+  isEdit.value = true;
+  showModal.value = true;
 }
 
 function deleteEvent(item) {
-  // Delete logic will be added later
-  console.log('Delete event', item);
+  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((e) => e.id !== item.id);
+  showToast(`Deleted: "${item.name}"`);
+}
+
+function handleFormSubmit(eventData) {
+  if (isEdit.value) {
+    const index = scheduleStore.schedule.items.findIndex((e) => e.id === eventData.id);
+    if (index !== -1) {
+      scheduleStore.schedule.items[index] = { ...eventData };
+      showToast(`Updated: "${eventData.name}"`);
+    }
+  } else {
+    scheduleStore.schedule.items.push({
+      ...eventData,
+      id: Date.now(),
+      type: 'event',
+    });
+    showToast(`Added new event: "${eventData.name}"`);
+  }
+  showModal.value = false;
+}
+
+function showToast(msg) {
+  toastMessage.value = msg;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
 }
 </script>
 
@@ -57,7 +86,15 @@ function deleteEvent(item) {
       <button class="add-button" @click="openAddModal">Add New Event</button>
     </div>
 
-    <!-- TODO: Add modals for add/edit -->
+    <EventForm
+      v-if="showModal"
+      :model-value="selectedItem"
+      :is-edit="isEdit"
+      @submit="handleFormSubmit"
+      @close="showModal = false"
+    />
+
+    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>
 </template>
 
@@ -117,5 +154,43 @@ h1 {
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>

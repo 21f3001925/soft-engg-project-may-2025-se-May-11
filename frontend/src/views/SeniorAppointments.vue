@@ -1,14 +1,20 @@
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useScheduleStore } from '../store/scheduleStore';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import { useCaregiverStore } from '../store/caregiverStore';
+import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import EventForm from '../components/EventForm.vue';
 
 const scheduleStore = useScheduleStore();
-const route = useRoute();
-const seniorId = parseInt(route.params.id);
 const caregiverStore = useCaregiverStore();
+const route = useRoute();
+
+const seniorId = parseInt(route.params.id);
+const toastMessage = ref('');
+const selectedAppointment = ref(null);
+const isEdit = ref(false);
+const showModal = ref(false);
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
@@ -26,15 +32,45 @@ const seniorName = computed(() => {
 });
 
 function editAppointment(item) {
-  console.log('Edit appointment button:', item);
+  selectedAppointment.value = { ...item };
+  isEdit.value = true;
+  showModal.value = true;
 }
 
 function cancelAppointment(item) {
-  console.log('Cancel appointment button:', item);
+  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((i) => i !== item);
+  showToast(`Cancelled: "${item.name}"`);
 }
 
 function addAppointment() {
-  console.log('Add new appointment button');
+  selectedAppointment.value = null;
+  isEdit.value = false;
+  showModal.value = true;
+}
+
+function handleFormSubmit(appointment) {
+  if (isEdit.value) {
+    const index = scheduleStore.schedule.items.findIndex((i) => i.id === appointment.id);
+    if (index !== -1) {
+      scheduleStore.schedule.items[index] = { ...appointment };
+      showToast(`Updated: "${appointment.name}"`);
+    }
+  } else {
+    scheduleStore.schedule.items.push({
+      ...appointment,
+      id: Date.now(), // mock ID
+      type: 'appointment',
+    });
+    showToast(`Added: "${appointment.name}"`);
+  }
+  showModal.value = false;
+}
+
+function showToast(message) {
+  toastMessage.value = message;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
 }
 </script>
 
@@ -66,6 +102,16 @@ function addAppointment() {
     <div class="action-bar">
       <button class="add-button" @click="addAppointment">Add Appointment</button>
     </div>
+
+    <EventForm
+      v-if="showModal"
+      :model-value="selectedAppointment"
+      :is-edit="isEdit"
+      @submit="handleFormSubmit"
+      @close="showModal = false"
+    />
+
+    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>
 </template>
 
@@ -125,5 +171,43 @@ h1 {
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>
