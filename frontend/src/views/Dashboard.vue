@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import StatCard from '../components/StatCard.vue';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import MedicationsSection from '../components/MedicationsSection.vue';
 
 const scheduleStore = useScheduleStore();
 
@@ -30,6 +31,12 @@ onMounted(async () => {
 onUnmounted(() => {
   if (timer) clearInterval(timer);
 });
+
+function toggleMedication(id) {
+  scheduleStore.medications = scheduleStore.medications.map((med) =>
+    med.id === id ? { ...med, taken: !med.taken } : med,
+  );
+}
 </script>
 
 <template>
@@ -42,26 +49,7 @@ onUnmounted(() => {
         {{ currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
       </div>
     </div>
-
-    <div class="stats-section">
-      <StatCard title="Upcoming Appointments" :value="scheduleStore.upcomingAppointments.length" />
-      <StatCard title="Medications" :value="scheduleStore.medications.length" />
-    </div>
-
-    <div class="schedule-section">
-      <h2>Today's Schedule</h2>
-      <div v-if="scheduleStore.schedule.loading" class="loading">Loading schedules...</div>
-
-      <div v-else-if="scheduleStore.schedule.error" class="error">
-        {{ scheduleStore.schedule.error }}
-      </div>
-
-      <div v-else-if="scheduleStore.schedule.items.length === 0" class="empty">No schedules for today</div>
-
-      <div v-else class="schedule-list">
-        <ScheduleRowItem v-for="schedule in scheduleStore.schedule.items" :key="schedule.id" :schedule="schedule" />
-      </div>
-    </div>
+    <MedicationsSection />
   </div>
 </template>
 
@@ -76,42 +64,5 @@ onUnmounted(() => {
   margin-bottom: 2rem;
   color: #2c3e50;
   font-size: 2rem;
-}
-
-.stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.schedule-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.schedule-section h2 {
-  margin-bottom: 1.5rem;
-  color: #2c3e50;
-  font-size: 1.5rem;
-}
-
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.loading,
-.error,
-.empty {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.error {
-  color: #e74c3c;
 }
 </style>
