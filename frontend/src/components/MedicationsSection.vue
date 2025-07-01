@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
+import MedicationItem from './MedicationItem.vue';
 
 const scheduleStore = useScheduleStore();
 
@@ -26,14 +27,12 @@ const progressPercentage = computed(() => (totalMeds.value === 0 ? 0 : (complete
       </div>
     </div>
     <ul>
-      <li
+      <MedicationItem
         v-for="med in scheduleStore.medications"
         :key="med.id"
-        style="display: flex; align-items: center; margin-bottom: 0.5rem"
-      >
-        <input type="checkbox" :id="'med-' + med.id" :checked="med.taken" @change="toggleMedication(med.id)" />
-        <label :for="'med-' + med.id" style="margin-left: 0.5rem">{{ med.name }} ({{ med.time }})</label>
-      </li>
+        :med="med"
+        :toggleMedication="toggleMedication"
+      />
     </ul>
   </div>
 </template>
