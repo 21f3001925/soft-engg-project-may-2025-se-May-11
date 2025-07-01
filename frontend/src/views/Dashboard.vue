@@ -1,19 +1,47 @@
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import StatCard from '../components/StatCard.vue';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 
 const scheduleStore = useScheduleStore();
 
+const currentTime = ref(new Date());
+const greeting = ref('');
+
+let timer = null;
+
+const updateGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) greeting.value = 'Good Morning';
+  else if (hour < 17) greeting.value = 'Good Afternoon';
+  else greeting.value = 'Good Evening';
+};
+
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
+  timer = setInterval(() => {
+    currentTime.value = new Date();
+    updateGreeting();
+  }, 1000);
+  updateGreeting();
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 </script>
 
 <template>
   <div class="dashboard">
-    <h1>Dashboard</h1>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem">
+      <div>
+        <h2>{{ greeting }}, Ramesh!</h2>
+      </div>
+      <div style="font-family: monospace; color: #555">
+        {{ currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+      </div>
+    </div>
 
     <div class="stats-section">
       <StatCard title="Upcoming Appointments" :value="scheduleStore.upcomingAppointments.length" />
