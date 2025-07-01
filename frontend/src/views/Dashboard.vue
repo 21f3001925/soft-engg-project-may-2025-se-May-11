@@ -1,8 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
-import StatCard from '../components/StatCard.vue';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationsSection from '../components/MedicationsSection.vue';
 
 const scheduleStore = useScheduleStore();
@@ -31,20 +29,12 @@ onMounted(async () => {
 onUnmounted(() => {
   if (timer) clearInterval(timer);
 });
-
-function toggleMedication(id) {
-  scheduleStore.medications = scheduleStore.medications.map((med) =>
-    med.id === id ? { ...med, taken: !med.taken } : med,
-  );
-}
 </script>
 
 <template>
   <div class="dashboard">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem">
-      <div>
-        <h2>{{ greeting }}, Ramesh!</h2>
-      </div>
+      <h2 class="dashboard-title">{{ greeting }}, Ramesh!</h2>
       <div style="font-family: monospace; color: #555">
         {{ currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
       </div>
@@ -60,7 +50,7 @@ function toggleMedication(id) {
   margin: 0 auto;
 }
 
-.dashboard h1 {
+.dashboard-title {
   margin-bottom: 2rem;
   color: #2c3e50;
   font-size: 2rem;
