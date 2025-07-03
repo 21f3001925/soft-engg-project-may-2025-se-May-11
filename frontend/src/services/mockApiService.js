@@ -40,6 +40,12 @@ const newsFeed = [
   },
 ];
 
+const emergencyContact = {
+  name: 'Ramesh A',
+  phone: '(918) 123-4567',
+  subtitle: '24/7 support',
+};
+
 export default {
   login() {
     return new Promise((resolve) => {
@@ -78,6 +84,14 @@ export default {
       setTimeout(() => {
         resolve({ data: newsFeed });
       });
+    });
+  },
+
+  getEmergencyContact() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: emergencyContact });
+      }, 300);
     });
   },
 };
