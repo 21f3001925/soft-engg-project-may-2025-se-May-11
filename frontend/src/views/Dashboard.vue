@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import MedicationsSection from '../components/MedicationsSection.vue';
 import AppointmentsSection from '../components/AppointmentsSection.vue';
+import NewsFeedSection from '../components/NewsFeedSection.vue';
 
 const scheduleStore = useScheduleStore();
 
@@ -51,6 +52,7 @@ onUnmounted(() => {
         }}</span>
       </div>
     </div>
+    <NewsFeedSection />
     <AppointmentsSection />
     <MedicationsSection />
   </div>

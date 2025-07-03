@@ -13,6 +13,33 @@ const mockSchedules = [
   { id: 5, type: 'appointment', name: 'Game Night', time: '7:30 PM', date: '09-07-2025', details: 'Community Center' },
 ];
 
+const newsFeed = [
+  {
+    id: 1,
+    title: 'Old Bird Yells At Cloud',
+    subtitle: 'Trending in Comedy',
+    time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    thumbnail:
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=facearea&w=64&h=64&facepad=2',
+  },
+  {
+    id: 2,
+    title: 'Elon Musk Moves To Mars Permanently',
+    subtitle: 'Space News',
+    time: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    thumbnail:
+      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=facearea&w=64&h=64&facepad=2',
+  },
+  {
+    id: 3,
+    title: 'New Health Guidelines Released',
+    subtitle: 'Health',
+    time: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    thumbnail:
+      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=facearea&w=64&h=64&facepad=2',
+  },
+];
+
 export default {
   login() {
     return new Promise((resolve) => {
@@ -43,6 +70,14 @@ export default {
         const allMedications = mockSchedules.filter((item) => item.type === 'medication');
         resolve({ data: allMedications });
       }, 500);
+    });
+  },
+
+  getNewsfeed() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: newsFeed });
+      });
     });
   },
 };
