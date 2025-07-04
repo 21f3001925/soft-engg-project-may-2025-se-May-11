@@ -57,6 +57,12 @@ const notifications = [
   { id: 2, text: 'New message from Social Hub' },
 ];
 
+let mockEmergencyContacts = [
+  { id: 1, seniorId: 1, name: 'Daughter', phone: '9876543210' },
+  { id: 2, seniorId: 1, name: 'Son', phone: '8765432109' },
+  { id: 3, seniorId: 2, name: 'Neighbor', phone: '9988776655' },
+];
+
 export default {
   login() {
     return new Promise((resolve) => {
@@ -89,7 +95,6 @@ export default {
       }, 500);
     });
   },
-
   getNewsfeed() {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -119,6 +124,76 @@ export default {
       setTimeout(() => {
         resolve({ data: notifications });
       }, 300);
+
+  getEmergencyContacts(seniorId) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const contacts = mockEmergencyContacts.filter((c) => c.seniorId === seniorId);
+        resolve({ data: contacts });
+      }, 500);
+    });
+  },
+
+  deleteEmergencyContact(contactId) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        mockEmergencyContacts = mockEmergencyContacts.filter((c) => c.id !== contactId);
+        resolve({ status: 200 });
+      }, 500);
+    });
+  },
+
+  addEmergencyContact(contact) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newContact = { ...contact, id: Date.now() };
+        mockEmergencyContacts.push(newContact);
+        resolve({ data: newContact });
+      }, 500);
+    });
+  },
+
+  updateEmergencyContact(contact) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const index = mockEmergencyContacts.findIndex((c) => c.id === contact.id);
+        if (index !== -1) {
+          mockEmergencyContacts[index] = { ...contact };
+        }
+        resolve({ data: contact });
+      }, 500);
+    });
+  },
+
+  addAppointment(event) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newEvent = { ...event, id: Date.now(), type: 'appointment' };
+        mockSchedules.push(newEvent);
+        resolve({ data: newEvent });
+      }, 500);
+    });
+  },
+
+  updateAppointment(event) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const index = mockSchedules.findIndex((e) => e.id === event.id);
+        if (index !== -1) {
+          mockSchedules[index] = { ...event };
+        }
+        resolve({ data: event });
+      }, 500);
+    });
+  },
+
+  deleteAppointment(id) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const index = mockSchedules.findIndex((e) => e.id === id);
+        if (index !== -1) mockSchedules.splice(index, 1);
+        resolve({ status: 200 });
+      }, 500);
     });
   },
 };

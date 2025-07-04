@@ -17,7 +17,7 @@ const toggleDarkMode = () => {
     <h2>Accessibility Settings</h2>
 
     <div class="setting">
-      <label>Font Size: </label>
+      <label>Font Size:</label>
       <select v-model="userStore.accessibility.fontSize">
         <option value="small">Small</option>
         <option value="medium">Medium</option>
@@ -29,14 +29,6 @@ const toggleDarkMode = () => {
       <label>Dark Mode:</label>
       <input type="checkbox" :checked="userStore.accessibility.darkMode" @change="toggleDarkMode" />
     </div>
-  </div>
-  <br />
-  <div class="notification-preference">
-    <h2>Notification Preferences</h2>
-  </div>
-  <br />
-  <div class="change-password">
-    <h2>Change Password</h2>
   </div>
 </template>
 

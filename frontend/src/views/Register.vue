@@ -1,7 +1,5 @@
-<script setup></script>
 <template>
   <div>
-    <h2>Register</h2>
-    <p>This will be the Register page for seniors and caretakers.</p>
+    <h1>This is registration page.</h1>
   </div>
 </template>

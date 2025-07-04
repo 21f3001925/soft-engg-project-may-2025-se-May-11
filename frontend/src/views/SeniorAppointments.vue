@@ -1,28 +1,69 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useScheduleStore } from '../store/scheduleStore';
-import { useRouter } from 'vue-router';
+import { useCaregiverStore } from '../store/caregiverStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import EventForm from '../components/EventForm.vue';
 
 const scheduleStore = useScheduleStore();
-const router = useRouter();
+const caregiverStore = useCaregiverStore();
+const route = useRoute();
+
+const seniorId = parseInt(route.params.id);
 const toastMessage = ref('');
+const selectedAppointment = ref(null);
+const isEdit = ref(false);
+const showModal = ref(false);
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
 });
 
 const appointments = computed(() =>
-  scheduleStore.schedule.items.filter((item) => item.type === 'appointment' || item.type === 'event'),
+  scheduleStore.schedule.items.filter(
+    (item) => (item.type === 'appointment' || item.type === 'event') && item.id === seniorId,
+  ),
 );
 
+const seniorName = computed(() => {
+  const senior = caregiverStore.assignedSeniors.find((s) => s.id === seniorId);
+  return senior ? senior.name : 'Senior';
+});
+
+function editAppointment(item) {
+  selectedAppointment.value = { ...item };
+  isEdit.value = true;
+  showModal.value = true;
+}
+
 function cancelAppointment(item) {
-  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((i) => i.id !== item.id);
+  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((i) => i !== item);
   showToast(`Cancelled: "${item.name}"`);
 }
 
-function goToeventsPage() {
-  router.push('/events');
+function addAppointment() {
+  selectedAppointment.value = null;
+  isEdit.value = false;
+  showModal.value = true;
+}
+
+function handleFormSubmit(appointment) {
+  if (isEdit.value) {
+    const index = scheduleStore.schedule.items.findIndex((i) => i.id === appointment.id);
+    if (index !== -1) {
+      scheduleStore.schedule.items[index] = { ...appointment };
+      showToast(`Updated: "${appointment.name}"`);
+    }
+  } else {
+    scheduleStore.schedule.items.push({
+      ...appointment,
+      id: Date.now(), // mock ID
+      type: 'appointment',
+    });
+    showToast(`Added: "${appointment.name}"`);
+  }
+  showModal.value = false;
 }
 
 function showToast(message) {
@@ -35,7 +76,7 @@ function showToast(message) {
 
 <template>
   <div class="appointments">
-    <h1>Your Appointments and Events</h1>
+    <h1>{{ seniorName }} Appointments</h1>
 
     <div v-if="scheduleStore.schedule.loading" class="loading">Loading appointments...</div>
 
@@ -53,16 +94,25 @@ function showToast(message) {
         :hide-type="true"
         :compact-layout="true"
       >
+        <button class="edit-button" @click="editAppointment(item)">Edit</button>
         <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
       </ScheduleRowItem>
     </div>
 
     <div class="action-bar">
-      <button class="add-button" @click="goToeventsPage">Explore Events</button>
+      <button class="add-button" @click="addAppointment">Add Appointment</button>
     </div>
-  </div>
 
-  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+    <EventForm
+      v-if="showModal"
+      :model-value="selectedAppointment"
+      :is-edit="isEdit"
+      @submit="handleFormSubmit"
+      @close="showModal = false"
+    />
+
+    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+  </div>
 </template>
 
 <style scoped>
@@ -100,6 +150,10 @@ h1 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
   margin: 0 auto;
+}
+
+.edit-button {
+  background-color: #6c5ce7;
 }
 
 .cancel-button {
