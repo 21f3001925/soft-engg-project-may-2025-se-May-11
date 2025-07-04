@@ -46,6 +46,12 @@ const emergencyContact = {
   subtitle: '24/7 support',
 };
 
+const socialHubStats = {
+  eventsToday: 3,
+  eventsThisWeek: 12,
+  subtitle: 'Connect & have fun!',
+};
+
 export default {
   login() {
     return new Promise((resolve) => {
@@ -91,6 +97,14 @@ export default {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({ data: emergencyContact });
+      }, 300);
+    });
+  },
+
+  getSocialHubStats() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: socialHubStats });
       }, 300);
     });
   },

@@ -5,6 +5,7 @@ import MedicationsSection from '../components/MedicationsSection.vue';
 import AppointmentsSection from '../components/AppointmentsSection.vue';
 import NewsFeedSection from '../components/NewsFeedSection.vue';
 import EmergencyContactSection from '../components/EmergencyContactSection.vue';
+import SocialHubSection from '../components/SocialHubSection.vue';
 
 const scheduleStore = useScheduleStore();
 
@@ -54,6 +55,7 @@ onUnmounted(() => {
       </div>
     </div>
     <EmergencyContactSection />
+    <SocialHubSection />
     <NewsFeedSection />
     <AppointmentsSection />
     <MedicationsSection />
