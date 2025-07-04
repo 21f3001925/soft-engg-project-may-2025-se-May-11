@@ -12,7 +12,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="mb-10 p-8 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative max-w-xl mx-auto"
+    class="mb-10 p-8 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative"
   >
     <div class="absolute inset-0 bg-gradient-to-r from-red-600/20 to-pink-600/20"></div>
     <div class="relative z-10 text-center">
@@ -31,7 +31,7 @@ onMounted(() => {
       <button
         v-if="contactStore.contact"
         size="lg"
-        class="w-full h-16 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
+        class="w-full h-25 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
       >
         <Phone class="h-6 w-6" />
         <div>

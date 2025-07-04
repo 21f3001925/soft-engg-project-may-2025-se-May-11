@@ -12,7 +12,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="mb-10 p-8 rounded-3xl shadow-xl border border-pink-100 bg-gradient-to-br from-white to-pink-50/30 max-w-xl mx-auto"
+    class="mb-10 p-8 rounded-3xl shadow-xl border border-pink-100 bg-gradient-to-br from-white to-pink-50/30 flex flex-col justify-between min-h-[20rem]"
   >
     <div class="flex items-center text-2xl font-bold mb-2">
       <span

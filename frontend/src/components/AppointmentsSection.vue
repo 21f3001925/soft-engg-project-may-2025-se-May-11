@@ -9,9 +9,7 @@ const appointments = computed(() => scheduleStore.upcomingAppointments.slice(0, 
 </script>
 
 <template>
-  <div
-    class="mb-10 p-8 rounded-3xl shadow-xl border border-purple-100 bg-gradient-to-br from-white to-purple-50/30 max-w-xl mx-auto"
-  >
+  <div class="mb-10 p-8 rounded-3xl shadow-xl border border-purple-100 bg-gradient-to-br from-white to-purple-50/30">
     <div class="flex items-center justify-between mb-2">
       <div class="flex items-center text-2xl font-bold">
         <span
@@ -23,7 +21,7 @@ const appointments = computed(() => scheduleStore.upcomingAppointments.slice(0, 
       </div>
     </div>
     <div class="text-purple-500 text-sm mb-6 ml-14">Your schedule looks great!</div>
-    <div class="space-y-4 ml-14">
+    <div class="space-y-4">
       <div
         v-for="appt in appointments"
         :key="appt.id"
