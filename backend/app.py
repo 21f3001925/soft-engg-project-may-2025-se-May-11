@@ -1,6 +1,9 @@
 from flask import Flask
+from scheduler import start_scheduler
 
 app = Flask(__name__)
+
+start_scheduler()
 
 
 @app.route("/")
