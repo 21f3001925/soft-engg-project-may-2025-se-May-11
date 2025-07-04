@@ -3,9 +3,9 @@ import TopNavBar from './components/TopNavBar.vue';
 </script>
 
 <template>
-  <div class="app min-h-screen bg-gray-50">
+  <div class="app flex flex-col min-h-screen bg-gray-50">
     <TopNavBar />
-    <main>
+    <main class="flex-1">
       <router-view />
     </main>
   </div>
