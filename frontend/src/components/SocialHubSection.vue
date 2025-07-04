@@ -50,13 +50,14 @@ onMounted(() => {
           <span>{{ socialHubStore.stats ? socialHubStore.stats.eventsThisWeek : '-' }} this week</span>
         </div>
       </div>
-      <button
+      <router-link
+        to="/events"
         class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white transition-all duration-300 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold shadow-sm hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-pink-300"
       >
         <Sparkles class="w-5 h-5 mr-2" />
         Explore Events
         <ChevronRight class="w-5 h-5 ml-2" />
-      </button>
+      </router-link>
     </div>
   </div>
 </template>

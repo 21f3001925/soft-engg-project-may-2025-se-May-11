@@ -39,6 +39,9 @@ onMounted(() => {
           <div class="text-sm opacity-90">Emergency Contact</div>
         </div>
       </button>
+      <router-link to="/profile" class="block mt-2 text-xs text-red-100 underline hover:text-white transition-colors">
+        Manage Emergency Contacts
+      </router-link>
       <p v-if="contactStore.contact" class="text-xs text-red-100 mt-3 opacity-80">
         {{ contactStore.contact.name }} • {{ contactStore.contact.phone }}
       </p>

@@ -53,12 +53,13 @@ function timeAgo(isoTime) {
         </div>
       </div>
     </div>
-    <button
+    <router-link
+      to="/news"
       class="mt-8 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 text-green-700 font-semibold shadow-sm hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-green-300"
     >
       <Coffee class="w-5 h-5 mr-2" />
       Read More Stories
       <ChevronRight class="w-5 h-5 ml-2" />
-    </button>
+    </router-link>
   </div>
 </template>
