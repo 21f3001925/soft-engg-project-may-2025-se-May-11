@@ -52,6 +52,11 @@ const socialHubStats = {
   subtitle: 'Connect & have fun!',
 };
 
+const notifications = [
+  { id: 1, text: 'Appointment at 11:30 AM' },
+  { id: 2, text: 'New message from Social Hub' },
+];
+
 export default {
   login() {
     return new Promise((resolve) => {
@@ -105,6 +110,14 @@ export default {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({ data: socialHubStats });
+      }, 300);
+    });
+  },
+
+  getNotifications() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: notifications });
       }, 300);
     });
   },
