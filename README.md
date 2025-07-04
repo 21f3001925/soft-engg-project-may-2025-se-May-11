@@ -24,8 +24,9 @@ To get the entire application up and running for development, follow these steps
 
 ### Prerequisites
 
-- **[Node.js](https://nodejs.org/)** (which includes `npm`) for the frontend.
-- **[Python](https://www.python.org/)** and **[Poetry](https://python-poetry.org/)** for the backend.
+- **[Node.js](https://nodejs.org/)** (which includes `npm`). **Node.js version 16.0 or higher is required** for the frontend.
+- **[Python](https://www.python.org/)**. **Python version 3.13.0 or higher is required** for the backend.
+- **[Poetry](https://python-poetry.org/)** for the backend.
 
 ### 1. Installation
 

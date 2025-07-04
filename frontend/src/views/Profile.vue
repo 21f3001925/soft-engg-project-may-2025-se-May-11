@@ -3,7 +3,6 @@ import { useUserStore } from '../store/userStore';
 import catImg from '../assets/cat.png';
 
 const userStore = useUserStore();
-
 const user = userStore.user;
 const friends = userStore.friends;
 const stats = userStore.stats;
@@ -11,12 +10,24 @@ const stats = userStore.stats;
 const contactEmergency = () => {
   alert(`Calling emergency number: ${userStore.user.emergencyNumber}`);
 };
+
+const onFileChange = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    userStore.updateProfilePic(reader.result);
+  };
+  reader.readAsDataURL(file);
+};
 </script>
 
 <template>
   <div class="profile-page">
     <div class="card user-profile">
-      <img class="user-avatar" :src="catImg" alt="User Avatar" />
+      <img class="user-avatar" :src="user.profilePic || catImg" alt="User Avatar" />
+      <input type="file" accept="image/*" @change="onFileChange" />
       <div class="user-info">
         <p><strong>Name:</strong> {{ user.username }}</p>
         <p><strong>Age:</strong> {{ user.age }}</p>

@@ -1,32 +1,58 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
-import { useRouter } from 'vue-router';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import EventForm from '../components/EventForm.vue';
 
 const scheduleStore = useScheduleStore();
-const router = useRouter();
+const selectedItem = ref(null);
+const showModal = ref(false);
+const isEdit = ref(false);
 const toastMessage = ref('');
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
 });
 
-const appointments = computed(() =>
-  scheduleStore.schedule.items.filter((item) => item.type === 'appointment' || item.type === 'event'),
-);
+const appointments = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
 
-function cancelAppointment(item) {
-  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((i) => i.id !== item.id);
-  showToast(`Cancelled: "${item.name}"`);
+function openAddModal() {
+  selectedItem.value = null;
+  isEdit.value = false;
+  showModal.value = true;
 }
 
-function goToeventsPage() {
-  router.push('/events');
+function openEditModal(item) {
+  selectedItem.value = { ...item };
+  isEdit.value = true;
+  showModal.value = true;
 }
 
-function showToast(message) {
-  toastMessage.value = message;
+function deleteEvent(item) {
+  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((e) => e.id !== item.id);
+  showToast(`Deleted: "${item.name}"`);
+}
+
+function handleFormSubmit(eventData) {
+  if (isEdit.value) {
+    const index = scheduleStore.schedule.items.findIndex((e) => e.id === eventData.id);
+    if (index !== -1) {
+      scheduleStore.schedule.items[index] = { ...eventData };
+      showToast(`Updated: "${eventData.name}"`);
+    }
+  } else {
+    scheduleStore.schedule.items.push({
+      ...eventData,
+      id: Date.now(),
+      type: 'event',
+    });
+    showToast(`Added new event: "${eventData.name}"`);
+  }
+  showModal.value = false;
+}
+
+function showToast(msg) {
+  toastMessage.value = msg;
   setTimeout(() => {
     toastMessage.value = '';
   }, 2000);
@@ -35,15 +61,13 @@ function showToast(message) {
 
 <template>
   <div class="appointments">
-    <h1>Your Appointments and Events</h1>
+    <h1>Manage Local Events</h1>
 
-    <div v-if="scheduleStore.schedule.loading" class="loading">Loading appointments...</div>
-
+    <div v-if="scheduleStore.schedule.loading" class="loading">Loading events...</div>
     <div v-else-if="scheduleStore.schedule.error" class="error">
       {{ scheduleStore.schedule.error }}
     </div>
-
-    <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
+    <div v-else-if="appointments.length === 0" class="empty">No events scheduled</div>
 
     <div v-else class="appointment-list">
       <ScheduleRowItem
@@ -53,16 +77,25 @@ function showToast(message) {
         :hide-type="true"
         :compact-layout="true"
       >
-        <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
+        <button class="edit-button" @click="openEditModal(item)">Edit</button>
+        <button class="cancel-button" @click="deleteEvent(item)">Delete</button>
       </ScheduleRowItem>
     </div>
 
     <div class="action-bar">
-      <button class="add-button" @click="goToeventsPage">Explore Events</button>
+      <button class="add-button" @click="openAddModal">Add New Event</button>
     </div>
-  </div>
 
-  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+    <EventForm
+      v-if="showModal"
+      :model-value="selectedItem"
+      :is-edit="isEdit"
+      @submit="handleFormSubmit"
+      @close="showModal = false"
+    />
+
+    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+  </div>
 </template>
 
 <style scoped>
@@ -100,6 +133,10 @@ h1 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
   margin: 0 auto;
+}
+
+.edit-button {
+  background-color: #6c5ce7;
 }
 
 .cancel-button {

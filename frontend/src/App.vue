@@ -1,9 +1,11 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from './store/userStore';
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 const showNav = computed(() => {
   return !['Login', 'Register'].includes(route.name);
@@ -17,7 +19,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="[userStore.accessibility.fontSize, userStore.accessibility.darkMode ? 'dark' : 'light']">
     <nav v-if="showNav" id="nav">
       <div class="nav-content">
         <div class="nav-left">
@@ -28,6 +30,8 @@ const handleLogout = () => {
           <router-link to="/events" class="nav-link">Events</router-link>
           <router-link to="/profile" class="nav-link">Profile</router-link>
           <router-link to="/setting" class="nav-link">Setting</router-link>
+          <router-link to="/caregiver-dashboard" class="nav-link">Caregiver Dashboard</router-link>
+          <router-link to="/service-provider" class="nav-link">ServiceProvider Dashboard</router-link>
         </div>
         <div class="nav-right">
           <button class="logout-button" @click="handleLogout">Logout</button>
@@ -71,5 +75,49 @@ const handleLogout = () => {
 
 main {
   padding: 1rem;
+}
+
+/* Font Size Classes */
+.small {
+  font-size: 16px;
+}
+.medium {
+  font-size: 19px;
+}
+.large {
+  font-size: 25px;
+}
+
+/* Theme Classes */
+.light {
+  background-color: white;
+  color: black;
+}
+
+.dark {
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+.dark a {
+  color: #90caf9;
+}
+
+.light a {
+  color: #1976d2;
+}
+
+.nav-content {
+  background-color: inherit;
+  color: inherit;
+}
+
+.logout-button {
+  background-color: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
