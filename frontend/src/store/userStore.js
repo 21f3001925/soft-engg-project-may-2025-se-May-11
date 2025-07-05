@@ -11,7 +11,12 @@ export const useUserStore = defineStore('user', {
       emergencyNumber: 1234567890,
       profilePic: null,
     },
-    friends: ['Narendra Modi', 'Elon Musk', 'Donald Trump', 'Vladimir Putin'],
+    friends: {
+      'Narendra Modi': 1234567890,
+      'Elon Musk': 1234567890,
+      'Donald Trump': 1234567890,
+      'Vladimir Putin': 123456890,
+    },
     stats: {
       topicsLiked: 200,
       commentsPosted: 50,

@@ -16,8 +16,8 @@
           <input v-model="form.details" required placeholder="Location / Info" />
         </label>
         <div class="actions">
-          <button type="submit">{{ isEdit ? 'Update' : 'Add' }}</button>
-          <button type="button" @click="close">Cancel</button>
+          <button class="submit-btn" type="submit">{{ isEdit ? 'Update' : 'Add' }}</button>
+          <button class="cancel-btn" type="button" @click="close">Cancel</button>
         </div>
       </form>
     </div>
@@ -106,5 +106,13 @@ function close() {
   margin-top: 1rem;
   display: flex;
   justify-content: space-between;
+}
+
+.submit-btn {
+  background-color: green;
+}
+
+.cancel-btn {
+  background-color: red;
 }
 </style>

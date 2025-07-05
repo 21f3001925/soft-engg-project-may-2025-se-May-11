@@ -78,8 +78,8 @@ function showToast(msg) {
       <li v-for="contact in contacts" :key="contact.id" class="contact-item">
         <span>{{ contact.name }} - {{ contact.phone }}</span>
         <div class="buttons">
-          <button @click="editContact(contact)">Edit</button>
-          <button @click="deleteContact(contact.id)">Delete</button>
+          <button class="edit-btn" @click="editContact(contact)">Edit</button>
+          <button class="delete-btn" @click="deleteContact(contact.id)">Delete</button>
         </div>
       </li>
     </ul>
@@ -153,7 +153,13 @@ button:hover {
   color: white;
 }
 
-/* Toast styles */
+.edit-btn {
+  background-color: blue;
+}
+
+.delete-btn {
+  background-color: red;
+}
 .toast {
   position: fixed;
   top: 20px;

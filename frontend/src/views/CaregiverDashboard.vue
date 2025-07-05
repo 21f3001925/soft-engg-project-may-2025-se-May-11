@@ -36,8 +36,9 @@ onMounted(async () => {
 h1 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #2c3e50;
+  color: rgb(82, 82, 255);
   text-align: center;
+  font-size: 30px;
 }
 
 .seniors-grid {

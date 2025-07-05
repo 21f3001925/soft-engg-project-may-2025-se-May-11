@@ -155,7 +155,7 @@ function showToast(message) {
 
 .add-button {
   margin-top: 15px;
-  margin-left: 236px;
+  margin-left: 680px;
   background-color: rgb(81, 188, 231);
 }
 
