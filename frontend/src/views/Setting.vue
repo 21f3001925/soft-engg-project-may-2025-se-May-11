@@ -31,7 +31,7 @@ const toggleDarkMode = () => {
     </div>
 
     <h2>Notification Preferences</h2>
-    <div class="placeholder">[Add notification options here]</div>
+    <div class="placeholder">[Notification preference will be added here]</div>
 
     <h2>Change Password</h2>
     <div class="placeholder">[Add password change fields here]</div>

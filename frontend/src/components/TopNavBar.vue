@@ -9,6 +9,7 @@ import { useNotificationStore } from '../store/notificationStore';
 const router = useRouter();
 const route = useRoute();
 const notificationStore = useNotificationStore();
+const roleDropdownOpen = ref(false);
 
 const showNav = computed(() => {
   return !['Login', 'Register'].includes(route.name);
@@ -88,6 +89,34 @@ onBeforeUnmount(() => {
             >
               {{ link.label }}
             </router-link>
+            <div class="relative role-dropdown">
+              <button
+                class="px-3 py-2 rounded-lg font-medium text-gray-700 bg-white border border-gray-300 hover:bg-blue-50 hover:text-blue-700 transition flex items-center gap-1"
+                @click.stop="roleDropdownOpen = !roleDropdownOpen"
+              >
+                Roles
+                <ChevronDown class="w-4 h-4" />
+              </button>
+              <div
+                v-if="roleDropdownOpen"
+                class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2 z-50"
+              >
+                <router-link
+                  to="/caregiver-dashboard"
+                  class="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                  @click="roleDropdownOpen = false"
+                >
+                  Caregiver
+                </router-link>
+                <router-link
+                  to="/service-provider"
+                  class="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                  @click="roleDropdownOpen = false"
+                >
+                  Service Provider
+                </router-link>
+              </div>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <div class="relative notification-bell">
