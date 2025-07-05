@@ -14,6 +14,7 @@ import SeniorAppointments from '../views/SeniorAppointments.vue';
 import SeniorEmergencyContacts from '../views/SeniorEmergencyContacts.vue';
 import AccessibilitySettings from '../views/AccessibilitySettings.vue';
 import ServiceProviderDashboard from '../views/ServiceProviderDashboard.vue';
+import EmergencyContacts from '../views/EmergencyContacts.vue';
 
 const routes = [
   {
@@ -56,6 +57,11 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: Profile,
+  },
+  {
+    path: '/emergency-contacts',
+    name: 'EmergencyContacts',
+    component: EmergencyContacts,
   },
   {
     path: '/events',

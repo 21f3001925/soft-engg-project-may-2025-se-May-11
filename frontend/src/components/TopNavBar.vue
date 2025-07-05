@@ -33,7 +33,7 @@ const navLinks = [
   { to: '/news', label: 'News' },
   { to: '/events', label: 'Events' },
   { to: '/profile', label: 'Profile' },
-  { to: '/setting', label: 'Setting' },
+  { to: '/setting', label: 'Settings' },
 ];
 
 function openNotifications() {

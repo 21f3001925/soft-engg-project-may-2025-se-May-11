@@ -17,7 +17,7 @@ function viewEmergencyContacts() {
 
 <template>
   <div class="senior-card">
-    <h3>{{ senior.senior.name }}</h3>
+    <h3><strong>Name:</strong> {{ senior.senior.name }}</h3>
     <p><strong>Age:</strong> {{ senior.senior.age }}</p>
     <p><strong>Phone:</strong> {{ senior.senior.phone }}</p>
 
@@ -31,11 +31,12 @@ function viewEmergencyContacts() {
 
 <style scoped>
 .senior-card {
-  background: rgb(120, 94, 59);
+  background: rgb(236, 196, 143);
   text-decoration-color: black;
   padding: 1.2rem;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-size: 18px;
 }
 
 .actions {
@@ -45,11 +46,11 @@ function viewEmergencyContacts() {
 }
 
 button {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem;
   border: none;
-  background: #3498db;
+  background: #c218b9;
   color: white;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
 }
 

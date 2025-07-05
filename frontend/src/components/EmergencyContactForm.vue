@@ -12,8 +12,8 @@
           <input v-model="form.phone" required />
         </label>
         <div class="actions">
-          <button type="submit">{{ isEdit ? 'Update' : 'Add' }}</button>
-          <button type="button" @click="close">Cancel</button>
+          <button class="submit-btn" type="submit">{{ isEdit ? 'Update' : 'Add' }}</button>
+          <button class="cancel-btn" type="button" @click="close">Cancel</button>
         </div>
       </form>
     </div>
@@ -80,7 +80,7 @@ function close() {
 .form-field {
   display: block;
   margin-bottom: 1rem;
-  color: #333;
+  color: black;
 }
 
 input {
@@ -89,10 +89,20 @@ input {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  background-color: white;
+  color: black;
 }
 
 .actions {
   display: flex;
   justify-content: space-between;
+}
+
+.submit-btn {
+  background-color: green;
+}
+
+.cancel-btn {
+  background-color: red;
 }
 </style>

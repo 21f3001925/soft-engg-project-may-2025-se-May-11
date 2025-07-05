@@ -1,9 +1,22 @@
 <script setup>
+import { useUserStore } from './store/userStore';
 import TopNavBar from './components/TopNavBar.vue';
+
+const userStore = useUserStore();
 </script>
 
 <template>
-  <div class="app flex flex-col min-h-screen bg-gray-50">
+  <div
+    :class="[
+      'app',
+      userStore.accessibility.darkMode ? 'dark' : 'light',
+      userStore.accessibility.fontSize,
+      'flex',
+      'flex-col',
+      'min-h-screen',
+      'bg-gray-100',
+    ]"
+  >
     <TopNavBar />
     <main class="flex-1">
       <router-view />

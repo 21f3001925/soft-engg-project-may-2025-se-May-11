@@ -21,13 +21,20 @@ const onFileChange = (event) => {
   };
   reader.readAsDataURL(file);
 };
+
+function emergencyContacts() {
+  window.location.href = '/emergency-contacts';
+}
 </script>
 
 <template>
   <div class="profile-page">
     <div class="card user-profile">
       <img class="user-avatar" :src="user.profilePic || catImg" alt="User Avatar" />
-      <input type="file" accept="image/*" @change="onFileChange" />
+      <div class="file-upload-wrapper">
+        <button class="upload-button" @click="$refs.fileInput.click()">Change Photo</button>
+        <input type="file" accept="image/*" @change="onFileChange" ref="fileInput" style="display: none" />
+      </div>
       <div class="user-info">
         <p><strong>Name:</strong> {{ user.username }}</p>
         <p><strong>Age:</strong> {{ user.age }}</p>
@@ -39,16 +46,18 @@ const onFileChange = (event) => {
     </div>
 
     <div class="card friends-list">
-      <h3 style="margin-top: 1px">Your Friends</h3>
+      <h3 style="margin-top: 1px"><b>Your Contacts</b></h3>
       <hr />
       <br />
       <div>
-        <div v-for="friend in friends" :key="friend.id" class="friend-item">{{ friend }}</div>
+        <div v-for="(number, name) in friends" :key="name" class="friend-item">{{ name }}</div>
       </div>
+
+      <button class="edit-button" @click="emergencyContacts">Edit Contacts</button>
     </div>
 
     <div class="card user-stats">
-      <h3 style="margin-top: 1px">Your stats</h3>
+      <h3 style="margin-top: 1px"><b>Your stats</b></h3>
       <hr />
       <br />
       <ul>
@@ -64,9 +73,9 @@ const onFileChange = (event) => {
 
 <style scoped>
 .profile-page {
-  margin-left: 200px;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   text-align: center;
   gap: 20px;
   padding: 20px;
@@ -113,8 +122,8 @@ const onFileChange = (event) => {
 }
 
 .friend-item:hover {
-  color: #4fc3f7; /* Light blue on hover */
-  cursor: pointer; /* Optional if you want it to feel interactive */
+  color: #4fc3f7;
+  cursor: pointer;
 }
 
 .user-avatar {
@@ -123,5 +132,36 @@ const onFileChange = (event) => {
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 12px;
+}
+
+.user-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.edit-button {
+  margin-top: 12px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+  background-color: #125aa1;
 }
 </style>
