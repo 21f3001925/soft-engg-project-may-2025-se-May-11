@@ -15,6 +15,11 @@ gunicorn = ">=23.0.0,<24.0.0"
 sqlalchemy = ">=1.4"
 flask_jwt_extended = "^4.6.0"
 bcrypt = "^4.1.2"
+flasgger = "^0.9.7.1"
+flask-smorest = "^0.44.0"
+marshmallow = "^3.20.2"
+apispec = "^6.3.0"
+apispec-webframeworks = "^0.5.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"

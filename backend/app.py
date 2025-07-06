@@ -1,17 +1,27 @@
 from flask import Flask
-from backend.db_session import Session
+from db_session import Session
 from flask_jwt_extended import JWTManager
-from routes.api_v1 import api_v1
+from flask_smorest import Api
+from routes.auth import auth_blp
+from routes.medications import medications_blp
 
 app = Flask(__name__)
 
 # SQLite DB URI
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///senior_citizen.db"
 app.config["JWT_SECRET_KEY"] = "your-very-secret-key"
+app.config["API_TITLE"] = "Senior Citizen API"
+app.config["API_VERSION"] = "v1"
+app.config["OPENAPI_VERSION"] = "3.0.2"
+app.config["OPENAPI_URL_PREFIX"] = "/api/v1"
+app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
+app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
+api = Api(app)
 jwt = JWTManager(app)
 
-app.register_blueprint(api_v1)
+api.register_blueprint(auth_blp)
+api.register_blueprint(medications_blp)
 
 
 @app.route("/")
