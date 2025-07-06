@@ -1,4 +1,5 @@
 from flask import Flask
+from scheduler import start_scheduler
 from db_session import Session
 from flask_jwt_extended import JWTManager
 from flask_smorest import Api
@@ -6,6 +7,8 @@ from routes.auth import auth_blp
 from routes.medications import medications_blp
 
 app = Flask(__name__)
+
+start_scheduler()
 
 # SQLite DB URI
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///senior_citizen.db"

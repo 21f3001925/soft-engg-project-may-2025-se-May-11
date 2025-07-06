@@ -1,22 +1,32 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useScheduleStore } from '../store/scheduleStore';
+import { useCaregiverStore } from '../store/caregiverStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
 const scheduleStore = useScheduleStore();
+const caregiverStore = useCaregiverStore();
+
+const route = useRoute();
+const seniorId = parseInt(route.params.id);
+
 const toastMessage = ref('');
+const selectedMedication = ref(null);
+const isEdit = ref(false);
+const showModal = ref(false);
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
   await scheduleStore.fetchAllMedications();
 });
 
-const medications = computed(() => scheduleStore.allMedications.items);
+const medications = computed(() => scheduleStore.allMedications.items.filter((med) => med.id === seniorId));
 
-const showModal = ref(false);
-const selectedMedication = ref(null);
-const isEdit = ref(false);
+const seniorName = computed(() => {
+  const senior = caregiverStore.assignedSeniors.find((s) => s.id === seniorId);
+  return senior ? senior.name : 'Senior';
+});
 
 function addMedications() {
   selectedMedication.value = null;
@@ -32,7 +42,7 @@ function editMedications(item) {
 
 function deleteMedication(item) {
   scheduleStore.allMedications.items = scheduleStore.allMedications.items.filter((m) => m.id !== item.id);
-  showToast(`Deleted "${item.name}"`);
+  showToast(`Deleted: "${item.name}"`);
 }
 
 function markAsTaken(item) {
@@ -45,7 +55,7 @@ function handleFormSubmit(medication) {
     const index = scheduleStore.allMedications.items.findIndex((m) => m.id === medication.id);
     if (index !== -1) {
       scheduleStore.allMedications.items[index] = { ...medication };
-      showToast(`Updated "${medication.name}"`);
+      showToast(`Updated: "${medication.name}"`);
     }
   } else {
     scheduleStore.allMedications.items.push({
@@ -53,7 +63,7 @@ function handleFormSubmit(medication) {
       id: Date.now(),
       type: 'medication',
     });
-    showToast(`Added "${medication.name}"`);
+    showToast(`Added: "${medication.name}"`);
   }
   showModal.value = false;
 }
@@ -67,10 +77,8 @@ function showToast(message) {
 </script>
 
 <template>
-  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
-
   <div class="medications">
-    <h1 style="text-align: center">Your Medications</h1>
+    <h1 style="text-align: center">{{ seniorName }}'s Medications</h1>
   </div>
 
   <div v-if="scheduleStore.schedule.loading" class="loading">Loading medications...</div>
@@ -106,6 +114,8 @@ function showToast(message) {
     @submit="handleFormSubmit"
     @close="showModal = false"
   />
+
+  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 </template>
 
 <style scoped>

@@ -73,6 +73,11 @@ defineProps({
   color: #7b1fa2;
 }
 
+.schedule-type.event {
+  background-color: #bce8aa;
+  color: #1b4d05;
+}
+
 .schedule-details {
   flex: 1;
 }
