@@ -1,10 +1,11 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
-from models import Medication
+from models import Medication, db
 from datetime import datetime
-from db_session import Session
+
 from marshmallow import Schema, fields
+from flask_security import roles_accepted
 
 
 class MedicationSchema(Schema):
@@ -37,10 +38,12 @@ medications_blp = Blueprint(
 @medications_blp.route("")
 class MedicationsResource(MethodView):
     @jwt_required()
+    @roles_accepted("senior_citizen", "caregiver")
     @medications_blp.response(200, MedicationResponseSchema(many=True))
     def get(self):
-        session = Session()
-        meds = session.query(Medication).all()
+
+        session = db.session
+        meds = db.session.query(Medication).all()
         result = [
             {
                 "medication_id": m.medication_id,
@@ -56,11 +59,12 @@ class MedicationsResource(MethodView):
         return result
 
     @jwt_required()
+    @roles_accepted("caregiver", "senior_citizen")
     @medications_blp.arguments(MedicationSchema())
     @medications_blp.response(201, MedicationAddResponseSchema())
     @medications_blp.alt_response(400, schema=MedicationAddResponseSchema())
     def post(self, data):
-        session = Session()
+        session = db.session
         try:
             medication = Medication(
                 name=data["name"],

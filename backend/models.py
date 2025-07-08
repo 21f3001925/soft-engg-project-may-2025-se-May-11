@@ -1,17 +1,24 @@
-from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, Enum, Text
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, declarative_base
-import uuid
+from flask_sqlalchemy import SQLAlchemy
+from flask_security import UserMixin, RoleMixin
 import enum
+import secrets
+import uuid
 from datetime import datetime, timezone
+from sqlalchemy.orm import relationship
 
-Base: declarative_base = declarative_base()
+db = SQLAlchemy()
 
 
-# Enums
 class AlertType(enum.Enum):
     missed_medication = "missed_medication"
     emergency = "emergency"
+
+
+roles_users = db.Table(
+    "roles_users",
+    db.Column("user_id", db.String(36), db.ForeignKey("user.user_id")),
+    db.Column("role_id", db.String(36), db.ForeignKey("role.id")),
+)
 
 
 class ReferenceType(enum.Enum):
@@ -20,71 +27,55 @@ class ReferenceType(enum.Enum):
     event = "event"
 
 
-# User and Roles
-class User(Base):
-    __tablename__ = "user"
-    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    username = Column(String, unique=True)
-    email = Column(String, unique=True)
-    password = Column(String)
-    active = Column(Boolean, default=True)
-    f6_uniquifier = Column(String)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+class Role(db.Model, RoleMixin):  # type: ignore
+    __tablename__ = "role"
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+    users = db.relationship("User", secondary=roles_users, back_populates="roles")
 
-    roles = relationship(
-        "UserRole", back_populates="user", cascade="all, delete-orphan"
+
+class User(db.Model, UserMixin):  # type: ignore
+    __tablename__ = "user"
+    user_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    senior_citizen = relationship(
+    username = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    active = db.Column(db.Boolean(), default=True)
+    fs_uniquifier = db.Column(
+        db.String(64),
+        unique=True,
+        nullable=False,
+        default=lambda: secrets.token_urlsafe(32),
+    )
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    roles = db.relationship("Role", secondary=roles_users, back_populates="users")
+    senior_citizen = db.relationship(
         "SeniorCitizen",
         uselist=False,
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    caregiver = relationship(
+    caregiver = db.relationship(
         "Caregiver", uselist=False, back_populates="user", cascade="all, delete-orphan"
     )
-    alerts = relationship(
+    alerts = db.relationship(
         "Alert", back_populates="recipient", cascade="all, delete-orphan"
     )
+    name = db.Column(db.String)
 
 
-class Role(Base):
-    __tablename__ = "role"
-    role_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String)
-
-    users = relationship(
-        "UserRole", back_populates="role", cascade="all, delete-orphan"
-    )
-
-
-class UserRole(Base):
-    __tablename__ = "userroles"
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("user.user_id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    role_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("role.role_id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-
-    user = relationship("User", back_populates="roles")
-    role = relationship("Role", back_populates="users")
-
-
-# SeniorCitizen and Caregiver
-class SeniorCitizen(Base):
+class SeniorCitizen(db.Model):  # type: ignore
     __tablename__ = "seniorcitizen"
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("user.user_id", ondelete="CASCADE"),
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("user.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    font_size = Column(String)
-    theme = Column(String)
+    font_size = db.Column(db.String)
+    theme = db.Column(db.String)
 
     user = relationship("User", back_populates="senior_citizen")
     appointments = relationship(
@@ -104,11 +95,11 @@ class SeniorCitizen(Base):
     )
 
 
-class Caregiver(Base):
+class Caregiver(db.Model):  # type: ignore
     __tablename__ = "caregiver"
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("user.user_id", ondelete="CASCADE"),
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("user.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
 
@@ -118,16 +109,16 @@ class Caregiver(Base):
     )
 
 
-class CaregiverAssignment(Base):
+class CaregiverAssignment(db.Model):  # type: ignore
     __tablename__ = "caregiver_assignment"
-    caregiver_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("caregiver.user_id", ondelete="CASCADE"),
+    caregiver_id = db.Column(
+        db.String(36),
+        db.ForeignKey("caregiver.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    senior_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("seniorcitizen.user_id", ondelete="CASCADE"),
+    senior_id = db.Column(
+        db.String(36),
+        db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
 
@@ -135,82 +126,88 @@ class CaregiverAssignment(Base):
     senior = relationship("SeniorCitizen", back_populates="caregiver_assignments")
 
 
-# Appointments and Medication
-class Appointment(Base):
+class Appointment(db.Model):  # type: ignore
     __tablename__ = "appointment"
-    appointment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String)
-    date_time = Column(DateTime)
-    location = Column(String)
-    senior_id = Column(
-        UUID(as_uuid=True), ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
+    appointment_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    title = db.Column(db.String)
+    date_time = db.Column(db.DateTime)
+    location = db.Column(db.String)
+    senior_id = db.Column(
+        db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
 
     senior = relationship("SeniorCitizen", back_populates="appointments")
 
 
-class Medication(Base):
+class Medication(db.Model):  # type: ignore
     __tablename__ = "medication"
-    medication_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String)
-    dosage = Column(String)
-    time = Column(DateTime)
-    isTaken = Column(Boolean, default=False)
-    senior_id = Column(
-        UUID(as_uuid=True), ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
+    medication_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    name = db.Column(db.String)
+    dosage = db.Column(db.String)
+    time = db.Column(db.DateTime)
+    isTaken = db.Column(db.Boolean, default=False)
+    senior_id = db.Column(
+        db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
 
     senior = relationship("SeniorCitizen", back_populates="medications")
 
 
-# Emergency Contacts
-class EmergencyContact(Base):
+class EmergencyContact(db.Model):  # type: ignore
     __tablename__ = "emergency_contact"
-    contact_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String)
-    relation = Column(String)
-    phone = Column(String)
-    senior_id = Column(
-        UUID(as_uuid=True), ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
+    contact_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    name = db.Column(db.String)
+    relation = db.Column(db.String)
+    phone = db.Column(db.String)
+    senior_id = db.Column(
+        db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
 
     senior = relationship("SeniorCitizen", back_populates="emergency_contacts")
 
 
-# News & Preferences
-class News(Base):
+class Feedback(db.Model):  # type: ignore
     __tablename__ = "news"
-    news_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    api_article_id = Column(String)
-    title = Column(String)
-    description = Column(Text)
-    url = Column(String)
-    source = Column(String)
-    category = Column(String)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    news_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    api_article_id = db.Column(db.String)
+    title = db.Column(db.String)
+    description = db.Column(db.Text)
+    url = db.Column(db.String)
+    source = db.Column(db.String)
+    category = db.Column(db.String)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 
-# Events & Attendance
-class ServiceProvider(Base):
+class ServiceProvider(db.Model):  # type: ignore
     __tablename__ = "service_provider"
-    service_provider_id = Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    service_provider_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     events = relationship(
         "Event", back_populates="service_provider", cascade="all, delete-orphan"
     )
 
 
-class Event(Base):
+class Event(db.Model):  # type: ignore
     __tablename__ = "event"
-    event_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String)
-    date_time = Column(DateTime)
-    location = Column(String)
-    description = Column(Text)
-    service_provider_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("service_provider.service_provider_id", ondelete="CASCADE"),
+    event_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    name = db.Column(db.String)
+    date_time = db.Column(db.DateTime)
+    location = db.Column(db.String)
+    description = db.Column(db.Text)
+    service_provider_id = db.Column(
+        db.String(36),
+        db.ForeignKey("service_provider.service_provider_id", ondelete="CASCADE"),
     )
 
     service_provider = relationship("ServiceProvider", back_populates="events")
@@ -219,16 +216,16 @@ class Event(Base):
     )
 
 
-class EventAttendance(Base):
+class EventAttendance(db.Model):  # type: ignore
     __tablename__ = "event_attendance"
-    senior_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("seniorcitizen.user_id", ondelete="CASCADE"),
+    senior_id = db.Column(
+        db.String(36),
+        db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    event_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("event.event_id", ondelete="CASCADE"),
+    event_id = db.Column(
+        db.String(36),
+        db.ForeignKey("event.event_id", ondelete="CASCADE"),
         primary_key=True,
     )
 
@@ -236,17 +233,19 @@ class EventAttendance(Base):
     event = relationship("Event", back_populates="attendance")
 
 
-class Alert(Base):
+class Alert(db.Model):  # type: ignore
     __tablename__ = "alert"
-    alert_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    recipient_user_id = Column(
-        UUID(as_uuid=True), ForeignKey("user.user_id", ondelete="CASCADE")
+    alert_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    alert_type = Column(Enum(AlertType))
-    message = Column(Text)
-    timestamp = Column(DateTime, default=datetime.now(timezone.utc))
-    reference_type = Column(Enum(ReferenceType))
-    reference_id = Column(UUID(as_uuid=True))
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    recipient_user_id = db.Column(
+        db.String(36), db.ForeignKey("user.user_id", ondelete="CASCADE")
+    )
+    alert_type = db.Column(db.Enum(AlertType))
+    message = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    reference_type = db.Column(db.Enum(ReferenceType))
+    reference_id = db.Column(db.String(36))
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     recipient = relationship("User", back_populates="alerts")

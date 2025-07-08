@@ -1,8 +1,8 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token
-from models import User
-from db_session import Session
+from models import User, Role, db
+
 import bcrypt
 from marshmallow import Schema, fields
 
@@ -11,6 +11,7 @@ class SignupSchema(Schema):
     username = fields.Str(required=True)
     email = fields.Email(required=True)
     password = fields.Str(required=True)
+    role = fields.Str(required=True)
 
 
 class LoginSchema(Schema):
@@ -39,20 +40,27 @@ class SignupResource(MethodView):
         username = data["username"]
         email = data["email"]
         password = data["password"]
-        session = Session()
+        role_name = data["role"]
+        session = db.session
         if (
-            session.query(User)
+            db.session.query(User)
             .filter((User.username == username) | (User.email == email))
             .first()
         ):
-            session.close()
+
             abort(409, message="Username or email already exists")
         hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+        role = db.session.query(Role).filter_by(name=role_name).first()
+        if not role:
+
+            abort(400, message="Invalid role specified")
         user = User(username=username, email=email, password=hashed_pw)
+        user.roles.append(role)
         session.add(user)
         session.commit()
         access_token = create_access_token(identity=str(user.user_id))
-        session.close()
+
         return {"access_token": access_token}, 201
 
 
@@ -64,17 +72,12 @@ class LoginResource(MethodView):
     def post(self, data):
         username = data["username"]
         password = data["password"]
-        session = Session()
-        user = session.query(User).filter_by(username=username).first()
-        session.close()
+        user = db.session.query(User).filter_by(username=username).first()
+
         if (
             user
             and user.password
-            and (
-                bcrypt.checkpw(password.encode(), user.password.encode())
-                if user.password.startswith("$2b$")
-                else user.password == password
-            )
+            and bcrypt.checkpw(password.encode(), user.password.encode())
         ):
             access_token = create_access_token(identity=str(user.user_id))
             return {"access_token": access_token}, 200
