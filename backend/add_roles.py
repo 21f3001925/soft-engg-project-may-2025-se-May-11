@@ -1,5 +1,6 @@
 from models import Role, db
 
+
 def add_core_roles():
     session = db.session
     core_roles = [
