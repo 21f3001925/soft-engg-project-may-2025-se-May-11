@@ -5,6 +5,8 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from models import db, User, Role
 from routes.auth import auth_blp
 from routes.medications import medications_blp
+from routes.providers import providers_bp
+from routes.events import events_bp
 from scheduler import start_scheduler
 from add_roles import add_core_roles
 from jwt_flask_security_bridge import load_user_from_jwt
@@ -28,6 +30,8 @@ api = Api(app)
 jwt = JWTManager(app)
 api.register_blueprint(auth_blp)
 api.register_blueprint(medications_blp)
+api.register_blueprint(providers_bp)
+api.register_blueprint(events_bp)
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
