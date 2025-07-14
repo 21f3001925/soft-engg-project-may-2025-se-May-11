@@ -1,7 +1,7 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token
-from models import User, Role, db
+from backend.models import User, Role, db
 
 import bcrypt
 from marshmallow import Schema, fields

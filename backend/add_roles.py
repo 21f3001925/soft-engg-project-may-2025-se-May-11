@@ -1,4 +1,4 @@
-from models import Role, db
+from backend.models import Role, db
 
 
 def add_core_roles():
