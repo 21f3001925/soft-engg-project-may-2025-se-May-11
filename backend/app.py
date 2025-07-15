@@ -10,7 +10,6 @@ from routes.reminder import reminder_blp
 from extensions import socketio
 import pyttsx3
 from appointment import appointment_bp
-from routes.reminder import reminder_blp
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "your-very-secret-key"
@@ -23,23 +22,22 @@ app.config["OPENAPI_VERSION"] = "3.0.2"
 app.config["OPENAPI_URL_PREFIX"] = "/api/v1"
 app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
 start_scheduler()
 db.init_app(app)
 
 # Initialize socketio
 socketio.init_app(app)
+
 # Initialize TTS engine
 engine = pyttsx3.init()
+voices = engine.getProperty('voices')
 
 api = Api(app)
 jwt = JWTManager(app)
 
-
 app.register_blueprint(reminder_blp)
 app.register_blueprint(appointment_bp)
-
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
@@ -54,11 +52,9 @@ app.before_request(load_user_from_jwt)
 def hello_world():
     return "Hello, World! from Backend"
 
-
 @app.teardown_appcontext
 def remove_session(exception=None):
     pass
 
 if __name__ == "__main__":
-    app.run(debug=True)
     socketio.run(app, debug=True)
