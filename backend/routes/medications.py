@@ -12,7 +12,7 @@ class MedicationSchema(Schema):
     name = fields.Str(required=True)
     dosage = fields.Str(required=True)
     time = fields.Str(required=True)
-    isTaken = fields.Boolean(missing=False)
+    isTaken = fields.Boolean(load_default=False)
     senior_id = fields.Int(required=True)
 
 

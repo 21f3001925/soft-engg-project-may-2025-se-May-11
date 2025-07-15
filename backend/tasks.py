@@ -1,8 +1,6 @@
 # tasks.py
 from celery_app import celery_app
 from extensions import socketio
-from flask_socketio import SocketIO
-from datetime import datetime
 
 @celery_app.task
 def send_reminder_notification(appointment_id, title, location, date_time, user_email):

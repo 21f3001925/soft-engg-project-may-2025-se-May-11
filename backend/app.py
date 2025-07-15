@@ -8,7 +8,6 @@ from add_roles import add_core_roles
 from jwt_flask_security_bridge import load_user_from_jwt
 from routes.reminder import reminder_blp
 from extensions import socketio
-import pyttsx3
 from appointment import appointment_bp
 
 app = Flask(__name__)

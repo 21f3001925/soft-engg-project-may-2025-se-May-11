@@ -7,10 +7,10 @@ import uuid
 
 from tasks import send_reminder_notification
 
-appointments_bp = Blueprint("appointments", __name__)
+appointment_bp = Blueprint("appointments", __name__)
 db = SQLAlchemy()
 
-@appointments_bp.route("/appointments", methods=["GET"])
+@appointment_bp.route("/appointments", methods=["GET"])
 def get_appointments():
     appts = db.session.query(Appointment).all()
     return jsonify([
@@ -25,7 +25,7 @@ def get_appointments():
         for a in appts
     ])
 
-@appointments_bp.route("/appointments", methods=["POST"])
+@appointment_bp.route("/appointments", methods=["POST"])
 def create_appointment():
     data = request.get_json()
     try:
@@ -51,7 +51,7 @@ def create_appointment():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-@appointments_bp.route("/appointments/<uuid:appointment_id>", methods=["PUT"])
+@appointment_bp.route("/appointments/<uuid:appointment_id>", methods=["PUT"])
 def update_appointment(appointment_id):
     data = request.get_json()
     appt = db.session.query(Appointment).filter_by(appointment_id=appointment_id).first()
@@ -74,7 +74,7 @@ def update_appointment(appointment_id):
 
     return jsonify({"message": "Appointment updated"})
 
-@appointments_bp.route("/appointments/<uuid:appointment_id>", methods=["DELETE"])
+@appointment_bp.route("/appointments/<uuid:appointment_id>", methods=["DELETE"])
 def delete_appointment(appointment_id):
     appt = db.session.query(Appointment).filter_by(appointment_id=appointment_id).first()
     if not appt:
