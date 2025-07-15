@@ -29,10 +29,6 @@ db.init_app(app)
 # Initialize socketio
 socketio.init_app(app)
 
-# Initialize TTS engine
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-
 api = Api(app)
 jwt = JWTManager(app)
 
