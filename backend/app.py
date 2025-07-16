@@ -21,6 +21,21 @@ app.config["OPENAPI_URL_PREFIX"] = "/api/v1"
 app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
+from authlib.integrations.flask_client import OAuth
+import os
+
+oauth = OAuth(app)
+oauth.register(
+    name='google',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET'),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+app.oauth = oauth
+
 start_scheduler()
 db.init_app(app)
 
