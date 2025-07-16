@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 reminder_blp = Blueprint("reminder", __name__)
 
+
 @reminder_blp.route("/api/schedule-reminder", methods=["POST"])
 def schedule_reminder():
     data = request.get_json()
@@ -24,15 +25,14 @@ def schedule_reminder():
         eta = date_time_obj - timedelta(minutes=mins)
         if eta > datetime.now():
             send_reminder_notification.apply_async(
-                args=[appointment_id, title, location, date_time, user_email],
-                eta=eta
+                args=[appointment_id, title, location, date_time, user_email], eta=eta
             )
 
     # Final reminder at exact time
     if date_time_obj > datetime.now():
         send_reminder_notification.apply_async(
             args=[appointment_id, title, location, date_time, user_email],
-            eta=date_time_obj
+            eta=date_time_obj,
         )
 
     return jsonify({"message": "Reminders scheduled"}), 200

@@ -43,13 +43,16 @@ with app.app_context():
 
 app.before_request(load_user_from_jwt)
 
+
 @app.route("/")
 def hello_world():
     return "Hello, World! from Backend"
 
+
 @app.teardown_appcontext
 def remove_session(exception=None):
     pass
+
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
