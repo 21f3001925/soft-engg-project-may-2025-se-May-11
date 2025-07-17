@@ -1,8 +1,9 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required
-from backend.models import db, ServiceProvider
-from backend.routes.events import EventSchema
+from flask_security import roles_accepted
+from models import db, ServiceProvider
+from routes.events import EventSchema
 from marshmallow import Schema, fields
 
 
@@ -26,11 +27,13 @@ providers_bp = Blueprint(
 class ServiceProviderList(MethodView):
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @providers_bp.response(200, ServiceProviderSchema(many=True))
     def get(self):
         return ServiceProvider.query.all()
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @providers_bp.arguments(ServiceProviderSchema)
     @providers_bp.response(201, ServiceProviderSchema)
     def post(self, new_data):
@@ -44,11 +47,13 @@ class ServiceProviderList(MethodView):
 class ServiceProviderResource(MethodView):
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @providers_bp.response(200, ServiceProviderSchema)
     def get(self, provider_id):
         return ServiceProvider.query.get_or_404(provider_id)
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @providers_bp.arguments(ServiceProviderSchema)
     @providers_bp.response(200, ServiceProviderSchema)
     def put(self, update_data, provider_id):
@@ -59,6 +64,7 @@ class ServiceProviderResource(MethodView):
         return provider
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @providers_bp.response(204)
     def delete(self, provider_id):
         provider = ServiceProvider.query.get_or_404(provider_id)
@@ -70,6 +76,7 @@ class ServiceProviderResource(MethodView):
 class ProviderEvents(MethodView):
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @providers_bp.response(200, EventSchema(many=True))
     def get(self, provider_id):
         provider = ServiceProvider.query.get_or_404(provider_id)

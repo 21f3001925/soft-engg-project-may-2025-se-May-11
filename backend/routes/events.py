@@ -1,7 +1,8 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required
-from backend.models import db, Event
+from flask_security import roles_accepted
+from models import db, Event
 from marshmallow import Schema, fields
 
 
@@ -23,11 +24,13 @@ events_bp = Blueprint(
 class EventList(MethodView):
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
         return Event.query.all()
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
     def post(self, new_data):
@@ -41,11 +44,13 @@ class EventList(MethodView):
 class EventResource(MethodView):
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
         return Event.query.get_or_404(event_id)
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @events_bp.arguments(EventSchema)
     @events_bp.response(200, EventSchema)
     def put(self, update_data, event_id):
@@ -56,6 +61,7 @@ class EventResource(MethodView):
         return event
 
     @jwt_required()
+    @roles_accepted("service_provider")
     @events_bp.response(204)
     def delete(self, event_id):
         event = Event.query.get_or_404(event_id)
