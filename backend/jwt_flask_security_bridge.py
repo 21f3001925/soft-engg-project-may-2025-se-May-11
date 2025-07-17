@@ -1,6 +1,6 @@
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from flask_login import login_user
-from backend.models import db, User
+from models import db, User
 from sqlalchemy.orm import joinedload
 
 
