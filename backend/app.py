@@ -6,9 +6,11 @@ from models import db, User, Role
 from scheduler import start_scheduler
 from add_roles import add_core_roles
 from jwt_flask_security_bridge import load_user_from_jwt
+from routes.auth import auth_blp
+from routes.medications import medications_blp
 from routes.reminder import reminder_blp
 from extensions import socketio
-from routes.appointments import appointment_bp
+from routes.appointments import appointments_blp
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "your-very-secret-key"
@@ -31,8 +33,10 @@ socketio.init_app(app)
 api = Api(app)
 jwt = JWTManager(app)
 
-app.register_blueprint(reminder_blp)
-app.register_blueprint(appointment_bp)
+api.register_blueprint(auth_blp)
+api.register_blueprint(medications_blp)
+api.register_blueprint(reminder_blp)
+api.register_blueprint(appointments_blp)
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)

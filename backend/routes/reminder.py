@@ -1,38 +1,54 @@
 # routes/reminder.py
-from flask import Blueprint, request, jsonify
+
+from flask_smorest import Blueprint, abort
+from flask.views import MethodView
+from flask_jwt_extended import jwt_required
+from schemas.reminder import ReminderSchema, MsgSchema  # you’ll define this schema
 from tasks import send_reminder_notification
 from datetime import datetime, timedelta
 
-reminder_blp = Blueprint("reminder", __name__)
+reminder_blp = Blueprint(
+    "Reminder",
+    "Reminder",
+    url_prefix="/api/v1/reminder",
+    description="Operations for scheduling reminders",
+)
 
 
-@reminder_blp.route("/api/schedule-reminder", methods=["POST"])
-def schedule_reminder():
-    data = request.get_json()
-    appointment_id = data.get("appointment_id")
-    title = data.get("title")
-    location = data.get("location")
-    date_time = data.get("date_time")
-    user_email = data.get("email")
+@reminder_blp.route("/schedule-reminder")
+class ReminderResource(MethodView):
+    @jwt_required()
+    @reminder_blp.doc(summary="Schedule reminders at intervals before appointment")
+    @reminder_blp.arguments(ReminderSchema())
+    @reminder_blp.response(200, MsgSchema())
+    @reminder_blp.alt_response(400, schema=MsgSchema())
+    def post(self, data):
+        appointment_id = data.get("appointment_id")
+        title = data.get("title")
+        location = data.get("location")
+        date_time = data.get("date_time")
+        user_email = data.get("email")
 
-    if not all([appointment_id, title, location, date_time, user_email]):
-        return jsonify({"error": "Missing required fields"}), 400
+        try:
+            date_time_obj = datetime.fromisoformat(date_time)
+        except Exception:
+            abort(400, message="Invalid date_time format")
 
-    time_formats = [1440, 60, 30, 10]  # Minutes before appointment
-    date_time_obj = datetime.fromisoformat(date_time)
+        time_formats = [1440, 60, 30, 10]  # Minutes before appointment
 
-    for mins in time_formats:
-        eta = date_time_obj - timedelta(minutes=mins)
-        if eta > datetime.now():
+        for mins in time_formats:
+            eta = date_time_obj - timedelta(minutes=mins)
+            if eta > datetime.now():
+                send_reminder_notification.apply_async(
+                    args=[appointment_id, title, location, date_time, user_email],
+                    eta=eta,
+                )
+
+        # Final reminder at exact time
+        if date_time_obj > datetime.now():
             send_reminder_notification.apply_async(
-                args=[appointment_id, title, location, date_time, user_email], eta=eta
+                args=[appointment_id, title, location, date_time, user_email],
+                eta=date_time_obj,
             )
 
-    # Final reminder at exact time
-    if date_time_obj > datetime.now():
-        send_reminder_notification.apply_async(
-            args=[appointment_id, title, location, date_time, user_email],
-            eta=date_time_obj,
-        )
-
-    return jsonify({"message": "Reminders scheduled"}), 200
+        return {"message": "Reminders scheduled"}, 200
