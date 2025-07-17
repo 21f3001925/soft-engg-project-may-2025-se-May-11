@@ -4,30 +4,12 @@ from flask_jwt_extended import jwt_required
 from models import Medication, db
 from datetime import datetime
 
-from marshmallow import Schema, fields
+from schemas.medication import (
+    MedicationSchema,
+    MedicationResponseSchema,
+    MedicationAddResponseSchema,
+)
 from flask_security import roles_accepted
-
-
-class MedicationSchema(Schema):
-    name = fields.Str(required=True)
-    dosage = fields.Str(required=True)
-    time = fields.Str(required=True)
-    isTaken = fields.Boolean(missing=False)
-    senior_id = fields.Int(required=True)
-
-
-class MedicationResponseSchema(Schema):
-    medication_id = fields.Int()
-    name = fields.Str()
-    dosage = fields.Str()
-    time = fields.Str()
-    isTaken = fields.Boolean()
-    senior_id = fields.Int()
-
-
-class MedicationAddResponseSchema(Schema):
-    message = fields.Str()
-    medication_id = fields.Int()
 
 
 medications_blp = Blueprint(

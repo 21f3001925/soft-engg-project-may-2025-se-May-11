@@ -2,13 +2,15 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_smorest import Api
 from flask_security import Security, SQLAlchemyUserDatastore
+from flask_cors import CORS
 from routes.auth import auth_blp
+from routes.appointments import appointments_blp
 from routes.medications import medications_blp
 from routes.providers import providers_bp
 from routes.events import events_bp
-from scheduler import start_scheduler
-from add_roles import add_core_roles
-from jwt_flask_security_bridge import load_user_from_jwt
+from utils.scheduler import start_scheduler
+from utils.add_roles import add_core_roles
+from utils.jwt_flask_security_bridge import load_user_from_jwt
 from models import db, User, Role
 
 app = Flask(__name__)
@@ -38,9 +40,12 @@ app.config["API_SPEC_OPTIONS"] = {
 start_scheduler()
 db.init_app(app)
 
-api = Api(app)
 jwt = JWTManager(app)
+CORS(app)
+api = Api(app)
+
 api.register_blueprint(auth_blp)
+api.register_blueprint(appointments_blp)
 api.register_blueprint(medications_blp)
 api.register_blueprint(providers_bp)
 api.register_blueprint(events_bp)

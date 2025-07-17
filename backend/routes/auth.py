@@ -2,32 +2,55 @@ from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token
 from models import User, Role, db
+import os
 
 import bcrypt
-from marshmallow import Schema, fields
+from schemas.auth import SignupSchema, LoginSchema, TokenSchema, MsgSchema
 
-
-class SignupSchema(Schema):
-    username = fields.Str(required=True)
-    email = fields.Email(required=True)
-    password = fields.Str(required=True)
-    role = fields.Str(required=True)
-
-
-class LoginSchema(Schema):
-    username = fields.Str(required=True)
-    password = fields.Str(required=True)
-
-
-class TokenSchema(Schema):
-    access_token = fields.Str()
-
-
-class MsgSchema(Schema):
-    msg = fields.Str()
+from flask import redirect, url_for, current_app
 
 
 auth_blp = Blueprint("auth", "auth", url_prefix="/api/v1/auth")
+
+
+@auth_blp.route("/oauth/google/login")
+class GoogleOAuthLoginResource(MethodView):
+    @auth_blp.response(302)
+    def get(self):
+        redirect_uri = url_for("auth.GoogleOAuthCallbackResource", _external=True)
+        return current_app.oauth.google.authorize_redirect(redirect_uri)
+
+
+@auth_blp.route("/oauth/google/callback")
+class GoogleOAuthCallbackResource(MethodView):
+    @auth_blp.response(200, TokenSchema())
+    @auth_blp.alt_response(401, schema=MsgSchema())
+    @auth_blp.alt_response(400, schema=MsgSchema())
+    def get(self):
+
+        token = current_app.oauth.google.authorize_access_token()
+
+        user_info = token.get("userinfo")
+        if not user_info:
+            abort(401, message="Failed to get user info from Google.")
+        email = user_info.get("email")
+        username = user_info.get("name")
+        user = db.session.query(User).filter_by(email=email).first()
+        if not user:
+            # Assign default role, 'caregiver'
+            role = db.session.query(Role).filter_by(name="caregiver").first()
+            if not role:
+                abort(400, message="Default role not found.")
+            user = User(username=username, email=email, password=None)
+            user.roles.append(role)
+            db.session.add(user)
+            db.session.commit()
+        access_token = create_access_token(identity=str(user.user_id))
+        frontend_url = os.environ.get(
+            "FRONTEND_URL", "http://localhost:3000/oauth/callback"
+        )
+        redirect_url = f"{frontend_url}?token={access_token}"
+        return redirect(redirect_url)
 
 
 @auth_blp.route("/signup")

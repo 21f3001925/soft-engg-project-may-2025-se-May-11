@@ -1,12 +1,9 @@
 from flask import Blueprint, request, jsonify
-from models import Appointment
-from flask_sqlalchemy import SQLAlchemy
+from models import Appointment, db
 from datetime import datetime
 import uuid
 
 appointments_bp = Blueprint("appointments", __name__)
-
-db = SQLAlchemy()
 
 
 # Get all appointments
