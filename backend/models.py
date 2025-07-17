@@ -65,6 +65,7 @@ class User(db.Model, UserMixin):  # type: ignore
         "Alert", back_populates="recipient", cascade="all, delete-orphan"
     )
     name = db.Column(db.String)
+    avatar_url = db.Column(db.String)
 
 
 class SeniorCitizen(db.Model):  # type: ignore
