@@ -8,12 +8,14 @@ from flask import redirect, url_for, current_app
 
 oauth_blp = Blueprint("oauth", "oauth", url_prefix="/api/v1/oauth")
 
+
 @oauth_blp.route("/google/login")
 class GoogleOAuthLoginResource(MethodView):
     @oauth_blp.response(302)
     def get(self):
         redirect_uri = url_for("oauth.GoogleOAuthCallbackResource", _external=True)
         return current_app.oauth.google.authorize_redirect(redirect_uri)
+
 
 @oauth_blp.route("/google/callback")
 class GoogleOAuthCallbackResource(MethodView):
