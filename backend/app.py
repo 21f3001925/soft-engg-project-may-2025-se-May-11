@@ -2,14 +2,14 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_smorest import Api
 from flask_security import Security, SQLAlchemyUserDatastore
-from backend.routes.auth import auth_blp
-from backend.routes.medications import medications_blp
-from backend.routes.providers import providers_bp
-from backend.routes.events import events_bp
-from backend.scheduler import start_scheduler
-from backend.add_roles import add_core_roles
-from backend.jwt_flask_security_bridge import load_user_from_jwt
-from backend.models import db, User, Role
+from routes.auth import auth_blp
+from routes.medications import medications_blp
+from routes.providers import providers_bp
+from routes.events import events_bp
+from scheduler import start_scheduler
+from add_roles import add_core_roles
+from jwt_flask_security_bridge import load_user_from_jwt
+from models import db, User, Role
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "your-very-secret-key"
@@ -22,6 +22,18 @@ app.config["OPENAPI_VERSION"] = "3.0.2"
 app.config["OPENAPI_URL_PREFIX"] = "/api/v1"
 app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+app.config["API_SPEC_OPTIONS"] = {
+    "security": [{"jwt": []}],
+    "components": {
+        "securitySchemes": {
+            "jwt": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+}
 
 start_scheduler()
 db.init_app(app)
