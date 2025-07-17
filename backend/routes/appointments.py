@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask_smorest import Blueprint
+from flask import request, jsonify
 from models import Appointment, db
 from datetime import datetime
 import uuid
