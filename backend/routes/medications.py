@@ -13,7 +13,10 @@ from flask_security import roles_accepted
 
 
 medications_blp = Blueprint(
-    "medications", "medications", url_prefix="/api/v1/medications"
+    "Medications",
+    "Medications",
+    url_prefix="/api/v1/medications",
+    description="Operations on medications",
 )
 
 
@@ -95,6 +98,7 @@ class MedicationsResource(MethodView):
 class MedicationByIdResource(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
+    @medications_blp.doc(summary="Get a specific medication by ID")
     @medications_blp.response(200, MedicationResponseSchema)
     def get(self, medication_id):
         user_id = get_jwt_identity()
@@ -121,6 +125,7 @@ class MedicationByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
+    @medications_blp.doc(summary="Update a specific medication by ID")
     @medications_blp.arguments(MedicationSchema(partial=True))
     @medications_blp.response(200, MedicationResponseSchema)
     def put(self, data, medication_id):
@@ -161,6 +166,7 @@ class MedicationByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
+    @medications_blp.doc(summary="Delete a specific medication by ID")
     @medications_blp.response(200, MedicationAddResponseSchema)
     def delete(self, medication_id):
         user_id = get_jwt_identity()

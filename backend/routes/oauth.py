@@ -6,11 +6,14 @@ import os
 from schemas.auth import TokenSchema, MsgSchema
 from flask import redirect, url_for, current_app
 
-oauth_blp = Blueprint("oauth", "oauth", url_prefix="/api/v1/oauth")
+oauth_blp = Blueprint(
+    "OAuth", "OAuth", url_prefix="/api/v1/oauth", description="Operations on OAuth"
+)
 
 
 @oauth_blp.route("/google/login")
 class GoogleOAuthLoginResource(MethodView):
+    @oauth_blp.doc(summary="Login with Google")
     @oauth_blp.response(302)
     def get(self):
         redirect_uri = url_for("oauth.GoogleOAuthCallbackResource", _external=True)
@@ -19,6 +22,7 @@ class GoogleOAuthLoginResource(MethodView):
 
 @oauth_blp.route("/google/callback")
 class GoogleOAuthCallbackResource(MethodView):
+    @oauth_blp.doc(summary="Callback from Google OAuth")
     @oauth_blp.response(200, TokenSchema())
     @oauth_blp.alt_response(401, schema=MsgSchema())
     @oauth_blp.alt_response(400, schema=MsgSchema())

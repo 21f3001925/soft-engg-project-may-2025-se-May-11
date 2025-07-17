@@ -19,7 +19,10 @@ class Config:
         "GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"
     )
     FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
+
     API_SPEC_OPTIONS = {
+        "servers": [{"url": BASE_URL}],
         "security": [{"jwt": []}],
         "components": {
             "securitySchemes": {
