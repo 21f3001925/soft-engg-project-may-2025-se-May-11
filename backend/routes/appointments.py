@@ -8,13 +8,17 @@ from models import Appointment, db, User
 from datetime import datetime
 import uuid
 from tasks import send_reminder_notification
-from schemas.appointments import AppointmentSchema, AppointmentResponseSchema, AppointmentAddResponseSchema
+from schemas.appointments import (
+    AppointmentSchema,
+    AppointmentResponseSchema,
+    AppointmentAddResponseSchema,
+)
 
 appointments_blp = Blueprint(
     "Appointments",
     "Appointments",
     url_prefix="/api/v1/appointments",
-    description="Operations on appointments"
+    description="Operations on appointments",
 )
 
 
@@ -54,8 +58,11 @@ class AppointmentListResource(MethodView):
                 title=data["title"],
                 date_time=datetime.fromisoformat(data["date_time"]),
                 location=data["location"],
-                reminder_time=datetime.fromisoformat(data["reminder_time"])
-                if data.get("reminder_time") else None,
+                reminder_time=(
+                    datetime.fromisoformat(data["reminder_time"])
+                    if data.get("reminder_time")
+                    else None
+                ),
                 senior_id=senior_id,
             )
             db.session.add(appointment)
