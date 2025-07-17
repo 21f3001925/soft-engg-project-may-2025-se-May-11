@@ -1,7 +1,7 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token
-from models import User, Role, db
+from models import User, Role, db, Caregiver, SeniorCitizen, ServiceProvider
 import os
 
 import bcrypt
@@ -76,14 +76,23 @@ class SignupResource(MethodView):
 
         role = db.session.query(Role).filter_by(name=role_name).first()
         if not role:
-
             abort(400, message="Invalid role specified")
         user = User(username=username, email=email, password=hashed_pw)
         user.roles.append(role)
         session.add(user)
         session.commit()
-        access_token = create_access_token(identity=str(user.user_id))
 
+        role_model_map = {
+            "caregiver": Caregiver,
+            "senior_citizen": SeniorCitizen,
+            "service_provider": ServiceProvider,
+        }
+        model_class = role_model_map.get(role_name)
+        if model_class:
+            session.add(model_class(user_id=user.user_id))
+        session.commit()
+
+        access_token = create_access_token(identity=str(user.user_id))
         return {"access_token": access_token}, 201
 
 
