@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Config:
@@ -19,6 +22,7 @@ class Config:
         "GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"
     )
     FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
     API_SPEC_OPTIONS = {
         "security": [{"jwt": []}],
         "components": {

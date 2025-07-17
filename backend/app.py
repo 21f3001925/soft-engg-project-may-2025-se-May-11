@@ -11,6 +11,7 @@ from routes.medications import medications_blp
 from routes.providers import providers_bp
 from routes.events import events_bp
 from routes.profile import profile_bp
+from routes.news import news_bp
 from utils.scheduler import start_scheduler
 from utils.oauth_setup import init_oauth
 from utils.add_roles import add_core_roles
@@ -38,6 +39,7 @@ api.register_blueprint(medications_blp)
 api.register_blueprint(providers_bp)
 api.register_blueprint(events_bp)
 api.register_blueprint(profile_bp)
+api.register_blueprint(news_bp)
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
