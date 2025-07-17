@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from backend.models import Appointment
+from models import Appointment
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import uuid

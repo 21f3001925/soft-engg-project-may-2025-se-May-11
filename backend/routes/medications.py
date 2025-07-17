@@ -1,7 +1,7 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
-from backend.models import Medication, db
+from models import Medication, db
 from datetime import datetime
 
 from marshmallow import Schema, fields
