@@ -1,4 +1,4 @@
-from backend.models import Role, db
+from models import Role, db
 
 
 def add_core_roles():
@@ -6,6 +6,7 @@ def add_core_roles():
     core_roles = [
         {"name": "senior_citizen", "description": "Senior Citizen"},
         {"name": "caregiver", "description": "Caregiver"},
+        {"name": "service_provider", "description": "Service Provider"},
         # Add more roles as needed
     ]
     for role_data in core_roles:
