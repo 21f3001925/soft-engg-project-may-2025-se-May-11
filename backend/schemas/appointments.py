@@ -1,7 +1,6 @@
 # schemas/appointment.py
 
 from marshmallow import Schema, fields
-import uuid
 
 
 class AppointmentSchema(Schema):
