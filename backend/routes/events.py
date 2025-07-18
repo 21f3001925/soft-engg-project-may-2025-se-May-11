@@ -16,21 +16,23 @@ class EventSchema(Schema):
 
 
 events_bp = Blueprint(
-    "events", "events", url_prefix="/api/v1/events", description="Operations on events"
+    "Events", "Events", url_prefix="/api/v1/events", description="Operations on events"
 )
 
 
-@events_bp.route("/")
+@events_bp.route("")
 class EventList(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
+    @events_bp.doc(summary="Get all events")
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
         return Event.query.all()
 
     @jwt_required()
     @roles_accepted("service_provider")
+    @events_bp.doc(summary="Create a new event")
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
     def post(self, new_data):
@@ -45,12 +47,14 @@ class EventResource(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
+    @events_bp.doc(summary="Get a specific event by ID")
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
         return Event.query.get_or_404(event_id)
 
     @jwt_required()
     @roles_accepted("service_provider")
+    @events_bp.doc(summary="Update a specific event by ID")
     @events_bp.arguments(EventSchema)
     @events_bp.response(200, EventSchema)
     def put(self, update_data, event_id):
@@ -62,6 +66,7 @@ class EventResource(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
+    @events_bp.doc(summary="Delete a specific event by ID")
     @events_bp.response(204)
     def delete(self, event_id):
         event = Event.query.get_or_404(event_id)

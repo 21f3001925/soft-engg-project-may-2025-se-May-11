@@ -6,18 +6,17 @@ class MedicationSchema(Schema):
     dosage = fields.Str(required=True)
     time = fields.Str(required=True)
     isTaken = fields.Boolean(missing=False)
-    senior_id = fields.Int(required=True)
 
 
 class MedicationResponseSchema(Schema):
-    medication_id = fields.Int()
+    medication_id = fields.UUID()
     name = fields.Str()
     dosage = fields.Str()
     time = fields.Str()
     isTaken = fields.Boolean()
-    senior_id = fields.Int()
+    senior_id = fields.UUID()
 
 
 class MedicationAddResponseSchema(Schema):
     message = fields.Str()
-    medication_id = fields.Int()
+    medication_id = fields.UUID()

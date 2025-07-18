@@ -22,22 +22,24 @@ class ChangePasswordSchema(Schema):
 
 
 profile_bp = Blueprint(
-    "profile",
-    "profile",
+    "Profile",
+    "Profile",
     url_prefix="/api/v1/profile",
     description="Operations on user profile",
 )
 
 
-@profile_bp.route("/")
+@profile_bp.route("")
 class ProfileResource(MethodView):
     @jwt_required()
+    @profile_bp.doc(summary="Get user profile")
     @profile_bp.response(200, ProfileSchema)
     def get(self):
         user = get_current_user()
         return user
 
     @jwt_required()
+    @profile_bp.doc(summary="Update user profile")
     @profile_bp.arguments(ProfileSchema)
     @profile_bp.response(200, ProfileSchema)
     def put(self, update_data):
@@ -48,6 +50,7 @@ class ProfileResource(MethodView):
         return user
 
     @jwt_required()
+    @profile_bp.doc(summary="Delete user profile")
     @profile_bp.response(204)
     def delete(self):
         user = get_current_user()
@@ -58,6 +61,7 @@ class ProfileResource(MethodView):
 @profile_bp.route("/change-password")
 class ChangePasswordResource(MethodView):
     @jwt_required()
+    @profile_bp.doc(summary="Change user password")
     @profile_bp.arguments(ChangePasswordSchema)
     @profile_bp.response(204)
     def post(self, password_data):
@@ -75,6 +79,7 @@ class ChangePasswordResource(MethodView):
 @profile_bp.route("/avatar")
 class AvatarUploadResource(MethodView):
     @jwt_required()
+    @profile_bp.doc(summary="Upload user avatar")
     @profile_bp.response(200, ProfileSchema)
     def put(self):
         user = get_current_user()
