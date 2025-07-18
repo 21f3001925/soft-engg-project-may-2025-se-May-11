@@ -23,6 +23,7 @@ from routes.providers import providers_bp
 from routes.events import events_bp
 from routes.profile import profile_bp
 from routes.news import news_bp
+from routes.emergency_contacts import emergency_contacts_blp
 from routes.reminder import reminder_blp
 from routes.appointments import appointments_blp
 
@@ -56,6 +57,7 @@ api.register_blueprint(providers_bp)
 api.register_blueprint(events_bp)
 api.register_blueprint(profile_bp)
 api.register_blueprint(news_bp)
+api.register_blueprint(emergency_contacts_blp)
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
