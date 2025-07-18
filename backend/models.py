@@ -77,6 +77,7 @@ class SeniorCitizen(db.Model):  # type: ignore
     )
     font_size = db.Column(db.String)
     theme = db.Column(db.String)
+    news_categories = db.Column(db.String)  # Comma-separated news categories
 
     user = relationship("User", back_populates="senior_citizen")
     appointments = relationship(

@@ -12,7 +12,9 @@ from models import db, User, Role
 # Core utilities and bridge
 from utils.jwt_flask_security_bridge import load_user_from_jwt
 from utils.add_roles import add_core_roles
-from utils.scheduler import start_scheduler
+from utils.oauth_setup import init_oauth
+from utils.add_roles import add_core_roles
+from utils.jwt_flask_security_bridge import load_user_from_jwt
 from config import Config
 
 # Blueprints
@@ -26,11 +28,13 @@ from routes.news import news_bp
 from routes.emergency_contacts import emergency_contacts_blp
 from routes.reminder import reminder_blp
 from routes.appointments import appointments_blp
+from routes.emergency import emergency_blp
 
-# Extensions
 from extensions import socketio
+from models import db, User, Role
+from celery_app import make_celery
+# import tasks
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -38,7 +42,8 @@ app.config.from_object(Config)
 
 init_oauth(app)
 
-start_scheduler()
+# start_scheduler()
+celery = make_celery(app)
 db.init_app(app)
 
 
@@ -58,6 +63,7 @@ api.register_blueprint(events_bp)
 api.register_blueprint(profile_bp)
 api.register_blueprint(news_bp)
 api.register_blueprint(emergency_contacts_blp)
+api.register_blueprint(emergency_blp)  # Register the new emergency blueprint
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)

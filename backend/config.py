@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 load_dotenv()
 
@@ -35,5 +36,25 @@ class Config:
                     "bearerFormat": "JWT",
                 }
             }
+        },
+    }
+    # Celery Configuration
+    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND = os.environ.get(
+        "CELERY_RESULT_BACKEND", "redis://localhost:6379/0"
+    )
+    CELERY_ACCEPT_CONTENT = ["json"]
+    CELERY_TASK_SERIALIZER = "json"
+    CELERY_RESULT_SERIALIZER = "json"
+    CELERY_TIMEZONE = "UTC"
+    CELERY_ENABLE_UTC = True
+    CELERY_BEAT_SCHEDULE = {
+        "check-missed-medications-every-15-minutes": {
+            "task": "backend.tasks.check_missed_medications",
+            "schedule": 900.0,  # 15 minutes
+        },
+        "send-daily-news-update-every-morning": {
+            "task": "backend.tasks.send_daily_news_update",
+            "schedule": crontab(hour=9, minute=0),  # Every day at 9 AM UTC
         },
     }
