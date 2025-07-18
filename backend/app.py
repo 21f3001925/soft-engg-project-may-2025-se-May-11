@@ -5,9 +5,6 @@ from flask_smorest import Api
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_cors import CORS
 
-# Load environment variables
-load_dotenv()
-
 # Core models and DB
 from models import db, User, Role
 
@@ -30,6 +27,9 @@ from routes.appointments import appointments_blp
 
 # Extensions
 from extensions import socketio
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
