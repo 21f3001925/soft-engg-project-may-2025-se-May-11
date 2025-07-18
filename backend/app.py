@@ -1,4 +1,3 @@
-from backend.utils.oauth_setup import init_oauth
 from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -13,8 +12,6 @@ from models import db, User, Role
 from utils.jwt_flask_security_bridge import load_user_from_jwt
 from utils.add_roles import add_core_roles
 from utils.oauth_setup import init_oauth
-from utils.add_roles import add_core_roles
-from utils.jwt_flask_security_bridge import load_user_from_jwt
 from config import Config
 
 # Blueprints
@@ -31,8 +28,8 @@ from routes.appointments import appointments_blp
 from routes.emergency import emergency_blp
 
 from extensions import socketio
-from models import db, User, Role
 from celery_app import make_celery
+
 # import tasks
 
 load_dotenv()
