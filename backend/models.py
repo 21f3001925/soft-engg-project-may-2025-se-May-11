@@ -138,6 +138,7 @@ class Appointment(db.Model):  # type: ignore
     senior_id = db.Column(
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
+    reminder_task_id = db.Column(db.String(36), nullable=True)
 
     senior = relationship("SeniorCitizen", back_populates="appointments")
 

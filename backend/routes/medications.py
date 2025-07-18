@@ -9,8 +9,8 @@ from schemas.medication import (
     MedicationResponseSchema,
     MedicationAddResponseSchema,
 )
-from flask_security import roles_accepted
 
+from flask_security import roles_accepted
 
 medications_blp = Blueprint(
     "Medications",
