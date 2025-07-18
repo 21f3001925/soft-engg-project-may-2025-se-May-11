@@ -38,8 +38,8 @@ class NewsResponseSchema(Schema):
 
 
 news_bp = Blueprint(
-    "news",
-    "news",
+    "News",
+    "News",
     url_prefix="/api/v1/news",
     description="Fetch news from NewsAPI.org.",
 )
