@@ -5,6 +5,7 @@ from flask_smorest import Api
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_cors import CORS
 from routes.auth import auth_blp
+from routes.oauth import oauth_blp
 
 # from routes.appointments import appointments_bp # Uncomment when needed.
 from routes.medications import medications_blp
@@ -34,6 +35,7 @@ CORS(app)
 api = Api(app)
 
 api.register_blueprint(auth_blp)
+api.register_blueprint(oauth_blp)
 # api.register_blueprint(appointments_bp) # Commented out because it's causing errors to run the server, once it's fixed uncomment this.
 api.register_blueprint(medications_blp)
 api.register_blueprint(providers_bp)
