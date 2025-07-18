@@ -140,6 +140,8 @@ class AppointmentDetailResource(MethodView):
         db.session.delete(appt)
         db.session.commit()
         return {"message": "Appointment deleted"}, 200
+
+
 appointments_bp = Blueprint("appointments", __name__)
 
 
@@ -212,4 +214,3 @@ def delete_appointment(appointment_id):
     db.delete(appt)
     db.commit()
     return jsonify({"message": "Appointment deleted"})
-
