@@ -65,6 +65,7 @@ class User(db.Model, UserMixin):  # type: ignore
         "Alert", back_populates="recipient", cascade="all, delete-orphan"
     )
     name = db.Column(db.String)
+    avatar_url = db.Column(db.String)
 
 
 class SeniorCitizen(db.Model):  # type: ignore
@@ -191,6 +192,10 @@ class ServiceProvider(db.Model):  # type: ignore
     service_provider_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
+    name = db.Column(db.String, nullable=False)
+    contact_email = db.Column(db.String, nullable=False)
+    phone_number = db.Column(db.String)
+    services_offered = db.Column(db.String)
     events = relationship(
         "Event", back_populates="service_provider", cascade="all, delete-orphan"
     )

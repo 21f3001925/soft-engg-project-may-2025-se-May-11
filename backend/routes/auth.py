@@ -1,37 +1,24 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token
-from models import User, Role, db
+from models import User, Role, db, Caregiver, SeniorCitizen, ServiceProvider
 
 import bcrypt
-from marshmallow import Schema, fields
+from schemas.auth import SignupSchema, LoginSchema, TokenSchema, MsgSchema
 
-
-class SignupSchema(Schema):
-    username = fields.Str(required=True)
-    email = fields.Email(required=True)
-    password = fields.Str(required=True)
-    role = fields.Str(required=True)
-
-
-class LoginSchema(Schema):
-    username = fields.Str(required=True)
-    password = fields.Str(required=True)
-
-
-class TokenSchema(Schema):
-    access_token = fields.Str()
-
-
-class MsgSchema(Schema):
-    msg = fields.Str()
-
-
-auth_blp = Blueprint("auth", "auth", url_prefix="/api/v1/auth")
+auth_blp = Blueprint(
+    "Auth",
+    "Auth",
+    url_prefix="/api/v1/auth",
+    description="Operations on authentication",
+)
 
 
 @auth_blp.route("/signup")
 class SignupResource(MethodView):
+    @auth_blp.doc(
+        summary="Create a new user account",
+    )
     @auth_blp.arguments(SignupSchema())
     @auth_blp.response(201, TokenSchema())
     @auth_blp.alt_response(400, schema=MsgSchema())
@@ -53,19 +40,29 @@ class SignupResource(MethodView):
 
         role = db.session.query(Role).filter_by(name=role_name).first()
         if not role:
-
             abort(400, message="Invalid role specified")
         user = User(username=username, email=email, password=hashed_pw)
         user.roles.append(role)
         session.add(user)
         session.commit()
-        access_token = create_access_token(identity=str(user.user_id))
 
+        role_model_map = {
+            "caregiver": Caregiver,
+            "senior_citizen": SeniorCitizen,
+            "service_provider": ServiceProvider,
+        }
+        model_class = role_model_map.get(role_name)
+        if model_class:
+            session.add(model_class(user_id=user.user_id))
+        session.commit()
+
+        access_token = create_access_token(identity=str(user.user_id))
         return {"access_token": access_token}, 201
 
 
 @auth_blp.route("/login")
 class LoginResource(MethodView):
+    @auth_blp.doc(summary="Login to get an access token")
     @auth_blp.arguments(LoginSchema())
     @auth_blp.response(200, TokenSchema())
     @auth_blp.alt_response(401, schema=MsgSchema())
