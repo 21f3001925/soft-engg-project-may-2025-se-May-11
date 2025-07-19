@@ -29,6 +29,9 @@ python-dotenv = "^1.1.1"
 flask-cors = "^6.0.1"
 requests = "^2.32.4"
 redis = "^5.0.1"
+celery = "^5.5.3"
+flask-socketio = "^5.5.1"
+flask-mail = "^0.10.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"

@@ -1,3 +1,4 @@
+from utils.oauth_setup import init_oauth
 from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -11,7 +12,6 @@ from models import db, User, Role
 # Core utilities and bridge
 from utils.jwt_flask_security_bridge import load_user_from_jwt
 from utils.add_roles import add_core_roles
-from utils.oauth_setup import init_oauth
 from config import Config
 
 # Blueprints
