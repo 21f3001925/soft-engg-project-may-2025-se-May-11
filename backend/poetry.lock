@@ -1010,17 +1010,21 @@ flask = "*"
 [[package]]
 name = "flask-principal"
 version = "0.4.0"
-description = "Identity management for flask"
+description = "Identity management for Flask."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 groups = ["main"]
-files = [
-    {file = "Flask-Principal-0.4.0.tar.gz", hash = "sha256:f5d6134b5caebfdbb86f32d56d18ee44b080876a27269560a96ea35f75c99453"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-blinker = "*"
-Flask = "*"
+flask = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/mattupstate/flask-principal"
+reference = "HEAD"
+resolved_reference = "e79efe2d85d9e1a9b46dded0386ddf3d719ca79d"
 
 [[package]]
 name = "flask-security-too"
@@ -2942,4 +2946,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<4.0"
-content-hash = "29de992f168a4ea1e9ec5e05267a72d38fe3514be176cf9fe0f48cc0d39e0096"
+content-hash = "1a94ddb24c8f597584e1eb9fb74292856c1141223f3a6ff99dff6bce5c148095"

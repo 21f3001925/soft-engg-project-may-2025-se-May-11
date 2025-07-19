@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Flask API for the senior-citizen app"
 authors = ["RNA <your.email@example.com>"]
 readme = "README.md"
+package-mode = false
 packages = [
     { include = "backend" }
 ]
@@ -32,6 +33,7 @@ redis = "^5.0.1"
 celery = "^5.5.3"
 flask-socketio = "^5.5.1"
 flask-mail = "^0.10.0"
+flask-principal = { git = "https://github.com/mattupstate/flask-principal" }
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
