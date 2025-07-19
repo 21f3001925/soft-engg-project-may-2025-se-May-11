@@ -4,9 +4,12 @@ from flask_mail import Mail, Message
 
 
 def send_sms(to_number, body):
-    twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
-    twilio_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
+    # twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    twilio_account_sid = "ACdf611bce4c0cd58c9e86a33f3688ef7e"
+    # twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+    twilio_auth_token = "6b61b819f9b1534e78b8f5850d5784c2"
+    # twilio_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
+    twilio_phone_number = "+15632393205"
 
     if not all([twilio_account_sid, twilio_auth_token, twilio_phone_number]):
         print("Twilio credentials not fully set up. Skipping SMS.")
