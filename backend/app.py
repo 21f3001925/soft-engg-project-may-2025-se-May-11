@@ -1,4 +1,4 @@
-from backend.utils.oauth_setup import init_oauth
+from utils.oauth_setup import init_oauth
 from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
