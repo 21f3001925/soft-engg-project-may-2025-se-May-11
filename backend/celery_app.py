@@ -1,26 +1,21 @@
 from celery import Celery
+from app import create_app
+
+flask_app = create_app()
 
 celery_app = Celery(
-    "reminder_app",
-    broker="redis://localhost:6379/0",
-    backend="redis://localhost:6379/0",
+    flask_app.import_name,
+    broker=flask_app.config["CELERY_BROKER_URL"],
+    backend=flask_app.config["CELERY_RESULT_BACKEND"],
+    include=["backend.tasks"],  # make sure tasks are imported
 )
+celery_app.conf.update(flask_app.config)
 
-celery_app.conf.timezone = "Asia/Kolkata"
+
+class ContextTask(Celery.Task):
+    def __call__(self, *args, **kwargs):
+        with flask_app.app_context():
+            return self.run(*args, **kwargs)
 
 
-def make_celery(app):
-    celery = Celery(
-        app.import_name,
-        broker=app.config["CELERY_BROKER_URL"],
-        backend=app.config["CELERY_RESULT_BACKEND"],
-    )
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
+celery_app.Task = ContextTask
