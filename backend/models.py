@@ -66,6 +66,7 @@ class User(db.Model, UserMixin):  # type: ignore
     )
     name = db.Column(db.String)
     avatar_url = db.Column(db.String)
+    avatar_url = db.Column(db.String)
 
 
 class SeniorCitizen(db.Model):  # type: ignore
