@@ -6,7 +6,7 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from flask_cors import CORS
 
 # Core models and DB
-from models import db, User, Role
+from models import User, Role
 
 # Core utilities and bridge
 from utils.jwt_flask_security_bridge import load_user_from_jwt
@@ -15,7 +15,7 @@ from utils.oauth_setup import init_oauth
 from config import Config
 
 # Extensions
-from extensions import socketio, mail
+from extensions import db, socketio, mail
 
 
 load_dotenv()
