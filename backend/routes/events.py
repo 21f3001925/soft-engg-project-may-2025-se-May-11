@@ -22,7 +22,10 @@ class EventJoinSchema(Schema):
 
 
 events_bp = Blueprint(
-    "Events", "Events", url_prefix="/api/v1/events", description="Operations on events"
+    "Events",
+    "Events",
+    url_prefix="/api/v1/events",
+    description="This route manages social events for senior citizens. It allows service providers to create, update, and delete event listings, while enabling seniors to browse and join activities. This feature is designed to promote social engagement and help seniors stay active and connected with their community.",
 )
 
 
@@ -31,14 +34,16 @@ class EventList(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
-    @events_bp.doc(summary="Get all events")
+    @events_bp.doc(
+        summary="All events organised by various service providers are listed when the route is called."
+    )
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
         return Event.query.all()
 
     @jwt_required()
     @roles_accepted("service_provider")
-    @events_bp.doc(summary="Create a new event")
+    @events_bp.doc(summary="Service provider can add a new event using this endpoint.")
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
     def post(self, new_data):
@@ -53,14 +58,18 @@ class EventResource(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
-    @events_bp.doc(summary="Get a specific event by ID")
+    @events_bp.doc(
+        summary="To get specific event details, service provider can use this route with the event id."
+    )
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
         return Event.query.get_or_404(event_id)
 
     @jwt_required()
     @roles_accepted("service_provider")
-    @events_bp.doc(summary="Update a specific event by ID")
+    @events_bp.doc(
+        summary="To update event details, service provider can use this route with the event id."
+    )
     @events_bp.arguments(EventSchema)
     @events_bp.response(200, EventSchema)
     def put(self, update_data, event_id):
@@ -72,7 +81,9 @@ class EventResource(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
-    @events_bp.doc(summary="Delete a specific event by ID")
+    @events_bp.doc(
+        summary="To delete an event, service provider can use this route with the event id."
+    )
     @events_bp.response(204)
     def delete(self, event_id):
         event = Event.query.get_or_404(event_id)
@@ -84,7 +95,9 @@ class EventResource(MethodView):
 class EventJoin(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen")
-    @events_bp.doc(summary="Allow a senior citizen to join an event")
+    @events_bp.doc(
+        summary="When senior citizens see the event list, they might want to join an event. They can use this route to join an event."
+    )
     @events_bp.arguments(EventJoinSchema)
     @events_bp.response(
         200, description="Successfully joined event and reminder scheduled"

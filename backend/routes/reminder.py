@@ -11,14 +11,16 @@ reminder_blp = Blueprint(
     "Reminder",
     "Reminder",
     url_prefix="/api/v1/reminder",
-    description="Operations for scheduling reminders",
+    description="This route is used to schedule and send reminders for appointments and other events. It allows users to set up multiple reminders, ensuring they receive timely notifications. This is a critical feature for helping seniors remember important events, which is essential for their health and well-being, and can be customized to meet individual needs.",
 )
 
 
 @reminder_blp.route("/schedule-reminder")
 class ReminderResource(MethodView):
     @jwt_required()
-    @reminder_blp.doc(summary="Schedule reminders at intervals before appointment")
+    @reminder_blp.doc(
+        summary="This route is used to schedule reminders for appointments."
+    )
     @reminder_blp.arguments(ReminderSchema())
     @reminder_blp.response(200, MsgSchema())
     @reminder_blp.alt_response(400, schema=MsgSchema())
