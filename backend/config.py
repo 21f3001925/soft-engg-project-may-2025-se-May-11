@@ -46,15 +46,15 @@ class Config:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
-    CELERY_TIMEZONE = "UTC"
-    CELERY_ENABLE_UTC = True
+    CELERY_TIMEZONE = "Asia/Kolkata"
+    CELERY_ENABLE_UTC = False
     CELERY_BEAT_SCHEDULE = {
         "check-missed-medications-every-15-minutes": {
-            "task": "backend.tasks.check_missed_medications",
-            "schedule": 900.0,  # 15 minutes
+            "task": "tasks.check_missed_medications",
+            "schedule": 30.0,  # 15 minutes
         },
         "send-daily-news-update-every-morning": {
-            "task": "backend.tasks.send_daily_news_update",
-            "schedule": crontab(hour=9, minute=0),  # Every day at 9 AM UTC
+            "task": "tasks.send_daily_news_update",
+            "schedule": crontab(hour=10, minute=57),  # Every day at 9 AM UTC
         },
     }

@@ -4,3 +4,5 @@
 venv
 .env
 instance/
+instance
+.venv/

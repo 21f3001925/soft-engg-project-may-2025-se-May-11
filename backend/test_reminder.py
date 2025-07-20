@@ -1,19 +1,22 @@
-from app import app
+from app_factory import create_app
 from models import db, User, SeniorCitizen, Medication
 from tasks import send_medication_reminder
 from datetime import datetime, timezone
 
+# Create Flask app instance
+app = create_app()
 
 with app.app_context():
     # Create dummy user if not exists
-    senior_user = User.query.filter_by(username="test_senior_user").first()
+    senior_user = User.query.filter_by(username="test_senior_user_2").first()
     if not senior_user:
         print("Creating dummy senior user...")
         senior_user = User(
-            username="test_senior_user",
-            email="test_senior@example.com",
+            username="test_senior_user_2",
+            email="test_senior_2@example.com",
             password="your_password_here",
-            name="Test Senior",
+            name="Test Senior 2",
+            phone_number="+916353619807",  # Add phone number for testing
         )
         db.session.add(senior_user)
         db.session.commit()
@@ -48,5 +51,7 @@ with app.app_context():
     test_medication_id = medication.medication_id
     print(f"\nUse this medication ID for testing: {test_medication_id}")
     print(f"Triggering send_medication_reminder for ID: {test_medication_id}")
-    send_medication_reminder.delay(test_medication_id)
-    print("Task sent to Celery.")
+
+    # Trigger the task
+    result = send_medication_reminder.delay(test_medication_id)
+    print(f"Task sent to Celery with ID: {result.id}")
