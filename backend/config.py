@@ -72,5 +72,5 @@ class Config:
     # MAIL_PORT = 587
     # MAIL_USE_TLS = True
     # MAIL_USERNAME = "your-email@gmail.com"
-    # MAIL_PASSWORD = "16 digit password you can get from your google account"
+    # MAIL_PASSWORD = "16 digit app password to be generated from google account"
     # MAIL_DEFAULT_SENDER = "your-email@gmail.com"

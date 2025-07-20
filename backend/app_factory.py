@@ -17,7 +17,6 @@ from config import Config
 # Extensions
 from extensions import db, socketio, mail
 
-
 load_dotenv()
 
 
