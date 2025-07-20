@@ -6,15 +6,15 @@ This document provides an overview of the RESTful APIs exposed by the backend se
 
 Base URL: `/api/v1/auth`
 
-### Supported User Stories
+### Purpose
 
-This API is foundational for all user stories requiring user authentication (1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13). It enables users to log in and access their specific functionalities.
+This API is foundational for all user interactions, enabling secure user authentication and access to specific functionalities across the application. It ensures that only authorized users can access the system and its features.
 
 ### Signup
 
 - **Endpoint:** `/api/v1/auth/signup`
 - **Method:** `POST`
-- **Description:** Creates a new user account.
+- **Description:** Registers a new user account (caregiver, senior citizen, or service provider).
 - **Request Body Example:**
   ```json
   {
@@ -41,7 +41,7 @@ This API is foundational for all user stories requiring user authentication (1, 
 
 - **Endpoint:** `/api/v1/auth/login`
 - **Method:** `POST`
-- **Description:** Logs in a user and returns an access token.
+- **Description:** Authenticates a user with username and password, returning an access token.
 - **Request Body Example:**
   ```json
   {
@@ -66,9 +66,9 @@ This API is foundational for all user stories requiring user authentication (1, 
 
 Base URL: `/api/v1/oauth`
 
-### Supported User Stories
+### Purpose
 
-This API supports user stories (1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13) by providing an alternative, convenient authentication method via Google, enhancing user accessibility and simplifying the login process.
+This API provides an alternative, convenient authentication method via Google, enhancing user accessibility and simplifying the login process for users who prefer to use existing accounts.
 
 ### Google Login
 
@@ -99,15 +99,15 @@ This API supports user stories (1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13) by provi
 
 Base URL: `/api/v1/medications`
 
-### Supported User Stories
+### Purpose
 
-This API directly supports User Story 1 (senior marking medication as taken) and User Story 9 (caregiver managing medications).
+This API enables seniors to track their medication intake and allows caregivers to manage medication schedules. It ensures that seniors adhere to their medication regimens, which is essential for their health and safety.
 
 ### Get All Medications
 
 - **Endpoint:** `/api/v1/medications`
 - **Method:** `GET`
-- **Description:** Retrieves all medications for the logged-in senior citizen.
+- **Description:** Retrieves all medications for the logged-in senior citizen, including details on dosage and whether taken.
 - **Authentication:** JWT Required, Roles: `senior_citizen`, `caregiver`
 - **Response Example (200 OK):**
   ```json
@@ -127,7 +127,7 @@ This API directly supports User Story 1 (senior marking medication as taken) and
 
 - **Endpoint:** `/api/v1/medications`
 - **Method:** `POST`
-- **Description:** Adds a new medication for the logged-in senior citizen.
+- **Description:** Adds a new medication for the logged-in senior citizen, including dosage and scheduled time.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Request Body Example:**
   ```json
@@ -150,7 +150,7 @@ This API directly supports User Story 1 (senior marking medication as taken) and
 
 - **Endpoint:** `/api/v1/medications/<string:medication_id>`
 - **Method:** `GET`
-- **Description:** Retrieves a specific medication by its ID.
+- **Description:** Retrieves details for a specific medication by its unique ID.
 - **Authentication:** JWT Required, Roles: `senior_citizen`, `caregiver`
 - **Response Example (200 OK):**
   ```json
@@ -174,7 +174,7 @@ This API directly supports User Story 1 (senior marking medication as taken) and
 
 - **Endpoint:** `/api/v1/medications/<string:medication_id>`
 - **Method:** `PUT`
-- **Description:** Updates a specific medication by its ID.
+- **Description:** Updates details for a specific medication by its ID, such as dosage or taken status.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Request Body Example:**
   ```json
@@ -199,7 +199,7 @@ This API directly supports User Story 1 (senior marking medication as taken) and
 
 - **Endpoint:** `/api/v1/medications/<string:medication_id>`
 - **Method:** `DELETE`
-- **Description:** Deletes a specific medication by its ID.
+- **Description:** Deletes a specific medication record by its ID.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Response Example (200 OK):**
   ```json
@@ -218,15 +218,15 @@ This API directly supports User Story 1 (senior marking medication as taken) and
 
 Base URL: `/api/v1/providers`
 
-### Supported User Stories
+### Purpose
 
-This API supports User Story 6 (senior browsing and joining local social events) and User Story 13 (service provider creating/updating/removing local events).
+This API facilitates the management of service providers and their associated events. It allows service providers to create, update, and remove local events, and enables seniors to browse and join these social activities, promoting community engagement.
 
 ### Get All Service Providers
 
 - **Endpoint:** `/api/v1/providers`
 - **Method:** `GET`
-- **Description:** Retrieves all service providers.
+- **Description:** Retrieves a list of all registered service providers.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (200 OK):**
   ```json
@@ -245,7 +245,7 @@ This API supports User Story 6 (senior browsing and joining local social events)
 
 - **Endpoint:** `/api/v1/providers`
 - **Method:** `POST`
-- **Description:** Creates a new service provider.
+- **Description:** Creates a new service provider entry in the system.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Request Body Example:**
   ```json
@@ -271,7 +271,7 @@ This API supports User Story 6 (senior browsing and joining local social events)
 
 - **Endpoint:** `/api/v1/providers/<string:provider_id>`
 - **Method:** `GET`
-- **Description:** Retrieves a specific service provider by its ID.
+- **Description:** Retrieves details for a specific service provider by their ID.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (200 OK):**
   ```json
@@ -294,7 +294,7 @@ This API supports User Story 6 (senior browsing and joining local social events)
 
 - **Endpoint:** `/api/v1/providers/<string:provider_id>`
 - **Method:** `PUT`
-- **Description:** Updates a specific service provider by its ID.
+- **Description:** Updates the information for a specific service provider by their ID.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Request Body Example:**
   ```json
@@ -317,7 +317,7 @@ This API supports User Story 6 (senior browsing and joining local social events)
 
 - **Endpoint:** `/api/v1/providers/<string:provider_id>`
 - **Method:** `DELETE`
-- **Description:** Deletes a specific service provider by its ID.
+- **Description:** Deletes a specific service provider record by their ID.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (204 No Content):** No content.
 - **Error Response Example (404 Not Found):**
@@ -331,7 +331,7 @@ This API supports User Story 6 (senior browsing and joining local social events)
 
 - **Endpoint:** `/api/v1/providers/<string:provider_id>/events`
 - **Method:** `GET`
-- **Description:** Retrieves all events associated with a specific service provider.
+- **Description:** Retrieves all events organized by a specific service provider.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (200 OK):**
   ```json
@@ -351,15 +351,15 @@ This API supports User Story 6 (senior browsing and joining local social events)
 
 Base URL: `/api/v1/events`
 
-### Supported User Stories
+### Purpose
 
-This API directly supports User Story 6 (senior browsing and joining local social events) and User Story 13 (service provider creating/updating/removing local events).
+This API manages social events for senior citizens. It allows service providers to create, update, and delete event listings, while enabling seniors to browse and join activities. This feature is designed to promote social engagement and help seniors stay active and connected with their community.
 
 ### Get All Events
 
 - **Endpoint:** `/api/v1/events`
 - **Method:** `GET`
-- **Description:** Retrieves all events.
+- **Description:** Retrieves a list of all available events.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (200 OK):**
   ```json
@@ -379,7 +379,7 @@ This API directly supports User Story 6 (senior browsing and joining local socia
 
 - **Endpoint:** `/api/v1/events`
 - **Method:** `POST`
-- **Description:** Creates a new event.
+- **Description:** Creates a new event entry.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Request Body Example:**
   ```json
@@ -407,7 +407,7 @@ This API directly supports User Story 6 (senior browsing and joining local socia
 
 - **Endpoint:** `/api/v1/events/<string:event_id>`
 - **Method:** `GET`
-- **Description:** Retrieves a specific event by its ID.
+- **Description:** Retrieves details for a specific event by its ID.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (200 OK):**
   ```json
@@ -431,7 +431,7 @@ This API directly supports User Story 6 (senior browsing and joining local socia
 
 - **Endpoint:** `/api/v1/events/<string:event_id>`
 - **Method:** `PUT`
-- **Description:** Updates a specific event by its ID.
+- **Description:** Updates the information for a specific event by its ID.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Request Body Example:**
   ```json
@@ -455,7 +455,7 @@ This API directly supports User Story 6 (senior browsing and joining local socia
 
 - **Endpoint:** `/api/v1/events/<string:event_id>`
 - **Method:** `DELETE`
-- **Description:** Deletes a specific event by its ID.
+- **Description:** Deletes a specific event record by its ID.
 - **Authentication:** JWT Required, Roles: `service_provider`
 - **Response Example (204 No Content):** No content.
 - **Error Response Example (404 Not Found):**
@@ -469,15 +469,15 @@ This API directly supports User Story 6 (senior browsing and joining local socia
 
 Base URL: `/api/v1/profile`
 
-### Supported User Stories
+### Purpose
 
-This API supports user stories by allowing users to manage their profile information, which is essential for personalized experiences across all functionalities (e.g., User Story 7 for accessibility settings, and implicitly for all stories requiring user identification).
+This API allows users to manage their profile information, including personal details, password changes, and avatar uploads. It also supports customization of user preferences, such as news categories, which is essential for a personalized user experience.
 
 ### Get User Profile
 
 - **Endpoint:** `/api/v1/profile`
 - **Method:** `GET`
-- **Description:** Retrieves the logged-in user's profile information.
+- **Description:** Retrieves the profile information for the currently authenticated user.
 - **Authentication:** JWT Required
 - **Response Example (200 OK):**
   ```json
@@ -493,7 +493,7 @@ This API supports user stories by allowing users to manage their profile informa
 
 - **Endpoint:** `/api/v1/profile`
 - **Method:** `PUT`
-- **Description:** Updates the logged-in user's profile information.
+- **Description:** Updates the profile information for the currently authenticated user.
 - **Authentication:** JWT Required
 - **Request Body Example:**
   ```json
@@ -515,7 +515,7 @@ This API supports user stories by allowing users to manage their profile informa
 
 - **Endpoint:** `/api/v1/profile`
 - **Method:** `DELETE`
-- **Description:** Deletes the logged-in user's profile.
+- **Description:** Deletes the profile for the currently authenticated user.
 - **Authentication:** JWT Required
 - **Response Example (204 No Content):** No content.
 
@@ -523,7 +523,7 @@ This API supports user stories by allowing users to manage their profile informa
 
 - **Endpoint:** `/api/v1/profile/change-password`
 - **Method:** `POST`
-- **Description:** Changes the logged-in user's password.
+- **Description:** Allows the currently authenticated user to change their password.
 - **Authentication:** JWT Required
 - **Request Body Example:**
   ```json
@@ -544,7 +544,7 @@ This API supports user stories by allowing users to manage their profile informa
 
 - **Endpoint:** `/api/v1/profile/avatar`
 - **Method:** `PUT`
-- **Description:** Uploads a new avatar for the logged-in user.
+- **Description:** Uploads a new avatar image for the currently authenticated user.
 - **Authentication:** JWT Required
 - **Request Body:** `multipart/form-data` with a `file` field.
 - **Response Example (200 OK):**
@@ -567,15 +567,15 @@ This API supports user stories by allowing users to manage their profile informa
 
 Base URL: `/api/v1/news`
 
-### Supported User Stories
+### Purpose
 
-This API directly supports User Story 3 (senior receiving daily news updates).
+This API provides seniors with access to news headlines from NewsAPI.org based on their selected topics of interest. This feature is designed to keep seniors informed and mentally engaged by delivering personalized content.
 
 ### Get News Categories
 
 - **Endpoint:** `/api/v1/news/categories`
 - **Method:** `GET`
-- **Description:** Returns the list of available news categories.
+- **Description:** Returns a list of available news categories that can be used for filtering news.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Response Example (200 OK):**
   ```json
@@ -596,7 +596,7 @@ This API directly supports User Story 3 (senior receiving daily news updates).
 
 - **Endpoint:** `/api/v1/news/`
 - **Method:** `GET`
-- **Description:** Retrieves top headlines from NewsAPI.org.
+- **Description:** Retrieves top news headlines from NewsAPI.org, with optional search query and category filters.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Query Parameters:**
   - `q` (optional): Search query.
@@ -631,15 +631,15 @@ This API directly supports User Story 3 (senior receiving daily news updates).
 
 Base URL: `/api/v1/emergency-contacts`
 
-### Supported User Stories
+### Purpose
 
-This API directly supports User Story 5 (senior viewing and notifying emergency contacts) and User Story 12 (caregiver managing emergency contacts).
+This API allows users to manage a senior's emergency contacts. It provides functionality to add, view, update, and delete contact information, ensuring that the right people can be notified promptly in a crisis.
 
 ### Get All Emergency Contacts
 
 - **Endpoint:** `/api/v1/emergency-contacts`
 - **Method:** `GET`
-- **Description:** Retrieves all emergency contacts for the logged-in senior citizen.
+- **Description:** Retrieves all emergency contacts associated with the logged-in senior citizen.
 - **Authentication:** JWT Required, Roles: `senior_citizen`, `caregiver`
 - **Response Example (200 OK):**
   ```json
@@ -680,7 +680,7 @@ This API directly supports User Story 5 (senior viewing and notifying emergency 
 
 - **Endpoint:** `/api/v1/emergency-contacts/<string:contact_id>`
 - **Method:** `GET`
-- **Description:** Retrieves a specific emergency contact by its ID.
+- **Description:** Retrieves details for a specific emergency contact by its ID.
 - **Authentication:** JWT Required, Roles: `senior_citizen`, `caregiver`
 - **Response Example (200 OK):**
   ```json
@@ -703,7 +703,7 @@ This API directly supports User Story 5 (senior viewing and notifying emergency 
 
 - **Endpoint:** `/api/v1/emergency-contacts/<string:contact_id>`
 - **Method:** `PUT`
-- **Description:** Updates a specific emergency contact by its ID.
+- **Description:** Updates the information for a specific emergency contact by its ID.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Request Body Example:**
   ```json
@@ -726,7 +726,7 @@ This API directly supports User Story 5 (senior viewing and notifying emergency 
 
 - **Endpoint:** `/api/v1/emergency-contacts/<string:contact_id>`
 - **Method:** `DELETE`
-- **Description:** Deletes a specific emergency contact by its ID.
+- **Description:** Deletes a specific emergency contact record by its ID.
 - **Authentication:** JWT Required, Roles: `caregiver`, `senior_citizen`
 - **Response Example (200 OK):**
   ```json
@@ -745,15 +745,15 @@ This API directly supports User Story 5 (senior viewing and notifying emergency 
 
 Base URL: `/appointments`
 
-### Supported User Stories
+### Purpose
 
-This API directly supports User Story 4 (senior viewing upcoming appointments) and User Story 10 (caregiver managing appointments).
+This API is essential for managing appointments. It provides comprehensive endpoints for creating, viewing, updating, and deleting appointment details. This functionality is crucial for helping both seniors and their caregivers keep track of medical check-ups and other important dates, ensuring that no appointments are missed.
 
 ### Get All Appointments
 
 - **Endpoint:** `/appointments`
 - **Method:** `GET`
-- **Description:** Retrieves all appointments.
+- **Description:** Retrieves all appointments for the logged-in senior citizen.
 - **Response Example (200 OK):**
   ```json
   [
@@ -771,7 +771,7 @@ This API directly supports User Story 4 (senior viewing upcoming appointments) a
 
 - **Endpoint:** `/appointments`
 - **Method:** `POST`
-- **Description:** Creates a new appointment.
+- **Description:** Creates a new appointment for the logged-in senior citizen.
 - **Request Body Example:**
   ```json
   {
