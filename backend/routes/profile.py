@@ -14,6 +14,7 @@ class ProfileSchema(Schema):
     email = fields.Email()
     name = fields.Str()
     avatar_url = fields.Str(dump_only=True)
+    news_categories = fields.Str(allow_none=True)
 
 
 class ChangePasswordSchema(Schema):
@@ -45,7 +46,13 @@ class ProfileResource(MethodView):
     def put(self, update_data):
         user = get_current_user()
         for key, value in update_data.items():
-            setattr(user, key, value)
+            if key == "news_categories":
+                if user.senior_citizen:
+                    user.senior_citizen.news_categories = value
+                else:
+                    abort(400, message="User is not a senior citizen.")
+            else:
+                setattr(user, key, value)
         db.session.commit()
         return user
 

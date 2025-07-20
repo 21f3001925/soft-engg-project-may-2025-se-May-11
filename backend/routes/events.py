@@ -1,9 +1,11 @@
 from flask.views import MethodView
-from flask_smorest import Blueprint
-from flask_jwt_extended import jwt_required
+from flask_smorest import Blueprint, abort
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
-from models import db, Event
+from models import db, Event, EventAttendance
 from marshmallow import Schema, fields
+from tasks import send_event_reminder
+from datetime import timedelta, datetime
 
 
 class EventSchema(Schema):
@@ -13,6 +15,10 @@ class EventSchema(Schema):
     location = fields.Str(required=True)
     description = fields.Str()
     service_provider_id = fields.Str(required=True)
+
+
+class EventJoinSchema(Schema):
+    event_id = fields.Str(required=True)
 
 
 events_bp = Blueprint(
@@ -72,3 +78,51 @@ class EventResource(MethodView):
         event = Event.query.get_or_404(event_id)
         db.session.delete(event)
         db.session.commit()
+
+
+@events_bp.route("/join")
+class EventJoin(MethodView):
+    @jwt_required()
+    @roles_accepted("senior_citizen")
+    @events_bp.doc(summary="Allow a senior citizen to join an event")
+    @events_bp.arguments(EventJoinSchema)
+    @events_bp.response(
+        200, description="Successfully joined event and reminder scheduled"
+    )
+    @events_bp.alt_response(400, description="Bad Request")
+    @events_bp.alt_response(404, description="Event not found")
+    @events_bp.alt_response(409, description="Already joined event")
+    def post(self, data):
+        senior_id = get_jwt_identity()
+        event_id = data["event_id"]
+
+        event = Event.query.get(event_id)
+        if not event:
+            abort(404, message="Event not found")
+
+        # Check if senior is already attending
+        existing_attendance = EventAttendance.query.filter_by(
+            senior_id=senior_id, event_id=event_id
+        ).first()
+        if existing_attendance:
+            abort(409, message="You have already joined this event.")
+
+        # Create attendance record
+        attendance = EventAttendance(senior_id=senior_id, event_id=event_id)
+        db.session.add(attendance)
+        db.session.commit()
+
+        # Schedule event reminder (e.g., 1 hour before the event)
+        reminder_time = event.date_time - timedelta(hours=1)
+        if reminder_time > datetime.utcnow():  # Only schedule if in the future
+            send_event_reminder.apply_async(
+                args=[
+                    senior_id,
+                    event.name,
+                    event.location,
+                    event.date_time.isoformat(),
+                ],
+                eta=reminder_time,
+            )
+
+        return {"message": "Successfully joined event and reminder scheduled"}, 200

@@ -13,10 +13,21 @@ def send_medication_reminder():
 def start_scheduler():
     scheduler = BackgroundScheduler()
     # Schedule the job (e.g., every day at 9 AM)
-    scheduler.add_job(send_medication_reminder, "cron", hour=14, minute=38)
+    # scheduler.add_job(send_medication_reminder, "cron", hour=14, minute=38)
+    scheduler.add_job(send_medication_reminder, "interval", seconds=5)
     scheduler.start()
     # send_sms("+916351838115", "Take your Medicine")
     # send_sms("+919884659616", "Take your Medicine")
     # send_sms("+919347714177", "Take your Medicine")
     # send_sms("+919496709986", "Take your Medicine")
     print("Scheduler started.")
+
+
+if __name__ == "__main__":
+    start_scheduler()
+    try:
+        # This is needed to keep the main thread alive.
+        while True:
+            pass
+    except (KeyboardInterrupt, SystemExit):
+        pass

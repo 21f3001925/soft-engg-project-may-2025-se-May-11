@@ -1,0 +1,28 @@
+from flask_smorest import Blueprint, abort
+from flask.views import MethodView
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from tasks import send_emergency_alert
+from models import User
+
+emergency_blp = Blueprint(
+    "Emergency",
+    "Emergency",
+    url_prefix="/api/v1/emergency",
+    description="Operations for emergency alerts",
+)
+
+
+@emergency_blp.route("/trigger")
+class EmergencyTrigger(MethodView):
+    @jwt_required()
+    @emergency_blp.doc(summary="Trigger an emergency alert")
+    @emergency_blp.response(200, description="Emergency alert triggered successfully")
+    def post(self):
+        user_id = get_jwt_identity()
+        senior = User.query.get(user_id)
+
+        if not senior or senior.roles[0].name != "senior_citizen":
+            abort(403, message="Only senior citizens can trigger emergency alerts.")
+
+        send_emergency_alert.delay(user_id)
+        return {"message": "Emergency alert triggered"}, 200

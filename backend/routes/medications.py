@@ -3,6 +3,7 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Medication, db, User
 from datetime import datetime
+from tasks import send_medication_reminder
 
 from schemas.medication import (
     MedicationSchema,
@@ -82,6 +83,10 @@ class MedicationsResource(MethodView):
             )
             session.add(medication)
             session.commit()
+            # Schedule medication reminder
+            send_medication_reminder.apply_async(
+                args=[str(medication.medication_id)], eta=medication.time
+            )
             resp = {
                 "message": "Medication added",
                 "medication_id": medication.medication_id,
