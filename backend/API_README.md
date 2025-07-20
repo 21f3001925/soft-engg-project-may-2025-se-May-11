@@ -741,6 +741,70 @@ This API allows users to manage a senior's emergency contacts. It provides funct
   }
   ```
 
+## Emergency API
+
+Base URL: `/api/v1/emergency`
+
+### Purpose
+
+This API handles the emergency alert system. When a senior citizen triggers an alert, this API is responsible for notifying their registered caregivers and emergency contacts. This provides a quick and effective way for seniors to request help, ensuring their safety and providing peace of mind for their loved ones.
+
+### Trigger Emergency Alert
+
+- **Endpoint:** `/api/v1/emergency/trigger`
+- **Method:** `POST`
+- **Description:** Triggers an emergency alert to registered caregivers and emergency contacts.
+- **Authentication:** JWT Required
+- **Response Example (200 OK):**
+  ```json
+  {
+    "message": "Emergency alert triggered"
+  }
+  ```
+- **Error Response Example (403 Forbidden):**
+  ```json
+  {
+    "message": "Only senior citizens can trigger emergency alerts."
+  }
+  ```
+
+## Reminder API
+
+Base URL: `/api/v1/reminder`
+
+### Purpose
+
+This API is used to schedule and send reminders for appointments and other events. It allows users to set up multiple reminders, ensuring they receive timely notifications. This is a critical feature for helping seniors remember important events, which is essential for their health and well-being, and can be customized to meet individual needs.
+
+### Schedule Reminder
+
+- **Endpoint:** `/api/v1/reminder/schedule-reminder`
+- **Method:** `POST`
+- **Description:** Schedules reminders for appointments based on provided details.
+- **Authentication:** JWT Required
+- **Request Body Example:**
+  ```json
+  {
+    "appointment_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "title": "Doctor's Visit",
+    "location": "Clinic",
+    "date_time": "2025-07-20T10:00:00",
+    "email": "senior@example.com"
+  }
+  ```
+- **Response Example (200 OK):**
+  ```json
+  {
+    "message": "Reminders scheduled"
+  }
+  ```
+- **Error Response Example (400 Bad Request):**
+  ```json
+  {
+    "message": "Invalid date_time format"
+  }
+  ```
+
 ## Appointments API
 
 Base URL: `/appointments`
