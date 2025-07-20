@@ -14,7 +14,7 @@ emergency_contacts_blp = Blueprint(
     "Emergency Contacts",
     "Emergency Contacts",
     url_prefix="/api/v1/emergency-contacts",
-    description="The senior citizens can add their emergency contacts to this route. They are the people who will contacted whenever the senior citizen presses the emergency button.",
+    description="This route allows users to manage a senior's emergency contacts. It provides functionality to add, view, update, and delete contact information, ensuring that the right people can be notified promptly in a crisis. This feature empowers both seniors and caregivers to maintain an up-to-date list of trusted contacts for emergency situations.",
 )
 
 
@@ -89,7 +89,9 @@ class EmergencyContactsResource(MethodView):
 class EmergencyContactByIdResource(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
-    @emergency_contacts_blp.doc(summary="The user can get a specific emergency contact by ID")
+    @emergency_contacts_blp.doc(
+        summary="The user can get a specific emergency contact by ID"
+    )
     @emergency_contacts_blp.response(200, EmergencyContactResponseSchema)
     def get(self, contact_id):
         user_id = get_jwt_identity()
@@ -109,7 +111,9 @@ class EmergencyContactByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @emergency_contacts_blp.doc(summary="When the emergency contacts change their details, user can update a specific emergency contact by ID")
+    @emergency_contacts_blp.doc(
+        summary="When the emergency contacts change their details, user can update a specific emergency contact by ID"
+    )
     @emergency_contacts_blp.arguments(EmergencyContactSchema(partial=True))
     @emergency_contacts_blp.response(200, EmergencyContactResponseSchema)
     def put(self, data, contact_id):
@@ -141,7 +145,9 @@ class EmergencyContactByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @emergency_contacts_blp.doc(summary="User can delete a specific emergency contact by ID whenever it is not needed.")
+    @emergency_contacts_blp.doc(
+        summary="User can delete a specific emergency contact by ID whenever it is not needed."
+    )
     @emergency_contacts_blp.response(200, EmergencyContactAddResponseSchema)
     def delete(self, contact_id):
         user_id = get_jwt_identity()

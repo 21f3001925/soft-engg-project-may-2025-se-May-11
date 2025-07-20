@@ -41,7 +41,7 @@ news_bp = Blueprint(
     "News",
     "News",
     url_prefix="/api/v1/news",
-    description="Based on topics selected by the senior citizen, this route will fetch top news and relevant developments from NewsAPI.org.",
+    description="This route provides seniors with access to news headlines from NewsAPI.org based on their selected topics of interest. This feature is designed to keep seniors informed and mentally engaged by delivering personalized content, without requiring them to search for news themselves.",
 )
 
 
@@ -74,7 +74,9 @@ class NewsResource(MethodView):
     @roles_accepted("caregiver", "senior_citizen")
     @news_bp.arguments(NewsQuerySchema, location="query")
     @news_bp.response(200, NewsResponseSchema)
-    @news_bp.doc(summary="On the specific topics selected, get top headlines from NewsAPI.org.")
+    @news_bp.doc(
+        summary="On the specific topics selected, get top headlines from NewsAPI.org."
+    )
     def get(self, args):
         """Get top headlines from NewsAPI.org."""
         api_key = current_app.config.get("NEWSAPI_KEY")

@@ -10,7 +10,7 @@ auth_blp = Blueprint(
     "Auth",
     "Auth",
     url_prefix="/api/v1/auth",
-    description="This endpoint helps to authenticate different types of users. Users can sign up and log in using this route.",
+    description="This route handles user authentication, a critical component of the system. It allows different user types (seniors, caregivers, service providers) to sign up and log in securely. The signup endpoint creates new user accounts, while the login endpoint authenticates existing users and provides an access token for securing access to other parts of the application.",
 )
 
 
@@ -62,7 +62,9 @@ class SignupResource(MethodView):
 
 @auth_blp.route("/login")
 class LoginResource(MethodView):
-    @auth_blp.doc(summary="This route allows a user to log in using their username and password. They will get an access token in return.")
+    @auth_blp.doc(
+        summary="This route allows a user to log in using their username and password. They will get an access token in return."
+    )
     @auth_blp.arguments(LoginSchema())
     @auth_blp.response(200, TokenSchema())
     @auth_blp.alt_response(401, schema=MsgSchema())

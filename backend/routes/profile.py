@@ -26,7 +26,7 @@ profile_bp = Blueprint(
     "Profile",
     "Profile",
     url_prefix="/api/v1/profile",
-    description="This route will help the user to get information about their profile, update their profile and delete their profile. They can also change their password and upload their avatar using this route.",
+    description="This route allows users to manage their profile information, including their username, email, and password. It also provides functionality for users to upload an avatar and customize their experience, such as by selecting news preferences. This gives users control over their personal information and allows them to tailor the application to their needs.",
 )
 
 
@@ -68,7 +68,9 @@ class ProfileResource(MethodView):
 @profile_bp.route("/change-password")
 class ChangePasswordResource(MethodView):
     @jwt_required()
-    @profile_bp.doc(summary="Users can change their password using this route to protect their accounts from security threats.")
+    @profile_bp.doc(
+        summary="Users can change their password using this route to protect their accounts from security threats."
+    )
     @profile_bp.arguments(ChangePasswordSchema)
     @profile_bp.response(204)
     def post(self, password_data):
@@ -86,7 +88,9 @@ class ChangePasswordResource(MethodView):
 @profile_bp.route("/avatar")
 class AvatarUploadResource(MethodView):
     @jwt_required()
-    @profile_bp.doc(summary="The user can upload their avatar using this route and change their avatar whenever required.")
+    @profile_bp.doc(
+        summary="The user can upload their avatar using this route and change their avatar whenever required."
+    )
     @profile_bp.response(200, ProfileSchema)
     def put(self):
         user = get_current_user()

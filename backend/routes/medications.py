@@ -17,7 +17,7 @@ medications_blp = Blueprint(
     "Medications",
     "Medications",
     url_prefix="/api/v1/medications",
-    description="This route enlists the CRUD operations for medications. Users can GET information about their medications, POST new information about medications, update (PUT) and DELETE the existing information too. It also addresses various errors that can occur.",
+    description="This route is responsible for managing medication schedules. It allows users to add, update, and delete medication reminders, and to track whether a dose has been taken. This is a critical feature for helping seniors adhere to their medication regimens, which is essential for their health and safety, and provides caregivers with peace of mind.",
 )
 
 
@@ -35,7 +35,9 @@ class MedicationsResource(MethodView):
 
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
-    @medications_blp.doc(summary="Get information about all medications, dosage and time to be taken of the logged in senior citizen. It also has details about whether the medication is taken or not.")
+    @medications_blp.doc(
+        summary="Get information about all medications, dosage and time to be taken of the logged in senior citizen. It also has details about whether the medication is taken or not."
+    )
     @medications_blp.response(200, MedicationResponseSchema(many=True))
     def get(self):
         user_id = get_jwt_identity()
@@ -103,7 +105,9 @@ class MedicationsResource(MethodView):
 class MedicationByIdResource(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
-    @medications_blp.doc(summary="The users can get information about a specific medication by ID. This would help them verify the details of medications.")
+    @medications_blp.doc(
+        summary="The users can get information about a specific medication by ID. This would help them verify the details of medications."
+    )
     @medications_blp.response(200, MedicationResponseSchema)
     def get(self, medication_id):
         user_id = get_jwt_identity()
@@ -130,7 +134,9 @@ class MedicationByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @medications_blp.doc(summary="Often medications change by dosage or time. This route can be used to update the information about medications by ID.")
+    @medications_blp.doc(
+        summary="Often medications change by dosage or time. This route can be used to update the information about medications by ID."
+    )
     @medications_blp.arguments(MedicationSchema(partial=True))
     @medications_blp.response(200, MedicationResponseSchema)
     def put(self, data, medication_id):
@@ -171,7 +177,9 @@ class MedicationByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @medications_blp.doc(summary="Whenever medications are no longer needed, this route can be used to delete the information about medications by ID.")
+    @medications_blp.doc(
+        summary="Whenever medications are no longer needed, this route can be used to delete the information about medications by ID."
+    )
     @medications_blp.response(200, MedicationAddResponseSchema)
     def delete(self, medication_id):
         user_id = get_jwt_identity()
