@@ -1,15 +1,15 @@
 import os
 from twilio.rest import Client
-from flask_mail import Mail, Message
+from flask_mail import Message
+from extensions import mail
 
 
 def send_sms(to_number, body):
-    # twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    twilio_account_sid = "ACdf611bce4c0cd58c9e86a33f3688ef7e"
-    # twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
-    twilio_auth_token = "6b61b819f9b1534e78b8f5850d5784c2"
-    # twilio_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
-    twilio_phone_number = "+15632393205"
+    # Generate your twilio free trial credentials and put here to test
+
+    twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+    twilio_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
 
     if not all([twilio_account_sid, twilio_auth_token, twilio_phone_number]):
         print("Twilio credentials not fully set up. Skipping SMS.")
@@ -25,32 +25,18 @@ def send_sms(to_number, body):
         print(f"Error sending SMS: {e}")
 
 
-def send_email(app, to_email, subject, body):
-    app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
-    app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
-    app.config["MAIL_USE_TLS"] = (
-        os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
-    )
-    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
-    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
-    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
+def send_email(app, recipient, subject, body):
 
-    if not all(
-        [
-            app.config["MAIL_SERVER"],
-            app.config["MAIL_USERNAME"],
-            app.config["MAIL_PASSWORD"],
-            app.config["MAIL_DEFAULT_SENDER"],
-        ]
-    ):
-        print("Mail server credentials not fully set up. Skipping email.")
-        return
-
-    mail = Mail(app)
-    msg = Message(subject, recipients=[to_email], body=body)
     try:
-        with app.app_context():
-            mail.send(msg)
-        print(f"Email sent to {to_email}")
+        msg = Message(
+            subject,
+            sender=app.config.get("MAIL_DEFAULT_SENDER"),
+            recipients=[recipient],
+        )
+        msg.body = body
+        mail.send(msg)
+        print(f"Successfully sent email to {recipient}")
+        return True
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"Error sending email to {recipient}: {e}")
+        return False
