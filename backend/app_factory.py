@@ -15,7 +15,8 @@ from utils.oauth_setup import init_oauth
 from config import Config
 
 # Extensions
-from extensions import socketio
+from extensions import socketio, mail
+
 
 load_dotenv()
 
@@ -28,12 +29,12 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     socketio.init_app(app)
+    mail.init_app(app)
     JWTManager(app)
     CORS(app)
     api = Api(app)
     init_oauth(app)
 
-    # Import and register blueprints inside the function to avoid circular imports
     from routes.auth import auth_blp
     from routes.oauth import oauth_blp
     from routes.medications import medications_blp
@@ -58,7 +59,6 @@ def create_app():
     api.register_blueprint(emergency_contacts_blp)
     api.register_blueprint(emergency_blp)
 
-    # Flask-Security
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     Security(app, user_datastore)
 

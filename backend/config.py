@@ -51,10 +51,26 @@ class Config:
     CELERY_BEAT_SCHEDULE = {
         "check-missed-medications-every-15-minutes": {
             "task": "tasks.check_missed_medications",
-            "schedule": 30.0,  # 15 minutes
+            "schedule": 30.0,
         },
         "send-daily-news-update-every-morning": {
             "task": "tasks.send_daily_news_update",
-            "schedule": crontab(hour=10, minute=57),  # Every day at 9 AM UTC
+            "schedule": crontab(hour=12, minute=9),
         },
     }
+    MAIL_SERVER = os.environ.get("MAIL_SERVER")
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() in ["true", "on", "1"]
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.environ.get(
+        "MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME")
+    )
+
+    # Sample ENV configuration for Flask-Mail
+    # MAIL_SERVER = "smtp.gmail.com"
+    # MAIL_PORT = 587
+    # MAIL_USE_TLS = True
+    # MAIL_USERNAME = "your-email@gmail.com"
+    # MAIL_PASSWORD = "16 digit app password to be generated from google account"
+    # MAIL_DEFAULT_SENDER = "your-email@gmail.com"
