@@ -67,6 +67,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String)
 
     avatar_url = db.Column(db.String)
+    avatar_url = db.Column(db.String)
 
     emergency_contacts = db.relationship(
         "EmergencyContact", back_populates="senior", cascade="all, delete-orphan"

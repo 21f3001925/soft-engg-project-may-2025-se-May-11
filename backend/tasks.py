@@ -77,7 +77,6 @@ def send_event_reminder(user_id, event_name, event_location, event_time):
 
 @celery_app.task
 def send_daily_news_update():
-
     app = get_flask_app()
     with app.app_context():
         from models import User
@@ -135,7 +134,6 @@ def send_daily_news_update():
 
 @celery_app.task
 def check_missed_medications():
-
     app = get_flask_app()
     with app.app_context():
         from models import User, Medication, CaregiverAssignment
@@ -170,7 +168,6 @@ def check_missed_medications():
 
 @celery_app.task
 def send_emergency_alert(senior_id):
-
     app = get_flask_app()
     with app.app_context():
         from models import User, CaregiverAssignment
