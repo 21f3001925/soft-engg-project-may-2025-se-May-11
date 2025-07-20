@@ -49,13 +49,13 @@ class Config:
     CELERY_TIMEZONE = "Asia/Kolkata"
     CELERY_ENABLE_UTC = False
     CELERY_BEAT_SCHEDULE = {
-        "check-missed-medications-every-15-minutes": {
+        "check-missed-medications-every-30-seconds": {
             "task": "tasks.check_missed_medications",
             "schedule": 30.0,
         },
         "send-daily-news-update-every-morning": {
             "task": "tasks.send_daily_news_update",
-            "schedule": crontab(hour=12, minute=9),
+            "schedule": crontab(hour=9, minute=0),
         },
     }
     MAIL_SERVER = os.environ.get("MAIL_SERVER")

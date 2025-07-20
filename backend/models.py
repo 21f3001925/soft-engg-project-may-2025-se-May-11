@@ -1,4 +1,3 @@
-from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin
 import enum
 import secrets
@@ -6,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
 
-db = SQLAlchemy()
+from extensions import db
 
 
 class AlertType(enum.Enum):
@@ -27,7 +26,7 @@ class ReferenceType(enum.Enum):
     event = "event"
 
 
-class Role(db.Model, RoleMixin):  # type: ignore
+class Role(db.Model, RoleMixin):
     __tablename__ = "role"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(80), unique=True)
@@ -35,7 +34,7 @@ class Role(db.Model, RoleMixin):  # type: ignore
     users = db.relationship("User", secondary=roles_users, back_populates="roles")
 
 
-class User(db.Model, UserMixin):  # type: ignore
+class User(db.Model, UserMixin):
     __tablename__ = "user"
     user_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -66,11 +65,16 @@ class User(db.Model, UserMixin):  # type: ignore
         "Alert", back_populates="recipient", cascade="all, delete-orphan"
     )
     name = db.Column(db.String)
+
     avatar_url = db.Column(db.String)
     avatar_url = db.Column(db.String)
 
+    emergency_contacts = db.relationship(
+        "EmergencyContact", back_populates="senior", cascade="all, delete-orphan"
+    )
 
-class SeniorCitizen(db.Model):  # type: ignore
+
+class SeniorCitizen(db.Model):
     __tablename__ = "seniorcitizen"
     user_id = db.Column(
         db.String(36),
@@ -88,9 +92,7 @@ class SeniorCitizen(db.Model):  # type: ignore
     medications = relationship(
         "Medication", back_populates="senior", cascade="all, delete-orphan"
     )
-    emergency_contacts = relationship(
-        "EmergencyContact", back_populates="senior", cascade="all, delete-orphan"
-    )
+
     caregiver_assignments = relationship(
         "CaregiverAssignment", back_populates="senior", cascade="all, delete-orphan"
     )
@@ -99,7 +101,7 @@ class SeniorCitizen(db.Model):  # type: ignore
     )
 
 
-class Caregiver(db.Model):  # type: ignore
+class Caregiver(db.Model):
     __tablename__ = "caregiver"
     user_id = db.Column(
         db.String(36),
@@ -113,7 +115,7 @@ class Caregiver(db.Model):  # type: ignore
     )
 
 
-class CaregiverAssignment(db.Model):  # type: ignore
+class CaregiverAssignment(db.Model):
     __tablename__ = "caregiver_assignment"
     caregiver_id = db.Column(
         db.String(36),
@@ -130,7 +132,7 @@ class CaregiverAssignment(db.Model):  # type: ignore
     senior = relationship("SeniorCitizen", back_populates="caregiver_assignments")
 
 
-class Appointment(db.Model):  # type: ignore
+class Appointment(db.Model):
     __tablename__ = "appointment"
     appointment_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -146,7 +148,7 @@ class Appointment(db.Model):  # type: ignore
     senior = relationship("SeniorCitizen", back_populates="appointments")
 
 
-class Medication(db.Model):  # type: ignore
+class Medication(db.Model):
     __tablename__ = "medication"
     medication_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -162,7 +164,7 @@ class Medication(db.Model):  # type: ignore
     senior = relationship("SeniorCitizen", back_populates="medications")
 
 
-class EmergencyContact(db.Model):  # type: ignore
+class EmergencyContact(db.Model):
     __tablename__ = "emergency_contact"
     contact_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -170,14 +172,17 @@ class EmergencyContact(db.Model):  # type: ignore
     name = db.Column(db.String)
     relation = db.Column(db.String)
     phone = db.Column(db.String)
+
+    email = db.Column(db.String)
+
     senior_id = db.Column(
-        db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
+        db.String(36), db.ForeignKey("user.user_id", ondelete="CASCADE")
     )
 
-    senior = relationship("SeniorCitizen", back_populates="emergency_contacts")
+    senior = relationship("User", back_populates="emergency_contacts")
 
 
-class Feedback(db.Model):  # type: ignore
+class Feedback(db.Model):
     __tablename__ = "news"
     news_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -191,7 +196,7 @@ class Feedback(db.Model):  # type: ignore
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 
-class ServiceProvider(db.Model):  # type: ignore
+class ServiceProvider(db.Model):
     __tablename__ = "service_provider"
     service_provider_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -205,7 +210,7 @@ class ServiceProvider(db.Model):  # type: ignore
     )
 
 
-class Event(db.Model):  # type: ignore
+class Event(db.Model):
     __tablename__ = "event"
     event_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
@@ -225,7 +230,7 @@ class Event(db.Model):  # type: ignore
     )
 
 
-class EventAttendance(db.Model):  # type: ignore
+class EventAttendance(db.Model):
     __tablename__ = "event_attendance"
     senior_id = db.Column(
         db.String(36),
@@ -242,7 +247,7 @@ class EventAttendance(db.Model):  # type: ignore
     event = relationship("Event", back_populates="attendance")
 
 
-class Alert(db.Model):  # type: ignore
+class Alert(db.Model):
     __tablename__ = "alert"
     alert_id = db.Column(
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
