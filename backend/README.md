@@ -31,14 +31,15 @@ Install dependencies using Poetry:
 
 ```bash
 poetry install
+poetry run pre-commit install
 ```
 
 ## Development Server
 
-Run the Flask development server:
+Run the development server:
 
 ```bash
-flask run
+./dev.sh
 ```
 
 The server will start at http://127.0.0.1:5000
