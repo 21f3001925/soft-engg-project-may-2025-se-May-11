@@ -31,7 +31,6 @@ Install dependencies using Poetry:
 
 ```bash
 poetry install
-poetry run pre-commit install
 ```
 
 ## Development Server
