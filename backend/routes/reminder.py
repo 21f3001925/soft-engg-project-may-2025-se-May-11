@@ -11,14 +11,14 @@ reminder_blp = Blueprint(
     "Reminder",
     "Reminder",
     url_prefix="/api/v1/reminder",
-    description="Operations for scheduling reminders",
+    description="Appointments need to be scheduled and remainded. This route is used to schedule reminders. Users will get notifications on reminders.",
 )
 
 
 @reminder_blp.route("/schedule-reminder")
 class ReminderResource(MethodView):
     @jwt_required()
-    @reminder_blp.doc(summary="Schedule reminders at intervals before appointment")
+    @reminder_blp.doc(summary="This route is used to schedule reminders for appointments.")
     @reminder_blp.arguments(ReminderSchema())
     @reminder_blp.response(200, MsgSchema())
     @reminder_blp.alt_response(400, schema=MsgSchema())

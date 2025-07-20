@@ -8,14 +8,14 @@ emergency_blp = Blueprint(
     "Emergency",
     "Emergency",
     url_prefix="/api/v1/emergency",
-    description="Operations for emergency alerts",
+    description="This route performs the emergency alert operation for senior citizens. Upon pressing the emergency button, the system will alert the caregivers.",
 )
 
 
 @emergency_blp.route("/trigger")
 class EmergencyTrigger(MethodView):
     @jwt_required()
-    @emergency_blp.doc(summary="Trigger an emergency alert")
+    @emergency_blp.doc(summary="When the senior citizen presses the emergency button, the system will trigger alert to the caregivers which will help them attend to the needs of senior citizen.")
     @emergency_blp.response(200, description="Emergency alert triggered successfully")
     def post(self):
         user_id = get_jwt_identity()

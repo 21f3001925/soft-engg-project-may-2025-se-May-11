@@ -7,13 +7,14 @@ from schemas.auth import TokenSchema, MsgSchema
 from flask import redirect, url_for, current_app
 
 oauth_blp = Blueprint(
-    "OAuth", "OAuth", url_prefix="/api/v1/oauth", description="Operations on OAuth"
+    "OAuth", "OAuth", url_prefix="/api/v1/oauth", 
+    description="As some users may prefer to login existing accounts, this route can be used to login with Google."
 )
 
 
 @oauth_blp.route("/google/login")
 class GoogleOAuthLoginResource(MethodView):
-    @oauth_blp.doc(summary="Login with Google")
+    @oauth_blp.doc(summary="To login with Google id. New users will be registered automatically.")
     @oauth_blp.response(302)
     def get(self):
         redirect_uri = url_for("oauth.GoogleOAuthCallbackResource", _external=True)

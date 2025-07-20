@@ -26,21 +26,21 @@ profile_bp = Blueprint(
     "Profile",
     "Profile",
     url_prefix="/api/v1/profile",
-    description="Operations on user profile",
+    description="This route will help the user to get information about their profile, update their profile and delete their profile. They can also change their password and upload their avatar using this route.",
 )
 
 
 @profile_bp.route("")
 class ProfileResource(MethodView):
     @jwt_required()
-    @profile_bp.doc(summary="Get user profile")
+    @profile_bp.doc(summary="The current user can get their profile information")
     @profile_bp.response(200, ProfileSchema)
     def get(self):
         user = get_current_user()
         return user
 
     @jwt_required()
-    @profile_bp.doc(summary="Update user profile")
+    @profile_bp.doc(summary="The current user can update their profile information")
     @profile_bp.arguments(ProfileSchema)
     @profile_bp.response(200, ProfileSchema)
     def put(self, update_data):
@@ -57,7 +57,7 @@ class ProfileResource(MethodView):
         return user
 
     @jwt_required()
-    @profile_bp.doc(summary="Delete user profile")
+    @profile_bp.doc(summary="The user can delete their profile if they want to.")
     @profile_bp.response(204)
     def delete(self):
         user = get_current_user()
@@ -68,7 +68,7 @@ class ProfileResource(MethodView):
 @profile_bp.route("/change-password")
 class ChangePasswordResource(MethodView):
     @jwt_required()
-    @profile_bp.doc(summary="Change user password")
+    @profile_bp.doc(summary="Users can change their password using this route to protect their accounts from security threats.")
     @profile_bp.arguments(ChangePasswordSchema)
     @profile_bp.response(204)
     def post(self, password_data):
@@ -86,7 +86,7 @@ class ChangePasswordResource(MethodView):
 @profile_bp.route("/avatar")
 class AvatarUploadResource(MethodView):
     @jwt_required()
-    @profile_bp.doc(summary="Upload user avatar")
+    @profile_bp.doc(summary="The user can upload their avatar using this route and change their avatar whenever required.")
     @profile_bp.response(200, ProfileSchema)
     def put(self):
         user = get_current_user()
