@@ -1,15 +1,8 @@
-from flask import Flask
-from scheduler import start_scheduler
+from app_factory import create_app
+from extensions import socketio
 
-app = Flask(__name__)
-
-start_scheduler()
-
-
-@app.route("/")
-def hello_world():
-    return "Hello, World! from Backend"
-
+# Create the Flask app instance for Gunicorn
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)

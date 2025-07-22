@@ -1,75 +1,76 @@
 <script setup>
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from './store/userStore';
+import TopNavBar from './components/TopNavBar.vue';
 
-const router = useRouter();
-const route = useRoute();
-
-const showNav = computed(() => {
-  return !['Login', 'Register'].includes(route.name);
-});
-
-const handleLogout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  router.push('/login');
-};
+const userStore = useUserStore();
 </script>
 
 <template>
-  <div class="app">
-    <nav v-if="showNav" id="nav">
-      <div class="nav-content">
-        <div class="nav-left">
-          <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
-          <router-link to="/medications" class="nav-link">Medications</router-link>
-          <router-link to="/appointments" class="nav-link">Appointments</router-link>
-          <router-link to="/news" class="nav-link">News</router-link>
-          <router-link to="/events" class="nav-link">Events</router-link>
-          <router-link to="/profile" class="nav-link">Profile</router-link>
-          <router-link to="/setting" class="nav-link">Setting</router-link>
-        </div>
-        <div class="nav-right">
-          <button class="logout-button" @click="handleLogout">Logout</button>
-        </div>
-      </div>
-    </nav>
-    <main>
+  <div
+    :class="[
+      'app',
+      userStore.accessibility.darkMode ? 'dark' : 'light',
+      userStore.accessibility.fontSize,
+      'flex',
+      'flex-col',
+      'min-h-screen',
+      'bg-gray-100',
+    ]"
+  >
+    <TopNavBar />
+    <main class="flex-1">
       <router-view />
     </main>
   </div>
 </template>
 
 <style scoped>
-#nav {
-  padding: 30px;
-  text-align: center;
-}
-#nav a {
-  font-weight: bold;
-  color: #2c4e50;
-  margin: 0 10px;
-}
-#nav a.router-link-exact-active {
-  color: #42b983;
+.app {
+  min-height: 100vh;
+  background: #f9fafb;
 }
 
-.nav-right {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+/* Font Size Classes */
+.small {
+  font-size: 16px;
+}
+.medium {
+  font-size: 19px;
+}
+.large {
+  font-size: 25px;
+}
+
+/* Theme Classes */
+.light {
+  background-color: white;
+  color: black;
+}
+
+.dark {
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+.dark a {
+  color: #90caf9;
+}
+
+.light a {
+  color: #1976d2;
+}
+
+.nav-content {
+  background-color: inherit;
+  color: inherit;
 }
 
 .logout-button {
-  display: flex;
-  background-color: #dc3545;
-  border: none;
-  color: #eeeeee;
-  font-weight: bold;
+  background-color: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
-}
-
-main {
-  padding: 1rem;
 }
 </style>

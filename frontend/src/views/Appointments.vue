@@ -1,32 +1,41 @@
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
+import { useRouter } from 'vue-router';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 
 const scheduleStore = useScheduleStore();
+const router = useRouter();
+const toastMessage = ref('');
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
 });
 
-const appointments = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'appointment'));
-
-function editAppointment(item) {
-  console.log('Edit appointment button:', item);
-}
+const appointments = computed(() =>
+  scheduleStore.schedule.items.filter((item) => item.type === 'appointment' || item.type === 'event'),
+);
 
 function cancelAppointment(item) {
-  console.log('Cancel appointment button:', item);
+  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((i) => i.id !== item.id);
+  showToast(`Cancelled: "${item.name}"`);
 }
 
-function addAppointment() {
-  console.log('Add new appointment button');
+function goToeventsPage() {
+  router.push('/events');
+}
+
+function showToast(message) {
+  toastMessage.value = message;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
 }
 </script>
 
 <template>
   <div class="appointments">
-    <h1>Your Appointments</h1>
+    <h1>Your Appointments and Events</h1>
 
     <div v-if="scheduleStore.schedule.loading" class="loading">Loading appointments...</div>
 
@@ -44,15 +53,16 @@ function addAppointment() {
         :hide-type="true"
         :compact-layout="true"
       >
-        <button class="edit-button" @click="editAppointment(item)">Edit</button>
         <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
       </ScheduleRowItem>
     </div>
 
     <div class="action-bar">
-      <button class="add-button" @click="addAppointment">Add Appointment</button>
+      <button class="add-button" @click="goToeventsPage">Explore Events</button>
     </div>
   </div>
+
+  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 </template>
 
 <style scoped>
@@ -92,10 +102,6 @@ h1 {
   margin: 0 auto;
 }
 
-.edit-button {
-  background-color: #6c5ce7;
-}
-
 .cancel-button {
   background-color: #d63031;
 }
@@ -111,5 +117,43 @@ h1 {
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>

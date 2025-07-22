@@ -2,26 +2,32 @@ repos:
   # ---------- Python ----------
   - repo: https://github.com/psf/black
     rev: 24.4.2
-    hooks: [ { id: black } ]
+    hooks:
+      - id: black
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.4
-    hooks: [ { id: ruff } ]          # lint + isort replacement
+    hooks:
+      - id: ruff
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
-    hooks: [ { id: mypy } ]          # type-checks backend
-
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
+        
   # ---------- JavaScript / Vue ----------
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.56.0                      # mirrors the latest ESLint 8.x
+    rev: v8.56.0
     hooks:
       - id: eslint
         files: "\\.(js|vue)$"
-        args: [ "--fix" ]            # auto-fixes where possible
+        args: [ "--fix" ]
+        language_version: 20.12.2  #  Pin Node.js version
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
     hooks:
       - id: prettier
         files: "\\.(js|vue|json|css|md)$"
+        language_version: 20.12.2  #  Pin Node.js version
