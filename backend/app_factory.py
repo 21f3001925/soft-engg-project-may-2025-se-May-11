@@ -20,10 +20,15 @@ from extensions import db, socketio, mail
 load_dotenv()
 
 
-def create_app():
+def create_app(config_class=None):
     """Application factory pattern"""
     app = Flask(__name__)
-    app.config.from_object(Config)
+
+    # Use provided config class or default to Config
+    if config_class is None:
+        config_class = Config
+
+    app.config.from_object(config_class)
 
     # Initialize extensions
     db.init_app(app)
