@@ -4,7 +4,7 @@ import bcrypt
 from app_factory import create_app
 from extensions import db
 from test_config import TestConfig
-from models import User, Role, Medication
+from models import User, Role, Medication, ServiceProvider
 
 
 @pytest.fixture(scope="session")
@@ -73,6 +73,25 @@ def caregiver_user():
     db.session.commit()
     return user
 
+@pytest.fixture
+def provider_user():
+    role = Role(name="service_provider", description="service_provider role")
+    db.session.add(role)
+    db.session.flush()
+
+    hashed_pw = bcrypt.hashpw("TestPassword123!".encode(), bcrypt.gensalt()).decode()
+    user = User(
+        username="test_provider",
+        email="test_provider@test.com",
+        password=hashed_pw,
+        phone_number="+1234567890",
+        name="Test Provider",
+    )
+    user.roles.append(role)
+    db.session.add(user)
+    db.session.commit()
+    return user
+
 
 @pytest.fixture
 def auth_headers(client, senior_user):
@@ -80,6 +99,7 @@ def auth_headers(client, senior_user):
         "/api/v1/auth/login",
         json={"username": senior_user.username, "password": "TestPassword123!"},
     )
+    assert response.status_code == 200
     token = response.json["access_token"]
     return {"Authorization": f"Bearer {token}"}
 

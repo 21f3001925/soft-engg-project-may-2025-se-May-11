@@ -38,6 +38,24 @@ class TestMedicationModel:
         assert saved_medication.dosage == expected_dosage
         assert saved_medication.isTaken is False
         assert saved_medication.senior_id == senior_user.user_id
+    
+    def test_create_medication_api(self, client, auth_headers, senior_user):
+        print("Roles for test user:", [role.name for role in senior_user.roles])
+        print("Auth headers being sent:", auth_headers)
+        response = client.post(
+            "/api/v1/medications",
+            headers=auth_headers,
+            json={
+                "name": "Aspirin",
+                "dosage": "10mg",
+                "frequency": "Daily",
+                "start_date": "2024-01-01",
+                "end_date": "2024-01-10"
+            }
+        )
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data["name"] == "Aspirin"
 
     def test_applies_default_values_when_not_specified(self, senior_user):
         vitamin_d_medication = Medication(
