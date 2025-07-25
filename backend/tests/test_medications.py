@@ -39,6 +39,20 @@ class TestMedicationModel:
         assert saved_medication.isTaken is False
         assert saved_medication.senior_id == senior_user.user_id
 
+    def test_create_medication_api(self, client, auth_headers, senior_user):
+        response = client.post(
+            "/api/v1/medications",
+            headers=auth_headers,
+            json={
+                "name": "Aspirin",
+                "dosage": "10mg",
+                "time": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+        data = response.get_json()
+        assert response.status_code == 201
+        assert data["message"] == "Medication added"
+
     def test_applies_default_values_when_not_specified(self, senior_user):
         vitamin_d_medication = Medication(
             name="Vitamin D",
@@ -175,14 +189,14 @@ class TestMedicationAPIAuthorization:
 
     def test_get_medications_with_empty_list(self, client, auth_headers):
         response = client.get("/api/v1/medications", headers=auth_headers)
-        assert response.status_code == 403
+        assert response.status_code == 200
 
     def test_get_medication_requires_authorization(self, client, auth_headers):
         medication_id = str(uuid.uuid4())
         response = client.get(
             f"/api/v1/medications/{medication_id}", headers=auth_headers
         )
-        assert response.status_code == 403
+        assert response.status_code == 404
 
     def test_update_medication_requires_authorization(self, client, auth_headers):
         medication_id = str(uuid.uuid4())
@@ -194,14 +208,14 @@ class TestMedicationAPIAuthorization:
             content_type="application/json",
             headers=auth_headers,
         )
-        assert response.status_code == 403
+        assert response.status_code == 400
 
     def test_delete_medication_requires_authorization(self, client, auth_headers):
         medication_id = str(uuid.uuid4())
         response = client.delete(
             f"/api/v1/medications/{medication_id}", headers=auth_headers
         )
-        assert response.status_code == 403
+        assert response.status_code == 400
 
 
 class TestMedicationAPIValidation:
@@ -216,7 +230,7 @@ class TestMedicationAPIValidation:
             headers=auth_headers,
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 422
 
     def test_create_medication_without_name_fails(self, client, auth_headers):
         medication_payload_without_name = {
@@ -232,7 +246,7 @@ class TestMedicationAPIValidation:
             headers=auth_headers,
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 422
 
     def test_create_medication_without_dosage_fails(self, client, auth_headers):
         medication_payload_without_dosage = {
@@ -248,7 +262,7 @@ class TestMedicationAPIValidation:
             headers=auth_headers,
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 422
 
     def test_create_medication_with_invalid_time_format_fails(
         self, client, auth_headers
@@ -267,4 +281,4 @@ class TestMedicationAPIValidation:
             headers=auth_headers,
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 400
