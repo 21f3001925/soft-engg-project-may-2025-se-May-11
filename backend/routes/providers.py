@@ -36,7 +36,7 @@ class ServiceProviderList(MethodView):
         return ServiceProvider.query.all()
 
     @jwt_required()
-    @roles_accepted("service_provider")
+    @roles_accepted("service_provider", "senior_citizen")
     @providers_bp.doc(
         summary="To create a new service provider, this route can be used."
     )

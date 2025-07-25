@@ -1,4 +1,6 @@
 import uuid
+import pytest
+from flask_jwt_extended import create_access_token
 
 from models import User, db, ServiceProvider
 
@@ -82,3 +84,68 @@ class TestProvidersAPIAuthentication:
     def test_get_providers_requires_authentication(self, client):
         response = client.get("/api/v1/providers")
         assert response.status_code == 401
+
+class TestProvidersAPI:
+
+    def test_create_service_provider_with_senior_citizen_api(self, client, auth_headers):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth_headers,
+            json={
+                "name": "Dummy Provider",
+                "contact_email": "dummymail@mail.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        data = response.get_json()
+        assert response.status_code == 201
+        #assert data["message"] == "Provider added"
+
+    def test_create_service_provider_with_caregiver_api(self, client, auth2_headers):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth2_headers,
+            json={
+                "name": "Dummy Provider",
+                "contact_email": "dummymail@mail.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        data = response.get_json()
+        assert response.status_code == 403
+        #assert data["message"] == "Provider added"
+    
+    def test_create_service_provider_with_provider_api(self, client, auth3_headers):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth3_headers,
+            json={
+                "name": "Dummy Provider",
+                "contact_email": "dummymail@mail.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        data = response.get_json()
+        assert response.status_code == 201
+        #assert data["message"] == "Provider added"
+
+@pytest.fixture
+def auth2_headers(client, caregiver_user):
+    with client.application.app_context():
+        access_token = create_access_token(
+            identity=caregiver_user.user_id,
+            additional_claims={"roles": [role.name for role in caregiver_user.roles]},
+        )
+    return {"Authorization": f"Bearer {access_token}"}
+
+@pytest.fixture
+def auth3_headers(client, provider_user):
+    with client.application.app_context():
+        access_token = create_access_token(
+            identity=provider_user.user_id,
+            additional_claims={"roles": [role.name for role in provider_user.roles]},
+        )
+    return {"Authorization": f"Bearer {access_token}"}
