@@ -39,7 +39,15 @@ class TestMedicationModel:
         assert saved_medication.isTaken is False
         assert saved_medication.senior_id == senior_user.user_id
 
-    def test_create_medication_api(self, client, auth_headers, senior_user):
+    def test_get_all_medication_api(self, client, auth_headers):
+        response = client.get(
+            "/api/v1/medications",
+            headers=auth_headers,
+        )
+        data = response.get_json()
+        assert response.status_code == 200
+
+    def test_create_medication_api(self, client, auth_headers):
         response = client.post(
             "/api/v1/medications",
             headers=auth_headers,

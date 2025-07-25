@@ -110,10 +110,24 @@ class TestProvidersAPI:
         assert response.status_code == 403
         #assert data["message"] == "Provider added"
     
-    def test_create_service_provider_with_provider_api(self, client, auth3_headers):
+    def test_create_service_provider_with_missing_values_api(self, client, auth3_headers):
         response = client.post(
             "/api/v1/providers",
             headers=auth3_headers,
+            json={
+                "name": "Dummy Provider",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        data = response.get_json()
+        assert response.status_code == 422
+        #assert data["message"] == "Provider added"
+
+    def test_create_service_provider_with_caregiver_api(self, client, auth2_headers):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth2_headers,
             json={
                 "name": "Dummy Provider",
                 "contact_email": "dummymail@mail.com",
@@ -122,7 +136,7 @@ class TestProvidersAPI:
             },
         )
         data = response.get_json()
-        assert response.status_code == 201
+        assert response.status_code == 403
         #assert data["message"] == "Provider added"
 
     def test_get_all_service_provider_info_api(self, client, auth_headers):
@@ -165,6 +179,22 @@ class TestProvidersAPI:
         )
         data = response.get_json()
         assert response.status_code == 200
+
+    def test_edit_service_provider_info_with_id_using_wrong_data_api(self, client, auth3_headers, sample_provider):
+        prod_id = sample_provider.service_provider_id
+        response = client.put(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+            json={
+                "name": "Updated Provider",
+                "contact_email": "updated@example.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Updated Services",
+                "address": "123 Main St"  # Extra field not expected
+            }
+        )
+        data = response.get_json()
+        assert response.status_code == 422
 
     def test_edit_service_provider_info_with_wrong_id_api(self, client, auth3_headers):
         prod_id = str(uuid.uuid4())
