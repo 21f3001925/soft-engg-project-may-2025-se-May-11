@@ -1,6 +1,4 @@
-from datetime import datetime, timezone, timedelta
 import uuid
-import json
 
 from models import User, db, ServiceProvider
 
@@ -24,15 +22,12 @@ class TestServiceProviderModel:
             name=expected_name,
             contact_email=expected_contact_email,
             phone_number=expected_phone_number,
-            services_offered=expected_services_offered
-
+            services_offered=expected_services_offered,
         )
         db.session.add(service_provider)
         db.session.commit()
 
-        saved_provider = ServiceProvider.query.filter_by(
-            name=expected_name
-        ).first()
+        saved_provider = ServiceProvider.query.filter_by(name=expected_name).first()
         assert saved_provider is not None
         assert saved_provider.name == expected_name
         assert saved_provider.contact_email == expected_contact_email
@@ -71,6 +66,7 @@ class TestServiceProviderModel:
         assert uuid.UUID(old_provider.service_provider_id)
         assert uuid.UUID(new_provider.service_provider_id)
 
+
 class TestUserRoleAssignment:
 
     def test_provider_user_has_correct_role(self, provider_user):
@@ -79,6 +75,7 @@ class TestUserRoleAssignment:
         assert found_user is not None
         assert len(found_user.roles) == 1
         assert found_user.roles[0].name == "service_provider"
+
 
 class TestProvidersAPIAuthentication:
 
