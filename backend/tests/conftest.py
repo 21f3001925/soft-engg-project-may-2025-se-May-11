@@ -4,7 +4,7 @@ import bcrypt
 from app_factory import create_app
 from extensions import db
 from test_config import TestConfig
-from models import User, Role, Medication
+from models import User, Role, Medication, ServiceProvider
 from flask_jwt_extended import create_access_token
 
 
@@ -92,6 +92,7 @@ def provider_user():
     user.roles.append(role)
     db.session.add(user)
     db.session.commit()
+    #provider_id = user.user_id
     return user
 
 
@@ -117,3 +118,16 @@ def sample_medication(senior_user):
     db.session.add(medication)
     db.session.commit()
     return medication
+
+
+@pytest.fixture
+def sample_provider():
+    new_provider = ServiceProvider(
+        name="Sample Provider",
+        contact_email="xyzmail.com",
+        phone_number="+1234567890",
+        services_offered="Pain relief",
+    )
+    db.session.add(new_provider)
+    db.session.commit()
+    return new_provider
