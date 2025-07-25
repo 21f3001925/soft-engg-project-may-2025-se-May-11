@@ -70,16 +70,19 @@ class TestUserRoleAssignment:
 
 class TestProvidersAPIAuthentication:
 
+    #Response code 401 for GET
     def test_get_providers_requires_authentication1(self, client):
         response = client.get("/api/v1/providers")
         assert response.status_code == 401
 
+    #Response code 200 for GET
     def test_get_providers_requires_authentication2(self, client, auth3_headers):
         response = client.get("/api/v1/providers", headers=auth3_headers)
         assert response.status_code == 200
 
 class TestProvidersAPI:
 
+    #Response code 201 for POST
     def test_create_service_provider_with_senior_citizen_api(self, client, auth_headers):
         response = client.post(
             "/api/v1/providers",
@@ -95,6 +98,7 @@ class TestProvidersAPI:
         assert response.status_code == 201
         #assert data["message"] == "Provider added"
 
+    #Response code 403 for POST
     def test_create_service_provider_with_caregiver_api(self, client, auth2_headers):
         response = client.post(
             "/api/v1/providers",
@@ -110,6 +114,7 @@ class TestProvidersAPI:
         assert response.status_code == 403
         #assert data["message"] == "Provider added"
     
+    #Response code 422 for POST
     def test_create_service_provider_with_missing_values_api(self, client, auth3_headers):
         response = client.post(
             "/api/v1/providers",
@@ -124,6 +129,7 @@ class TestProvidersAPI:
         assert response.status_code == 422
         #assert data["message"] == "Provider added"
 
+    #Response code 403 for POST
     def test_create_service_provider_with_caregiver_api(self, client, auth2_headers):
         response = client.post(
             "/api/v1/providers",
@@ -139,6 +145,7 @@ class TestProvidersAPI:
         assert response.status_code == 403
         #assert data["message"] == "Provider added"
 
+    #Response code 200 for GET
     def test_get_all_service_provider_info_api(self, client, auth_headers):
         response = client.get(
             "/api/v1/providers",
@@ -147,6 +154,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 200
 
+    #Response code 200 for GET
     def test_get_service_provider_info_with_correct_id_api(self, client, auth3_headers, sample_provider):
         prod_id = sample_provider.service_provider_id
         response = client.get(
@@ -165,6 +173,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 404
 
+    #Response code 200 for PUT
     def test_edit_service_provider_info_with_correct_id_api(self, client, auth3_headers, sample_provider):
         prod_id = sample_provider.service_provider_id
         response = client.put(
@@ -180,6 +189,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 200
 
+    #Response code 422 for PUT
     def test_edit_service_provider_info_with_id_using_wrong_data_api(self, client, auth3_headers, sample_provider):
         prod_id = sample_provider.service_provider_id
         response = client.put(
@@ -196,6 +206,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 422
 
+    #Response code 404 for PUT
     def test_edit_service_provider_info_with_wrong_id_api(self, client, auth3_headers):
         prod_id = str(uuid.uuid4())
         response = client.put(
@@ -211,6 +222,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 404
 
+    #Response code 204 for DELETE
     def test_delete_service_provider_info_with_correct_id_api(self, client, auth3_headers, sample_provider):
         prod_id = sample_provider.service_provider_id
         response = client.delete(
@@ -220,6 +232,7 @@ class TestProvidersAPI:
         #data = response.get_json()
         assert response.status_code == 204
 
+    #Response code 404 for DELETE
     def test_delete_service_provider_info_with_wrong_id_api(self, client, auth3_headers):
         prod_id = str(uuid.uuid4())
         response = client.delete(
@@ -229,6 +242,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 404
 
+    #Response code 200 for GET
     def test_get_all_service_info_with_correct_provider_id_api(self, client, auth3_headers, sample_provider):
         prod_id = sample_provider.service_provider_id
         response = client.get(
@@ -238,6 +252,7 @@ class TestProvidersAPI:
         data = response.get_json()
         assert response.status_code == 200
 
+    #Response code 404 for GET
     def test_get_all_service_info_with_wrong_provider_id_api(self, client, auth3_headers):
         prod_id = str(uuid.uuid4())
         response = client.get(
