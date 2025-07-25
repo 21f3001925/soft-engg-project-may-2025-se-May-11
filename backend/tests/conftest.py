@@ -4,7 +4,8 @@ import bcrypt
 from app_factory import create_app
 from extensions import db
 from test_config import TestConfig
-from models import User, Role, Medication, ServiceProvider
+from models import User, Role, Medication
+from flask_jwt_extended import create_access_token
 
 
 @pytest.fixture(scope="session")
@@ -73,6 +74,7 @@ def caregiver_user():
     db.session.commit()
     return user
 
+
 @pytest.fixture
 def provider_user():
     role = Role(name="service_provider", description="service_provider role")
@@ -95,13 +97,12 @@ def provider_user():
 
 @pytest.fixture
 def auth_headers(client, senior_user):
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"username": senior_user.username, "password": "TestPassword123!"},
-    )
-    assert response.status_code == 200
-    token = response.json["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    with client.application.app_context():
+        access_token = create_access_token(
+            identity=senior_user.user_id,
+            additional_claims={"roles": [role.name for role in senior_user.roles]},
+        )
+    return {"Authorization": f"Bearer {access_token}"}
 
 
 @pytest.fixture
