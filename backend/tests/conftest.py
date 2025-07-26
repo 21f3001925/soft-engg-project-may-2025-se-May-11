@@ -4,7 +4,7 @@ import bcrypt
 from app_factory import create_app
 from extensions import db
 from test_config import TestConfig
-from models import User, Role, Medication, ServiceProvider
+from models import User, Role, Medication, ServiceProvider, EmergencyContact
 from flask_jwt_extended import create_access_token
 
 
@@ -118,6 +118,19 @@ def sample_medication(senior_user):
     db.session.add(medication)
     db.session.commit()
     return medication
+
+@pytest.fixture
+def sample_emergency_contact(senior_user):
+    contact = EmergencyContact(
+        name="Sample Contact",
+        relation="Friend",
+        phone="+1234567890",
+        email="contact@mail.com",
+        senior_id=senior_user.user_id,
+    )
+    db.session.add(contact)
+    db.session.commit()
+    return contact
 
 
 @pytest.fixture
