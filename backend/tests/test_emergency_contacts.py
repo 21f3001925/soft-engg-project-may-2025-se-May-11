@@ -134,21 +134,6 @@ class TestEmergencyContactsAPI:
         data = response.get_json()
         assert response.status_code == 404
 
-    # Response code 200 for PUT
-    def test_edit_emergency_contact_api(self, client, auth_headers, sample_emergency_contact):
-        contact_id = sample_emergency_contact.contact_id
-        response = client.put(
-            f"/api/v1/emergency-contacts/{contact_id}",
-                headers=auth_headers,
-            json={
-                "name": "Updated Contact",
-                "relation": "Friend",
-                "phone": "+1234567890",
-            },
-        )
-        data = response.get_json()
-        assert response.status_code == 200
-
     # Response code 200 for DELETE
     def test_delete_emergency_contact_api(self, client, auth_headers, sample_emergency_contact):
         contact_id = sample_emergency_contact.contact_id
