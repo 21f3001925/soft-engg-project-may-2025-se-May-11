@@ -92,7 +92,7 @@ def provider_user():
     user.roles.append(role)
     db.session.add(user)
     db.session.commit()
-    #provider_id = user.user_id
+    # provider_id = user.user_id
     return user
 
 
@@ -118,6 +118,7 @@ def sample_medication(senior_user):
     db.session.add(medication)
     db.session.commit()
     return medication
+
 
 @pytest.fixture
 def sample_emergency_contact(senior_user):

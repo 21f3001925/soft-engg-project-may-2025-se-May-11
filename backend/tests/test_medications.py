@@ -39,16 +39,16 @@ class TestMedicationModel:
         assert saved_medication.isTaken is False
         assert saved_medication.senior_id == senior_user.user_id
 
-    #Response code 200 for GET
+    # Response code 200 for GET
     def test_get_all_medication_api(self, client, auth_headers):
         response = client.get(
             "/api/v1/medications",
             headers=auth_headers,
         )
-        data = response.get_json()
+        # data = response.get_json()
         assert response.status_code == 200
 
-    #Response code 201 for POST
+    # Response code 201 for POST
     def test_create_medication_api(self, client, auth_headers):
         response = client.post(
             "/api/v1/medications",
@@ -63,7 +63,7 @@ class TestMedicationModel:
         assert response.status_code == 201
         assert data["message"] == "Medication added"
 
-    #Response code 422 for POST
+    # Response code 422 for POST
     def test_create_medication_with_extra_field_api(self, client, auth_headers):
         response = client.post(
             "/api/v1/medications",
@@ -75,21 +75,25 @@ class TestMedicationModel:
                 "extra_field": "Wrong field for test",
             },
         )
-        data = response.get_json()
+        # data = response.get_json()
         assert response.status_code == 422
 
-    #Response code 200 for GET
-    def test_get_medication_with_medication_id_api(self, client, auth_headers, sample_medication):
+    # Response code 200 for GET
+    def test_get_medication_with_medication_id_api(
+        self, client, auth_headers, sample_medication
+    ):
         medication_id = sample_medication.medication_id
         response = client.get(
             f"/api/v1/medications/{medication_id}",
             headers=auth_headers,
         )
-        data = response.get_json()
+        # data = response.get_json()
         assert response.status_code == 200
 
-    #Response code 200 for PUT
-    def test_update_medication_with_medication_id_api(self, client, auth_headers, sample_medication):
+    # Response code 200 for PUT
+    def test_update_medication_with_medication_id_api(
+        self, client, auth_headers, sample_medication
+    ):
         medication_id = sample_medication.medication_id
         response = client.put(
             f"/api/v1/medications/{medication_id}",
@@ -101,11 +105,13 @@ class TestMedicationModel:
                 "isTaken": True,
             },
         )
-        data = response.get_json()
+        # data = response.get_json()
         assert response.status_code == 200
 
-    #Response code 422 for PUT
-    def test_update_medication_with_medication_id_using_wrong_fields_api(self, client, auth_headers, sample_medication):
+    # Response code 422 for PUT
+    def test_update_medication_with_medication_id_using_wrong_fields_api(
+        self, client, auth_headers, sample_medication
+    ):
         medication_id = sample_medication.medication_id
         response = client.put(
             f"/api/v1/medications/{medication_id}",
@@ -118,11 +124,13 @@ class TestMedicationModel:
                 "extra_field": "Wrong field for test",
             },
         )
-        data = response.get_json()
+        # data = response.get_json()
         assert response.status_code == 422
 
-    #Response code 200 for DELETE
-    def test_delete_medication_with_medication_id_api(self, client, auth_headers, sample_medication):
+    # Response code 200 for DELETE
+    def test_delete_medication_with_medication_id_api(
+        self, client, auth_headers, sample_medication
+    ):
         medication_id = sample_medication.medication_id
         response = client.delete(
             f"/api/v1/medications/{medication_id}",
@@ -266,7 +274,7 @@ class TestMedicationAPIAuthentication:
 
 class TestMedicationAPIAuthorization:
 
-    #Response code 200 for GET
+    # Response code 200 for GET
     def test_get_medications_with_empty_list(self, client, auth_headers):
         response = client.get("/api/v1/medications", headers=auth_headers)
         assert response.status_code == 200
@@ -300,7 +308,7 @@ class TestMedicationAPIAuthorization:
 
 class TestMedicationAPIValidation:
 
-    #Response code 422 for POST
+    # Response code 422 for POST
     def test_create_medication_with_empty_payload_fails(self, client, auth_headers):
         empty_medication_payload = {}
 
@@ -312,8 +320,8 @@ class TestMedicationAPIValidation:
         )
 
         assert response.status_code == 422
-  
-    #Response code 422 for POST
+
+    # Response code 422 for POST
     def test_create_medication_without_name_fails(self, client, auth_headers):
         medication_payload_without_name = {
             "dosage": "10mg",
@@ -330,7 +338,7 @@ class TestMedicationAPIValidation:
 
         assert response.status_code == 422
 
-    #Response code 422 for POST
+    # Response code 422 for POST
     def test_create_medication_without_dosage_fails(self, client, auth_headers):
         medication_payload_without_dosage = {
             "name": "Aspirin",
