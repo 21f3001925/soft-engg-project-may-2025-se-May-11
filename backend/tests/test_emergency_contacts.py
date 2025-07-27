@@ -117,7 +117,9 @@ class TestEmergencyContactsAPI:
     def test_get_emergency_contact_with_id_api(
         self, client, auth_headers, sample_emergency_contact
     ):
-        contact_id = sample_emergency_contact.contact_id
+        contact_id = (
+            sample_emergency_contact  # sample_emergency_contact is now a string
+        )
         response = client.get(
             f"/api/v1/emergency-contacts/{contact_id}",
             headers=auth_headers,
@@ -139,7 +141,9 @@ class TestEmergencyContactsAPI:
     def test_delete_emergency_contact_api(
         self, client, auth_headers, sample_emergency_contact
     ):
-        contact_id = sample_emergency_contact.contact_id
+        contact_id = (
+            sample_emergency_contact  # sample_emergency_contact is now a string
+        )
         response = client.delete(
             f"/api/v1/emergency-contacts/{contact_id}",
             headers=auth_headers,
@@ -156,6 +160,48 @@ class TestEmergencyContactsAPI:
         )
         # data = response.get_json()
         assert response.status_code == 400
+
+    # Response code 200 for PUT (update)
+    def test_update_emergency_contact_api(
+        self, client, auth_headers, sample_emergency_contact
+    ):
+        contact_id = (
+            sample_emergency_contact  # sample_emergency_contact is now a string
+        )
+        updated_data = {
+            "name": "Updated Name",
+            "relation": "Updated Relation",
+            "phone": "+1987654321",
+        }
+        response = client.put(
+            f"/api/v1/emergency-contacts/{contact_id}",
+            headers=auth_headers,
+            json=updated_data,
+        )
+        assert response.status_code == 200
+
+        updated_contact = EmergencyContact.query.filter_by(
+            contact_id=contact_id
+        ).first()
+        assert updated_contact is not None
+        assert updated_contact.name == "Updated Name"
+        assert updated_contact.relation == "Updated Relation"
+        assert updated_contact.phone == "+1987654321"
+
+    # Response code 422 for PUT (update) with invalid data
+    def test_update_emergency_contact_with_invalid_data_api(
+        self, client, auth_headers, sample_emergency_contact
+    ):
+        contact_id = sample_emergency_contact
+        invalid_data = {
+            "phone": 12345,
+        }
+        response = client.put(
+            f"/api/v1/emergency-contacts/{contact_id}",
+            headers=auth_headers,
+            json=invalid_data,
+        )
+        assert response.status_code == 422
 
 
 # Fixtures for Authentication Headers
