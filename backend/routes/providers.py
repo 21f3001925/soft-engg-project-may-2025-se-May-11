@@ -27,7 +27,7 @@ providers_bp = Blueprint(
 class ServiceProviderList(MethodView):
 
     @jwt_required()
-    @roles_accepted("service_provider")
+    @roles_accepted("service_provider", "senior_citizen")
     @providers_bp.doc(
         summary="This route will list all the service providers and basic information about them"
     )
@@ -36,7 +36,7 @@ class ServiceProviderList(MethodView):
         return ServiceProvider.query.all()
 
     @jwt_required()
-    @roles_accepted("service_provider")
+    @roles_accepted("service_provider", "senior_citizen")
     @providers_bp.doc(
         summary="To create a new service provider, this route can be used."
     )
