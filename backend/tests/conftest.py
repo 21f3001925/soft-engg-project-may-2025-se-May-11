@@ -100,6 +100,7 @@ def provider_user():
     user.roles.append(role)
     db.session.add(user)
     db.session.commit()
+    # provider_id = user.user_id
     return user
 
 

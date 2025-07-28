@@ -136,7 +136,13 @@ class EmergencyContactByIdResource(MethodView):
             if "phone" in data:
                 contact.phone = data["phone"]
             session.commit()
-            return contact
+            # Re-query to get a fresh, attached instance
+            updated_contact = (
+                session.query(EmergencyContact)
+                .filter_by(contact_id=contact_id, senior_id=senior_id)
+                .first()
+            )
+            return updated_contact
         except Exception as e:
             session.rollback()
             abort(400, message=str(e))

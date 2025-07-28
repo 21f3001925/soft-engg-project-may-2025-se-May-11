@@ -140,6 +140,7 @@ class Appointment(db.Model):
     title = db.Column(db.String)
     date_time = db.Column(db.DateTime)
     location = db.Column(db.String)
+    reminder_time = db.Column(db.DateTime, nullable=True)
     senior_id = db.Column(
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )

@@ -3,7 +3,6 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
 from models import Appointment, db, User
-from datetime import datetime
 import uuid
 from tasks import send_reminder_notification
 from celery_app import celery_app
@@ -60,15 +59,11 @@ class AppointmentListResource(MethodView):
             senior_user = User.query.get(senior_id)
 
             appointment = Appointment(
-                appointment_id=uuid.uuid4(),
+                appointment_id=str(uuid.uuid4()),
                 title=data["title"],
-                date_time=datetime.fromisoformat(data["date_time"]),
+                date_time=data["date_time"],
                 location=data["location"],
-                reminder_time=(
-                    datetime.fromisoformat(data["reminder_time"])
-                    if data.get("reminder_time")
-                    else None
-                ),
+                reminder_time=data.get("reminder_time"),
                 senior_id=senior_id,
             )
 
@@ -106,7 +101,7 @@ class AppointmentDetailResource(MethodView):
         summary="To get information about a specific appointment, user can use this endpoint with appointment_id."
     )
     def get(self, appointment_id):
-        appt = Appointment.query.filter_by(appointment_id=appointment_id).first()
+        appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
         return appt
@@ -119,7 +114,7 @@ class AppointmentDetailResource(MethodView):
         summary="When details of an appointment change, user can update it using appointment_id."
     )
     def put(self, data, appointment_id):
-        appt = Appointment.query.filter_by(appointment_id=appointment_id).first()
+        appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
 
@@ -127,13 +122,13 @@ class AppointmentDetailResource(MethodView):
             if field in data:
                 setattr(appt, field, data[field])
         if "date_time" in data:
-            appt.date_time = datetime.fromisoformat(data["date_time"])
+            appt.date_time = data["date_time"]
 
         if appt.reminder_task_id:
             celery_app.control.revoke(appt.reminder_task_id)
 
         if "reminder_time" in data:
-            appt.reminder_time = datetime.fromisoformat(data["reminder_time"])
+            appt.reminder_time = data["reminder_time"]
             senior_user = User.query.get(appt.senior_id)
             task = send_reminder_notification.apply_async(
                 args=[
@@ -157,7 +152,7 @@ class AppointmentDetailResource(MethodView):
         summary="User can delete a specific appointment by ID whenever it is not needed."
     )
     def delete(self, appointment_id):
-        appt = Appointment.query.filter_by(appointment_id=appointment_id).first()
+        appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
 
