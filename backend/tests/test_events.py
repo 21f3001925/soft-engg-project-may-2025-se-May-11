@@ -69,7 +69,7 @@ class TestEventAPI:
             json={"location": "Updated Hall"},
             headers=provider_auth_headers,
         )
-        assert response.status_code == 422
+        assert response.status_code == 200
         data = response.get_json()
         assert data["location"] == "Updated Hall"
 
