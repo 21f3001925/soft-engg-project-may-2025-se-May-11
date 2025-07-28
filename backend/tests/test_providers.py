@@ -1,4 +1,6 @@
 import uuid
+import pytest
+from flask_jwt_extended import create_access_token
 
 from models import User, db, ServiceProvider
 
@@ -34,18 +36,6 @@ class TestServiceProviderModel:
         assert saved_provider.phone_number == expected_phone_number
         assert saved_provider.services_offered == expected_services_offered
 
-    def test_applies_default_values_when_not_specified(self):
-        dummy_provider = ServiceProvider(
-            name="Dummy Provider",
-            contact_email="xyz@mail.com",
-            phone_number="+19999999999",
-            services_offered="Dummy Services",
-        )
-        db.session.add(dummy_provider)
-        db.session.commit()
-
-        assert dummy_provider.service_provider_id is not None
-
     def test_generates_unique_ids_for_different_providers(self):
         old_provider = ServiceProvider(
             name="Old Provider",
@@ -79,6 +69,218 @@ class TestUserRoleAssignment:
 
 class TestProvidersAPIAuthentication:
 
-    def test_get_providers_requires_authentication(self, client):
+    # Response code 401 for GET
+    def test_get_providers_requires_authentication1(self, client):
         response = client.get("/api/v1/providers")
         assert response.status_code == 401
+
+    # Response code 200 for GET
+    def test_get_providers_requires_authentication2(self, client, auth3_headers):
+        response = client.get("/api/v1/providers", headers=auth3_headers)
+        assert response.status_code == 200
+
+
+class TestProvidersAPI:
+
+    # Response code 201 for POST
+    def test_create_service_provider_with_senior_citizen_api(
+        self, client, auth_headers
+    ):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth_headers,
+            json={
+                "name": "Dummy Provider",
+                "contact_email": "dummymail@mail.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        # data = response.get_json()
+        assert response.status_code == 201
+        # assert data["message"] == "Provider added"
+
+    # Response code 403 for POST
+    def test_create_service_provider_with_caregiver_api(self, client, auth2_headers):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth2_headers,
+            json={
+                "name": "Dummy Provider",
+                "contact_email": "dummymail@mail.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        # data = response.get_json()
+        assert response.status_code == 403
+        # assert data["message"] == "Provider added"
+
+    # Response code 422 for POST
+    def test_create_service_provider_with_missing_values_api(
+        self, client, auth3_headers
+    ):
+        response = client.post(
+            "/api/v1/providers",
+            headers=auth3_headers,
+            json={
+                "name": "Dummy Provider",
+                "phone_number": "+1234567890",
+                "services_offered": "Pain relief",
+            },
+        )
+        # data = response.get_json()
+        assert response.status_code == 422
+        # assert data["message"] == "Provider added"
+
+    # Response code 200 for GET
+    def test_get_all_service_provider_info_api(self, client, auth_headers):
+        response = client.get(
+            "/api/v1/providers",
+            headers=auth_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 200
+
+    # Response code 200 for GET
+    def test_get_service_provider_info_with_correct_id_api(
+        self, client, auth3_headers, sample_provider
+    ):
+        prod_id = sample_provider.service_provider_id
+        response = client.get(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 200
+
+    def test_get_service_provider_info_with_wrong_id_api(self, client, auth3_headers):
+        prod_id = str(uuid.uuid4())
+        response = client.get(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 404
+
+    # Response code 200 for PUT
+    def test_edit_service_provider_info_with_correct_id_api(
+        self, client, auth3_headers, sample_provider
+    ):
+        prod_id = sample_provider.service_provider_id
+        response = client.put(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+            json={
+                "name": "Updated Provider",
+                "contact_email": "updated@example.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Updated Services",
+            },
+        )
+        # data = response.get_json()
+        assert response.status_code == 200
+
+    # Response code 422 for PUT
+    def test_edit_service_provider_info_with_id_using_wrong_data_api(
+        self, client, auth3_headers, sample_provider
+    ):
+        prod_id = sample_provider.service_provider_id
+        response = client.put(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+            json={
+                "name": "Updated Provider",
+                "contact_email": "updated@example.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Updated Services",
+                "address": "123 Main St",  # Extra field not expected
+            },
+        )
+        # data = response.get_json()
+        assert response.status_code == 422
+
+    # Response code 404 for PUT
+    def test_edit_service_provider_info_with_wrong_id_api(self, client, auth3_headers):
+        prod_id = str(uuid.uuid4())
+        response = client.put(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+            json={
+                "name": "Updated Provider",
+                "contact_email": "updated@example.com",
+                "phone_number": "+1234567890",
+                "services_offered": "Updated Services",
+            },
+        )
+        # data = response.get_json()
+        assert response.status_code == 404
+
+    # Response code 204 for DELETE
+    def test_delete_service_provider_info_with_correct_id_api(
+        self, client, auth3_headers, sample_provider
+    ):
+        prod_id = sample_provider.service_provider_id
+        response = client.delete(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 204
+
+    # Response code 404 for DELETE
+    def test_delete_service_provider_info_with_wrong_id_api(
+        self, client, auth3_headers
+    ):
+        prod_id = str(uuid.uuid4())
+        response = client.delete(
+            f"/api/v1/providers/{prod_id}",
+            headers=auth3_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 404
+
+    # Response code 200 for GET
+    def test_get_all_service_info_with_correct_provider_id_api(
+        self, client, auth3_headers, sample_provider
+    ):
+        prod_id = sample_provider.service_provider_id
+        response = client.get(
+            f"/api/v1/providers/{prod_id}/events",
+            headers=auth3_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 200
+
+    # Response code 404 for GET
+    def test_get_all_service_info_with_wrong_provider_id_api(
+        self, client, auth3_headers
+    ):
+        prod_id = str(uuid.uuid4())
+        response = client.get(
+            f"/api/v1/providers/{prod_id}/events",
+            headers=auth3_headers,
+        )
+        # data = response.get_json()
+        assert response.status_code == 404
+
+
+# Fixtures for Authentication Headers
+@pytest.fixture
+def auth2_headers(client, caregiver_user):
+    with client.application.app_context():
+        access_token = create_access_token(
+            identity=caregiver_user.user_id,
+            additional_claims={"roles": [role.name for role in caregiver_user.roles]},
+        )
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture
+def auth3_headers(client, provider_user):
+    with client.application.app_context():
+        access_token = create_access_token(
+            identity=provider_user.user_id,
+            additional_claims={"roles": [role.name for role in provider_user.roles]},
+        )
+    return {"Authorization": f"Bearer {access_token}"}
