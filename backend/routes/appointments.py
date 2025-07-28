@@ -101,9 +101,13 @@ class AppointmentDetailResource(MethodView):
         summary="To get information about a specific appointment, user can use this endpoint with appointment_id."
     )
     def get(self, appointment_id):
+        user_id = get_jwt_identity()
+        senior_id = AppointmentUtils.get_senior_id(user_id)
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
+        if appt.senior_id != senior_id:
+            abort(403, message="You are not authorized to view this appointment.")
         return appt
 
     @jwt_required()
@@ -114,9 +118,13 @@ class AppointmentDetailResource(MethodView):
         summary="When details of an appointment change, user can update it using appointment_id."
     )
     def put(self, data, appointment_id):
+        user_id = get_jwt_identity()
+        senior_id = AppointmentUtils.get_senior_id(user_id)
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
+        if appt.senior_id != senior_id:
+            abort(403, message="You are not authorized to modify this appointment.")
 
         for field in ["title", "location"]:
             if field in data:
@@ -152,9 +160,13 @@ class AppointmentDetailResource(MethodView):
         summary="User can delete a specific appointment by ID whenever it is not needed."
     )
     def delete(self, appointment_id):
+        user_id = get_jwt_identity()
+        senior_id = AppointmentUtils.get_senior_id(user_id)
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
+        if appt.senior_id != senior_id:
+            abort(403, message="You are not authorized to delete this appointment.")
 
         if appt.reminder_task_id:
             celery_app.control.revoke(appt.reminder_task_id)
