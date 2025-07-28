@@ -15,4 +15,4 @@ class ChangePasswordSchema(Schema):
 
 
 class AvatarUploadSchema(Schema):
-    file = fields.Raw(type="file", required=True)
+    file = fields.Raw(type="file", required=False)
