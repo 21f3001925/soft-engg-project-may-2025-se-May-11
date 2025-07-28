@@ -2,7 +2,7 @@ from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
-from models import Appointment, db, User
+from models import Appointment, db, User, CaregiverAssignment
 import uuid
 from tasks import send_reminder_notification
 from celery_app import celery_app
@@ -26,9 +26,15 @@ class AppointmentUtils:
         user = User.query.get(user_id)
         if user.roles[0].name == "senior_citizen":
             return user.user_id
-        elif user.senior_citizen:
-            return user.senior_citizen.user_id
-        abort(404, message="Senior citizen not found")
+        elif user.caregiver:
+            assignments = CaregiverAssignment.query.filter_by(
+                caregiver_id=user.user_id
+            ).all()
+            if assignments:
+                return assignments[0].senior_id
+            else:
+                abort(404, message="Caregiver is not assigned to any senior citizen.")
+        abort(404, message="Senior citizen not found.")
 
 
 @appointments_blp.route("")
