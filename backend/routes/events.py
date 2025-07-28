@@ -70,7 +70,7 @@ class EventResource(MethodView):
     @events_bp.doc(
         summary="To update event details, service provider can use this route with the event id."
     )
-    @events_bp.arguments(EventSchema)
+    @events_bp.arguments(EventSchema(partial=True))
     @events_bp.response(200, EventSchema)
     def put(self, update_data, event_id):
         event = Event.query.get_or_404(event_id)
