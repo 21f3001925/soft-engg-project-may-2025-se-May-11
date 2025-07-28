@@ -1,4 +1,3 @@
-import pytest
 from datetime import datetime, timezone, timedelta
 import uuid
 import json
@@ -244,7 +243,6 @@ class TestAppointmentAPIAuthorization:
         appt = Appointment.query.get(str(sample_appointment.appointment_id))
         assert appt is not None
 
-    @pytest.mark.skip(reason="Caregiver functionality needs proper role setup")
     def test_caregiver_can_manage_linked_senior_appointments(
         self, client, caregiver_auth_headers
     ):
