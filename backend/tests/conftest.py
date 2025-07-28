@@ -5,7 +5,15 @@ import bcrypt
 from app_factory import create_app
 from extensions import db
 from test_config import TestConfig
-from models import Appointment, User, Role, Medication
+from models import (
+    Appointment,
+    User,
+    Role,
+    Medication,
+    SeniorCitizen,
+    Caregiver,
+    CaregiverAssignment,
+)
 from flask_jwt_extended import create_access_token
 
 
@@ -58,11 +66,15 @@ def senior_user():
     user.roles.append(role)
     db.session.add(user)
     db.session.commit()
+
+    senior_citizen = SeniorCitizen(user_id=user.user_id)
+    db.session.add(senior_citizen)
+    db.session.commit()
     return user
 
 
 @pytest.fixture
-def caregiver_user():
+def caregiver_user(senior_user):
     role = Role.query.filter_by(name="caregiver").first()
     if not role:
         role = Role(name="caregiver", description="caregiver role")
@@ -80,6 +92,18 @@ def caregiver_user():
     user.roles.append(role)
     db.session.add(user)
     db.session.commit()
+
+    caregiver = Caregiver(user_id=user.user_id)
+    db.session.add(caregiver)
+    db.session.commit()
+
+    # Assign the caregiver to the senior_user
+    assignment = CaregiverAssignment(
+        caregiver_id=caregiver.user_id, senior_id=senior_user.user_id
+    )
+    db.session.add(assignment)
+    db.session.commit()
+
     return user
 
 
