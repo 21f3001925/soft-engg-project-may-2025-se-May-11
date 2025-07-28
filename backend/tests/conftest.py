@@ -134,12 +134,11 @@ def sample_emergency_contact(senior_user):
         name="Sample Contact",
         relation="Friend",
         phone="+1234567890",
-        email="contact@mail.com",
         senior_id=senior_user.user_id,
     )
     db.session.add(contact)
     db.session.commit()
-    return contact
+    return contact.contact_id  # Return only the ID
 
 
 @pytest.fixture
