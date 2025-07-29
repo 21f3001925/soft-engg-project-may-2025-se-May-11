@@ -1,3 +1,6 @@
+from flask_smorest import abort
+
+
 class TestDatabaseConfiguration:
 
     def test_uses_in_memory_database(self, app):
@@ -72,12 +75,11 @@ class TestNewsAPI:
         # Simulate NewsAPI.org being unavailable: monkeypatch the backend's network call
         # You may need to adjust attribute path to match your backend's architecture
         # This example assumes the route calls some news module's function fetch_news()
-        import app.news_routes as news_routes  # replace with your actual import path
 
         def fake_fetch_news(*args, **kwargs):
-            return None, "Failed to fetch news from NewsAPI."
+            abort(502, message="Failed to fetch news from NewsAPI.")
 
-        monkeypatch.setattr(news_routes, "fetch_news", fake_fetch_news)
+        monkeypatch.setattr("routes.news.fetch_news_from_api", fake_fetch_news)
 
         response = client.get("/api/v1/news/", headers=auth_headers)
         assert response.status_code == 502
