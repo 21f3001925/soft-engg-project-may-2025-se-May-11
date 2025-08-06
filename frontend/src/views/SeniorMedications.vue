@@ -1,10 +1,13 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useMedicationStore } from '../store/medicationStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
 const medicationStore = useMedicationStore();
+const route = useRoute();
+const seniorId = parseInt(route.params.id);
 
 const toastMessage = ref('');
 const showModal = ref(false);
@@ -16,7 +19,7 @@ const loading = computed(() => medicationStore.loading);
 const error = computed(() => medicationStore.error);
 
 onMounted(() => {
-  medicationStore.fetchMedications();
+  medicationStore.fetchMedications(seniorId);
 });
 
 function addMedications() {
@@ -34,7 +37,7 @@ function editMedications(item) {
 async function deleteMedication(item) {
   if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
     try {
-      await medicationStore.deleteMedication(item.medication_id);
+      await medicationStore.deleteMedication(item.medication_id, seniorId);
       showToast(`Deleted: "${item.name}"`);
     } catch (err) {
       showToast(`Error deleting medication: ${err.message}`, 'error');
