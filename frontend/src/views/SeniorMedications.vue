@@ -1,37 +1,23 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue';
-// import { useRoute } from 'vue-router';
-// import { useScheduleStore } from '../store/scheduleStore';
-// import { useCaregiverStore } from '../store/caregiverStore';
+import { onMounted, ref, computed } from 'vue';
+import { useMedicationStore } from '../store/medicationStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
-import medicationService from '../services/medicationService';
 
-// const scheduleStore = useScheduleStore();
-// const caregiverStore = useCaregiverStore();
-
-// const route = useRoute();
-// const seniorId = parseInt(route.params.id);
-
-const medications = ref([]);
-const loading = ref(true);
-const error = ref(null);
+const medicationStore = useMedicationStore();
 
 const toastMessage = ref('');
+const showModal = ref(false);
 const selectedMedication = ref(null);
 const isEdit = ref(false);
-const showModal = ref(false);
 
-// onMounted(async () => {
-//   await scheduleStore.fetchAllMedications();
-// });
+const medications = computed(() => medicationStore.medications);
+const loading = computed(() => medicationStore.loading);
+const error = computed(() => medicationStore.error);
 
-// const medications = computed(() => scheduleStore.allMedications.items.filter((med) => med.id === seniorId));
-
-// const seniorName = computed(() => {
-//   const senior = caregiverStore.assignedSeniors.find((s) => s.id === seniorId);
-//   return senior ? senior.name : 'Senior';
-// });
+onMounted(() => {
+  medicationStore.fetchMedications();
+});
 
 function addMedications() {
   selectedMedication.value = null;
@@ -39,102 +25,53 @@ function addMedications() {
   showModal.value = true;
 }
 
-async function fetchMedications() {
-  try {
-    loading.value = true;
-    const response = await medicationService.getMedications();
-    medications.value = response.data;
-    loading.value = false;
-  } catch (err) {
-    error.value = 'Failed to load medications. ' + (err.response?.data?.message || err.message);
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(fetchMedications);
-
 function editMedications(item) {
   selectedMedication.value = { ...item };
   isEdit.value = true;
   showModal.value = true;
 }
 
-// function deleteMedication(item) {
-//   scheduleStore.allMedications.items = scheduleStore.allMedications.items.filter((m) => m.id !== item.id);
-//   showToast(`Deleted: "${item.name}"`);
-// }
-
 async function deleteMedication(item) {
   if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
     try {
-      await medicationService.deleteMedication(item.id);
-      medications.value = medications.value.filter((m) => m.id !== item.id);
+      await medicationStore.deleteMedication(item.medication_id);
       showToast(`Deleted: "${item.name}"`);
     } catch (err) {
-      showToast(`Error deleting medication: ${err.response?.data?.message || err.message}`);
+      showToast(`Error deleting medication: ${err.message}`, 'error');
     }
   }
 }
-
-// function markAsTaken(item) {
-//   item.taken = true;
-//   showToast(`Marked "${item.name}" as taken`);
-// }
 
 async function markAsTaken(item) {
   try {
-    const updatedMed = await medicationService.updateMedication(item.id, { isTaken: true });
-    const index = medications.value.findIndex((m) => m.id === item.id);
-    if (index !== -1) {
-      medications.value[index] = { ...medications.value[index], ...updatedMed.data };
-      showToast(`Marked "${item.name}" as taken`);
-    }
+    await medicationStore.updateMedication(item.medication_id, { isTaken: true });
+    showToast(`Marked "${item.name}" as taken`);
   } catch (err) {
-    showToast(`Error marking medication as taken: ${err.response?.data?.message || err.message}`);
+    showToast(`Error updating medication: ${err.message}`, 'error');
   }
 }
 
-// function handleFormSubmit(medication) {
-//   if (isEdit.value) {
-//     const index = scheduleStore.allMedications.items.findIndex((m) => m.id === medication.id);
-//     if (index !== -1) {
-//       scheduleStore.allMedications.items[index] = { ...medication };
-//       showToast(`Updated: "${medication.name}"`);
-//     }
-//   } else {
-//     scheduleStore.allMedications.items.push({
-//       ...medication,
-//       id: Date.now(),
-//       type: 'medication',
-//     });
-//     showToast(`Added: "${medication.name}"`);
-//   }
-//   showModal.value = false;
-// }
-
 async function handleFormSubmit(medicationData) {
-  const payload = { ...medicationData, time: new Date(medicationData.time).toISOString() };
+  const payload = {
+    ...medicationData,
+    time: new Date(medicationData.time).toISOString(),
+  };
+
   try {
     if (isEdit.value) {
-      const response = await medicationService.updateMedication(selectedMedication.value.id, payload);
-      const index = medications.value.findIndex((m) => m.id === selectedMedication.value.id);
-      if (index !== -1) {
-        medications.value[index] = response.data;
-      }
-      showToast(`Updated: "${response.data.name}"`);
+      await medicationStore.updateMedication(selectedMedication.value.medication_id, payload);
+      showToast(`Updated: "${payload.name}"`);
     } else {
-      await medicationService.addMedication(payload);
-      await fetchMedications();
+      await medicationStore.addMedication(payload);
       showToast(`Added: "${payload.name}"`);
     }
     showModal.value = false;
   } catch (err) {
-    showToast(`Error: ${err.response?.data?.message || err.message}`, 'error');
+    showToast(`Error saving medication: ${err.message}`, 'error');
   }
 }
 
-function showToast(message) {
+function showToast(message, type = 'success') {
   toastMessage.value = message;
   setTimeout(() => {
     toastMessage.value = '';
@@ -144,7 +81,7 @@ function showToast(message) {
 
 <template>
   <div class="medications">
-    <h1 style="text-align: center">{{ seniorName }}'s Medications</h1>
+    <h1 style="text-align: center">My Medications</h1>
   </div>
 
   <div v-if="loading" class="loading">Loading medications...</div>
@@ -153,14 +90,20 @@ function showToast(message) {
     {{ error }}
   </div>
 
-  <div v-else-if="medications.length === 0" class="empty">No medications for today</div>
+  <div v-else-if="medications.length === 0" class="empty">No medications scheduled.</div>
 
   <div v-else class="med-schedule-list">
-    <ScheduleRowItem v-for="med in medications" :key="med.id" :schedule="med" :hide-type="true" :compact-layout="true">
-      <button v-if="!med.isTaken" class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
+    <ScheduleRowItem
+      v-for="med in medications"
+      :key="med.medication_id"
+      :schedule="med"
+      :hide-type="true"
+      :compact-layout="true"
+    >
+      <button v-if="!med.isTaken" class="mark-as-taken-button" @click="markAsTaken(med)">Mark as taken</button>
       <span v-else class="taken-status">Taken</span>
-      <button class="edit-button" @click="editMedications(schedule)">Edit</button>
-      <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
+      <button class="edit-button" @click="editMedications(med)">Edit</button>
+      <button class="delete-button" @click="deleteMedication(med)">Delete</button>
     </ScheduleRowItem>
   </div>
 
