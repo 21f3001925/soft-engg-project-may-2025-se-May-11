@@ -13,7 +13,10 @@ from models import (
     SeniorCitizen,
     Caregiver,
     CaregiverAssignment,
+    EmergencyContact,
+    ServiceProvider,
 )
+
 from flask_jwt_extended import create_access_token
 
 
@@ -214,3 +217,27 @@ def other_senior_user():
     db.session.add(user)
     db.session.commit()
     return user
+
+def sample_emergency_contact(senior_user):
+    contact = EmergencyContact(
+        name="Sample Contact",
+        relation="Friend",
+        phone="+1234567890",
+        senior_id=senior_user.user_id,
+    )
+    db.session.add(contact)
+    db.session.commit()
+    return contact.contact_id  # Return only the ID
+
+
+@pytest.fixture
+def sample_provider():
+    new_provider = ServiceProvider(
+        name="Sample Provider",
+        contact_email="xyzmail.com",
+        phone_number="+1234567890",
+        services_offered="Pain relief",
+    )
+    db.session.add(new_provider)
+    db.session.commit()
+    return new_provider

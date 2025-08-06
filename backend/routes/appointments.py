@@ -3,6 +3,7 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
 from models import Appointment, db, User, CaregiverAssignment
+
 import uuid
 from tasks import send_reminder_notification
 from celery_app import celery_app
@@ -109,6 +110,7 @@ class AppointmentDetailResource(MethodView):
     def get(self, appointment_id):
         user_id = get_jwt_identity()
         senior_id = AppointmentUtils.get_senior_id(user_id)
+
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
@@ -126,6 +128,7 @@ class AppointmentDetailResource(MethodView):
     def put(self, data, appointment_id):
         user_id = get_jwt_identity()
         senior_id = AppointmentUtils.get_senior_id(user_id)
+
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
@@ -168,6 +171,7 @@ class AppointmentDetailResource(MethodView):
     def delete(self, appointment_id):
         user_id = get_jwt_identity()
         senior_id = AppointmentUtils.get_senior_id(user_id)
+
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
