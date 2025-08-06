@@ -7,3 +7,4 @@ instance/
 instance
 celerybeat-schedule
 celerybeat-schedule.db
+static/

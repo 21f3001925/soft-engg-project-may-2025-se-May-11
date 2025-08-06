@@ -1,31 +1,25 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useScheduleStore } from '../store/scheduleStore';
-import { useCaregiverStore } from '../store/caregiverStore';
+import { useMedicationStore } from '../store/medicationStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
-const scheduleStore = useScheduleStore();
-const caregiverStore = useCaregiverStore();
-
+const medicationStore = useMedicationStore();
 const route = useRoute();
 const seniorId = parseInt(route.params.id);
 
 const toastMessage = ref('');
+const showModal = ref(false);
 const selectedMedication = ref(null);
 const isEdit = ref(false);
-const showModal = ref(false);
 
-onMounted(async () => {
-  await scheduleStore.fetchAllMedications();
-});
+const medications = computed(() => medicationStore.medications);
+const loading = computed(() => medicationStore.loading);
+const error = computed(() => medicationStore.error);
 
-const medications = computed(() => scheduleStore.allMedications.items.filter((med) => med.id === seniorId));
-
-const seniorName = computed(() => {
-  const senior = caregiverStore.assignedSeniors.find((s) => s.id === seniorId);
-  return senior ? senior.name : 'Senior';
+onMounted(() => {
+  medicationStore.fetchMedications(seniorId);
 });
 
 function addMedications() {
@@ -35,71 +29,84 @@ function addMedications() {
 }
 
 function editMedications(item) {
-  selectedMedication.value = item;
+  selectedMedication.value = { ...item };
   isEdit.value = true;
   showModal.value = true;
 }
 
-function deleteMedication(item) {
-  scheduleStore.allMedications.items = scheduleStore.allMedications.items.filter((m) => m.id !== item.id);
-  showToast(`Deleted: "${item.name}"`);
-}
-
-function markAsTaken(item) {
-  item.taken = true;
-  showToast(`Marked "${item.name}" as taken`);
-}
-
-function handleFormSubmit(medication) {
-  if (isEdit.value) {
-    const index = scheduleStore.allMedications.items.findIndex((m) => m.id === medication.id);
-    if (index !== -1) {
-      scheduleStore.allMedications.items[index] = { ...medication };
-      showToast(`Updated: "${medication.name}"`);
+async function deleteMedication(item) {
+  if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+    try {
+      await medicationStore.deleteMedication(item.medication_id, seniorId);
+      showToast(`Deleted: "${item.name}"`);
+    } catch (err) {
+      showToast(`Error deleting medication: ${err.message}`, 'error');
     }
-  } else {
-    scheduleStore.allMedications.items.push({
-      ...medication,
-      id: Date.now(),
-      type: 'medication',
-    });
-    showToast(`Added: "${medication.name}"`);
   }
-  showModal.value = false;
 }
 
-function showToast(message) {
+async function markAsTaken(item) {
+  try {
+    await medicationStore.updateMedication(item.medication_id, { isTaken: true });
+    showToast(`Marked "${item.name}" as taken`);
+  } catch (err) {
+    showToast(`Error updating medication: ${err.message}`, 'error');
+  }
+}
+
+async function handleFormSubmit(medicationData) {
+  const payload = {
+    ...medicationData,
+    time: new Date(medicationData.time).toISOString(),
+  };
+
+  try {
+    if (isEdit.value) {
+      await medicationStore.updateMedication(selectedMedication.value.medication_id, payload);
+      showToast(`Updated: "${payload.name}"`);
+    } else {
+      await medicationStore.addMedication(payload);
+      showToast(`Added: "${payload.name}"`);
+    }
+    showModal.value = false;
+  } catch (err) {
+    showToast(`Error saving medication: ${err.message}`, 'error');
+  }
+}
+
+function showToast(message, type = 'success') {
   toastMessage.value = message;
   setTimeout(() => {
     toastMessage.value = '';
-  }, 2000);
+  }, 3000);
 }
 </script>
 
 <template>
   <div class="medications">
-    <h1 style="text-align: center">{{ seniorName }}'s Medications</h1>
+    <h1 style="text-align: center">My Medications</h1>
   </div>
 
-  <div v-if="scheduleStore.schedule.loading" class="loading">Loading medications...</div>
+  <div v-if="loading" class="loading">Loading medications...</div>
 
-  <div v-else-if="scheduleStore.schedule.error" class="error">
-    {{ scheduleStore.schedule.error }}
+  <div v-else-if="error" class="error">
+    {{ error }}
   </div>
 
-  <div v-else-if="medications.length === 0" class="empty">No medications for today</div>
+  <div v-else-if="medications.length === 0" class="empty">No medications scheduled.</div>
 
   <div v-else class="med-schedule-list">
     <ScheduleRowItem
-      v-for="schedule in medications"
-      :key="schedule.id"
-      :schedule="schedule"
+      v-for="med in medications"
+      :key="med.medication_id"
+      :schedule="med"
       :hide-type="true"
       :compact-layout="true"
     >
-      <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
-      <button class="edit-button" @click="editMedications(schedule)">Edit</button>
-      <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
+      <button v-if="!med.isTaken" class="mark-as-taken-button" @click="markAsTaken(med)">Mark as taken</button>
+      <span v-else class="taken-status">Taken</span>
+      <button class="edit-button" @click="editMedications(med)">Edit</button>
+      <button class="delete-button" @click="deleteMedication(med)">Delete</button>
     </ScheduleRowItem>
   </div>
 
