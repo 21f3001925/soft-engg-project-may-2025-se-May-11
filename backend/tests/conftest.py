@@ -218,6 +218,7 @@ def other_senior_user():
     db.session.commit()
     return user
 
+
 def sample_emergency_contact(senior_user):
     contact = EmergencyContact(
         name="Sample Contact",
