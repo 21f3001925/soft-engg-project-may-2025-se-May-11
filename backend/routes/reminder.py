@@ -5,7 +5,7 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from schemas.reminder import ReminderSchema, MsgSchema  # you’ll define this schema
 from tasks import send_reminder_notification
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 reminder_blp = Blueprint(
     "Reminder",
@@ -40,14 +40,14 @@ class ReminderResource(MethodView):
 
         for mins in time_formats:
             eta = date_time_obj - timedelta(minutes=mins)
-            if eta > datetime.now():
+            if eta > datetime.now(timezone.utc):
                 send_reminder_notification.apply_async(
                     args=[appointment_id, title, location, date_time, user_email],
                     eta=eta,
                 )
 
         # Final reminder at exact time
-        if date_time_obj > datetime.now():
+        if date_time_obj > datetime.now(timezone.utc):
             send_reminder_notification.apply_async(
                 args=[appointment_id, title, location, date_time, user_email],
                 eta=date_time_obj,
