@@ -66,6 +66,7 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get(
         "MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME")
     )
+    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "static/uploads")
 
     # Sample ENV configuration for Flask-Mail
     # MAIL_SERVER = "smtp.gmail.com"

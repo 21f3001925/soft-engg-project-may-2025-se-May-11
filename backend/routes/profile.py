@@ -2,24 +2,11 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required, get_current_user
 from models import db
-from marshmallow import Schema, fields
 import bcrypt
 import os
 from werkzeug.utils import secure_filename
-from flask import request
-
-
-class ProfileSchema(Schema):
-    username = fields.Str()
-    email = fields.Email()
-    name = fields.Str()
-    avatar_url = fields.Str(dump_only=True)
-    news_categories = fields.Str(allow_none=True)
-
-
-class ChangePasswordSchema(Schema):
-    current_password = fields.Str(required=True)
-    new_password = fields.Str(required=True)
+from flask import current_app
+from schemas.profile import ProfileSchema, ChangePasswordSchema, AvatarUploadSchema
 
 
 profile_bp = Blueprint(
@@ -91,18 +78,19 @@ class AvatarUploadResource(MethodView):
     @profile_bp.doc(
         summary="The user can upload their avatar using this route and change their avatar whenever required."
     )
+    @profile_bp.arguments(AvatarUploadSchema, location="files")
     @profile_bp.response(200, ProfileSchema)
-    def put(self):
+    def put(self, files):
         user = get_current_user()
-        if "file" not in request.files:
-            abort(400, message="No file part")
-        file = request.files["file"]
+        file = files["file"]
         if file.filename == "":
             abort(400, message="No selected file")
         if file:
             filename = secure_filename(file.filename)
-            upload_folder = os.path.join("backend", "static", "uploads", "avatars")
-            file.save(os.path.join(upload_folder, filename))
-            user.avatar_url = f"/static/uploads/avatars/{filename}"
+            upload_folder = current_app.config["UPLOAD_FOLDER"]
+            avatar_folder = os.path.join(upload_folder, "avatars")
+            os.makedirs(avatar_folder, exist_ok=True)
+            file.save(os.path.join(avatar_folder, filename))
+            user.avatar_url = f"static/uploads/avatars/{filename}"
             db.session.commit()
         return user
