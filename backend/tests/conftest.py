@@ -15,6 +15,7 @@ from models import (
     CaregiverAssignment,
     EmergencyContact,
     ServiceProvider,
+    Event,
 )
 
 from flask_jwt_extended import create_access_token
@@ -243,3 +244,52 @@ def sample_provider():
     db.session.add(new_provider)
     db.session.commit()
     return new_provider
+
+
+@pytest.fixture
+def sample_event(provider_user):
+    event = Event(
+        name="Community Picnic",
+        date_time=datetime(2025, 8, 1, 14, 0, 0, tzinfo=timezone.utc),
+        location="Central Park",
+        description="Annual community picnic for seniors.",
+        service_provider_id=provider_user.user_id,
+    )
+    db.session.add(event)
+    db.session.commit()
+    return event
+
+
+@pytest.fixture
+def sample_reminder(provider_user):
+    appointment = Appointment(
+        title="Title",
+        date_time=datetime(2025, 8, 1, 14, 0, 0, tzinfo=timezone.utc),
+        location="Central Park",
+    )
+    db.session.add(appointment)
+    db.session.commit()
+    return appointment
+
+
+@pytest.fixture
+def sample_user(provider_user):
+    user = User(
+        username="User1",
+        email="user@mail.com",
+        password="pass123",
+        phone_number="+91234",
+    )
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def provider_auth_headers(client, provider_user):
+    with client.application.app_context():
+        access_token = create_access_token(
+            identity=provider_user.user_id,
+            additional_claims={"roles": [role.name for role in provider_user.roles]},
+        )
+    return {"Authorization": f"Bearer {access_token}"}
