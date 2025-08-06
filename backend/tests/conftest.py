@@ -219,6 +219,7 @@ def other_senior_user():
     return user
 
 
+@pytest.fixture
 def sample_emergency_contact(senior_user):
     contact = EmergencyContact(
         name="Sample Contact",
