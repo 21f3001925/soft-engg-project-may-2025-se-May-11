@@ -1,31 +1,33 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue';
-import { useScheduleStore } from '../store/scheduleStore';
+import { onMounted, ref, computed } from 'vue';
+import { useEventStore } from '../store/eventStore';
 
-const scheduleStore = useScheduleStore();
+const eventStore = useEventStore();
 const toastMessage = ref('');
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
+  await eventStore.getEvents();
 });
 
-const events = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
+const events = computed(() => eventStore.events.items.filter((item) => item.type === 'event'));
 
-function setReminder(item) {
-  showToast(`Reminder set for: "${item.name}"`);
+async function deleteEvent(item) {
+  if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+    try {
+      await eventStore.deleteEvent(item.event_id); // Pass the event ID
+      showToast(`Deleted: "${item.name}"`);
+    } catch (err) {
+      showToast(`Error deleting event: ${err.message}`, 'error');
+    }
+  }
 }
 
-function deleteEvent(item) {
-  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((e) => e.id !== item.id);
-  showToast(`Deleted: "${item.name}"`);
-}
-
-function showToast(message) {
-  toastMessage.value = message;
-  setTimeout(() => {
-    toastMessage.value = '';
-  }, 2000);
-}
+// function showToast(message) {
+//   toastMessage.value = message;
+//   setTimeout(() => {
+//     toastMessage.value = '';
+//   }, 2000);
+// }
 </script>
 
 <template>
