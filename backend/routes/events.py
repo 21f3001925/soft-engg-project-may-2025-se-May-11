@@ -32,17 +32,25 @@ events_bp = Blueprint(
 @events_bp.route("")
 class EventList(MethodView):
 
-    @jwt_required()
-    @roles_accepted("service_provider")
     @events_bp.doc(
         summary="All events organised by various service providers are listed when the route is called."
     )
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
-        return Event.query.all()
+        events = Event.query.all()
+        result = [
+            {
+                "event_id": event.event_id,
+                "name": event.name,
+                "description": event.description,
+                "date_time": event.date_time.isoformat() if event.date_time else None,
+                "location": event.location,
+                "service_provider_id": event.service_provider_id,
+            }
+            for event in events
+        ]
+        return result
 
-    @jwt_required()
-    @roles_accepted("service_provider")
     @events_bp.doc(summary="Service provider can add a new event using this endpoint.")
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
@@ -50,23 +58,34 @@ class EventList(MethodView):
         event = Event(**new_data)
         db.session.add(event)
         db.session.commit()
-        return event
+        return {
+            "event_id": event.event_id,
+            "name": event.name,
+            "description": event.description,
+            "date_time": event.date_time.isoformat() if event.date_time else None,
+            "location": event.location,
+            "service_provider_id": event.service_provider_id,
+        }
 
 
 @events_bp.route("/<string:event_id>")
 class EventResource(MethodView):
 
-    @jwt_required()
-    @roles_accepted("service_provider")
     @events_bp.doc(
         summary="To get specific event details, service provider can use this route with the event id."
     )
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
-        return Event.query.get_or_404(event_id)
+        event = Event.query.get_or_404(event_id)
+        return {
+            "event_id": event.event_id,
+            "name": event.name,
+            "description": event.description,
+            "date_time": event.date_time.isoformat() if event.date_time else None,
+            "location": event.location,
+            "service_provider_id": event.service_provider_id,
+        }
 
-    @jwt_required()
-    @roles_accepted("service_provider")
     @events_bp.doc(
         summary="To update event details, service provider can use this route with the event id."
     )
@@ -77,7 +96,14 @@ class EventResource(MethodView):
         for key, value in update_data.items():
             setattr(event, key, value)
         db.session.commit()
-        return event
+        return {
+            "event_id": event.event_id,
+            "name": event.name,
+            "description": event.description,
+            "date_time": event.date_time.isoformat() if event.date_time else None,
+            "location": event.location,
+            "service_provider_id": event.service_provider_id,
+        }
 
     @jwt_required()
     @roles_accepted("service_provider")
