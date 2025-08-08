@@ -1,10 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
+import { useUserStore } from '../store/userStore';
 import MedicationItem from './MedicationItem.vue';
 import { Pill, ChevronRight } from 'lucide-vue-next';
 
 const scheduleStore = useScheduleStore();
+const userStore = useUserStore();
+
+const seniorId = computed(() => userStore.user.id);
 
 function toggleMedication(id) {
   const med = scheduleStore.medications.find((m) => m.id === id);

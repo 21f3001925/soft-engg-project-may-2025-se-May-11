@@ -8,11 +8,12 @@ export const useMedicationStore = defineStore('medication', {
     error: null,
   }),
   actions: {
-    async fetchMedications(seniorId) {
+    async fetchMedications() {
       this.loading = true;
       this.error = null;
       try {
-        const response = await medicationService.getMedications(seniorId);
+        const response = await medicationService.getMedications();
+
         this.medications = response.data;
       } catch (err) {
         this.error = `Failed to load medications: ${err.response?.data?.message || err.message}`;
@@ -49,17 +50,28 @@ export const useMedicationStore = defineStore('medication', {
         this.loading = false;
       }
     },
-    async deleteMedication(id, seniorId) {
+
+    async deleteMedication(id) {
       this.loading = true;
       this.error = null;
       try {
         await medicationService.deleteMedication(id);
-        await this.fetchMedications(seniorId);
+        await this.fetchMedications();
       } catch (err) {
         this.error = `Failed to delete medication: ${err.response?.data?.message || err.message}`;
         throw err;
       } finally {
         this.loading = false;
+      }
+    },
+
+    async markAsTaken(medication) {
+      try {
+        const updatedMedication = { ...medication, isTaken: !medication.isTaken };
+        await this.updateMedication(medication.medication_id, updatedMedication);
+      } catch (err) {
+        this.error = `Failed to mark as taken: ${err.response?.data?.message || err.message}`;
+        throw err;
       }
     },
   },

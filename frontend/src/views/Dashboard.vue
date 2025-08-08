@@ -23,6 +23,7 @@ const updateGreeting = () => {
 
 onMounted(async () => {
   await scheduleStore.fetchSchedules();
+  await scheduleStore.fetchAllMedications();
   timer = setInterval(() => {
     currentTime.value = new Date();
     updateGreeting();

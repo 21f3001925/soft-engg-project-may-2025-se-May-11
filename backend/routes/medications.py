@@ -26,12 +26,12 @@ class MedicationsResource(MethodView):
     @staticmethod
     def get_senior_id_from_user(user_id):
         user = User.query.get(user_id)
-        if user.roles[0].name == "senior_citizen":
-            return user.user_id
-        elif user.senior_citizen:
-            return user.senior_citizen.user_id
-        else:
-            abort(404, message="Senior citizen not found")
+        if user and user.roles:
+            if user.roles[0].name == "senior_citizen":
+                return user.user_id
+            elif user.senior_citizen:
+                return user.senior_citizen.user_id
+        abort(404, message="Senior citizen not found or user role mismatch")
 
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")

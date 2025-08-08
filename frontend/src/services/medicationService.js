@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/v1';
+const API_URL = 'http://localhost:5000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -23,8 +23,8 @@ apiClient.interceptors.request.use(
 );
 
 export default {
-  getMedications(seniorId) {
-    return apiClient.get('/medications', { params: { senior_id: seniorId } });
+  getMedications() {
+    return apiClient.get('/medications');
   },
   addMedication(medicationData) {
     return apiClient.post('/medications', medicationData);

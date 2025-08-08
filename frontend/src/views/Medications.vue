@@ -1,18 +1,16 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
-import { useScheduleStore } from '../store/scheduleStore';
+import { useMedicationStore } from '../store/medicationStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
-const scheduleStore = useScheduleStore();
-const toastMessage = ref('');
+const medicationStore = useMedicationStore();
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
-  await scheduleStore.fetchAllMedications();
+  await medicationStore.fetchMedications();
 });
 
-const medications = computed(() => scheduleStore.allMedications.items);
+const medications = computed(() => medicationStore.medications);
 
 const showModal = ref(false);
 const selectedMedication = ref(null);
@@ -30,29 +28,23 @@ function editMedications(item) {
   showModal.value = true;
 }
 
-function deleteMedication(item) {
-  scheduleStore.allMedications.items = scheduleStore.allMedications.items.filter((m) => m.id !== item.id);
+async function deleteMedication(item) {
+  await medicationStore.deleteMedication(item.medication_id);
   showToast(`Deleted "${item.name}"`);
 }
 
-function markAsTaken(item) {
-  item.taken = true;
+async function markAsTaken(item) {
+  await medicationStore.markAsTaken(item);
   showToast(`Marked "${item.name}" as taken`);
 }
 
-function handleFormSubmit(medication) {
+async function handleFormSubmit(medication) {
+  const medicationData = { ...medication };
   if (isEdit.value) {
-    const index = scheduleStore.allMedications.items.findIndex((m) => m.id === medication.id);
-    if (index !== -1) {
-      scheduleStore.allMedications.items[index] = { ...medication };
-      showToast(`Updated "${medication.name}"`);
-    }
+    await medicationStore.updateMedication(medication.medication_id, medicationData);
+    showToast(`Updated "${medication.name}"`);
   } else {
-    scheduleStore.allMedications.items.push({
-      ...medication,
-      id: Date.now(),
-      type: 'medication',
-    });
+    await medicationStore.addMedication(medicationData);
     showToast(`Added "${medication.name}"`);
   }
   showModal.value = false;
@@ -73,10 +65,10 @@ function showToast(message) {
     <h1 style="text-align: center">Your Medications</h1>
   </div>
 
-  <div v-if="scheduleStore.schedule.loading" class="loading">Loading medications...</div>
+  <div v-if="medicationStore.loading" class="loading">Loading medications...</div>
 
-  <div v-else-if="scheduleStore.schedule.error" class="error">
-    {{ scheduleStore.schedule.error }}
+  <div v-else-if="medicationStore.error" class="error">
+    {{ medicationStore.error }}
   </div>
 
   <div v-else-if="medications.length === 0" class="empty">No medications for today</div>
