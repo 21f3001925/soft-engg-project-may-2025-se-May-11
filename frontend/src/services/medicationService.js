@@ -23,8 +23,8 @@ apiClient.interceptors.request.use(
 );
 
 export default {
-  getMedications(seniorId) {
-    return apiClient.get('/medications', { params: { senior_id: seniorId } });
+  getMedications() {
+    return apiClient.get('/medications');
   },
   addMedication(medicationData) {
     return apiClient.post('/medications', medicationData);
