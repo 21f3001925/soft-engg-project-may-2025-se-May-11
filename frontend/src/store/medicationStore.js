@@ -62,5 +62,15 @@ export const useMedicationStore = defineStore('medication', {
         this.loading = false;
       }
     },
+
+    async markAsTaken(medication) {
+      try {
+        const updatedMedication = { ...medication, isTaken: !medication.isTaken };
+        await this.updateMedication(medication.medication_id, updatedMedication);
+      } catch (err) {
+        this.error = `Failed to mark as taken: ${err.response?.data?.message || err.message}`;
+        throw err;
+      }
+    },
   },
 });
