@@ -4,14 +4,10 @@ import { useMedicationStore } from '../store/medicationStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
-import { useRoute } from 'vue-router';
-
 const medicationStore = useMedicationStore();
-const route = useRoute();
-const seniorId = parseInt(route.params.id);
 
 onMounted(async () => {
-  await medicationStore.fetchMedications(seniorId);
+  await medicationStore.fetchMedications();
 });
 
 const medications = computed(() => medicationStore.medications);
@@ -33,7 +29,7 @@ function editMedications(item) {
 }
 
 async function deleteMedication(item) {
-  await medicationStore.deleteMedication(item.medication_id, seniorId);
+  await medicationStore.deleteMedication(item.medication_id);
   showToast(`Deleted "${item.name}"`);
 }
 
@@ -43,7 +39,7 @@ async function markAsTaken(item) {
 }
 
 async function handleFormSubmit(medication) {
-  const medicationData = { ...medication, senior_id: seniorId };
+  const medicationData = { ...medication };
   if (isEdit.value) {
     await medicationStore.updateMedication(medication.medication_id, medicationData);
     showToast(`Updated "${medication.name}"`);
