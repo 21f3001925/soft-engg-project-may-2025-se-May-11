@@ -1,10 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
+import { useUserStore } from '../store/userStore';
 import MedicationItem from './MedicationItem.vue';
 import { Pill, ChevronRight } from 'lucide-vue-next';
 
 const scheduleStore = useScheduleStore();
+const userStore = useUserStore();
+
+const seniorId = computed(() => userStore.user.id);
 
 function toggleMedication(id) {
   const med = scheduleStore.medications.find((m) => m.id === id);
@@ -56,7 +60,7 @@ const progressPercentage = computed(() => (totalMeds.value === 0 ? 0 : (complete
       />
     </ul>
     <router-link
-      to="/medications"
+      :to="`/medications/${seniorId}`"
       class="mt-8 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 hover:from-blue-100 hover:to-purple-100 transition-all duration-300 text-blue-700 font-semibold shadow-sm hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
     >
       View All Medications
