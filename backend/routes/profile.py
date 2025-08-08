@@ -82,6 +82,8 @@ class AvatarUploadResource(MethodView):
     @profile_bp.response(200, ProfileSchema)
     def put(self, files):
         user = get_current_user()
+        if "file" not in files:
+            abort(400, message="No file part")
         file = files["file"]
         if file.filename == "":
             abort(400, message="No selected file")

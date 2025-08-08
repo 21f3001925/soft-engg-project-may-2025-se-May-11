@@ -46,9 +46,20 @@ class MedicationsResource(MethodView):
         session = db.session
         try:
             meds = session.query(Medication).filter_by(senior_id=senior_id).all()
-            return meds
+            result = [
+                {
+                    "medication_id": med.medication_id,
+                    "name": med.name,
+                    "dosage": med.dosage,
+                    "time": med.time.isoformat() if med.time else None,
+                    "isTaken": med.isTaken,
+                    "senior_id": med.senior_id,
+                }
+                for med in meds
+            ]
         finally:
             session.close()
+        return result
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
@@ -59,6 +70,7 @@ class MedicationsResource(MethodView):
     @medications_blp.response(201, MedicationAddResponseSchema())
     @medications_blp.alt_response(400, schema=MedicationAddResponseSchema())
     def post(self, data):
+
         user_id = get_jwt_identity()
         senior_id = self.get_senior_id_from_user(user_id)
 
@@ -67,8 +79,7 @@ class MedicationsResource(MethodView):
             medication = Medication(
                 name=data["name"],
                 dosage=data["dosage"],
-                # Assuming time is in "HH:MM AM/PM" format, e.g., "09:00 AM"
-                time=datetime.strptime(data["time"], "%I:%M %p"),
+                time=datetime.fromisoformat(data["time"]),
                 isTaken=data.get("isTaken", False),
                 senior_id=senior_id,
             )
@@ -110,7 +121,14 @@ class MedicationByIdResource(MethodView):
             )
             if not med:
                 abort(404, message="Medication not found")
-            return med
+            return {
+                "medication_id": med.medication_id,
+                "name": med.name,
+                "dosage": med.dosage,
+                "time": med.time.isoformat() if med.time else None,
+                "isTaken": med.isTaken,
+                "senior_id": med.senior_id,
+            }
         finally:
             session.close()
 
@@ -139,7 +157,7 @@ class MedicationByIdResource(MethodView):
             if "dosage" in data:
                 med.dosage = data["dosage"]
             if "time" in data:
-                med.time = datetime.strptime(data["time"], "%I:%M %p")
+                med.time = datetime.fromisoformat(data["time"])
             if "isTaken" in data:
                 med.isTaken = data["isTaken"]
             session.commit()
