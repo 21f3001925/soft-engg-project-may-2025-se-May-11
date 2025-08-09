@@ -9,7 +9,7 @@ const mockSchedules = [
     date: '06-07-2025',
     details: 'Room 201, Apollo J.Hills',
   },
-  { id: 4, type: 'medication', name: 'Aspirin', time: '08:00 PM', taken: false },
+  { id: 4, type: 'medication', name: 'Aspirin', time: '08:00 PM', isTaken: false },
   { id: 5, type: 'appointment', name: 'Game Night', time: '7:30 PM', date: '09-07-2025', details: 'Community Center' },
   { id: 6, type: 'event', name: 'Game Night', time: '7:30 PM', details: 'Community Center' },
   { id: 7, type: 'event', name: 'Hangout', time: '08:00 PM', details: 'Cafe' },
