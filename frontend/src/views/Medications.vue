@@ -1,5 +1,7 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
+
+const toastMessage = ref('');
 import { useMedicationStore } from '../store/medicationStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
@@ -81,7 +83,12 @@ function showToast(message) {
       :hide-type="true"
       :compact-layout="true"
     >
-      <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
+      <template v-if="!schedule.isTaken">
+        <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
+      </template>
+      <template v-else>
+        <span class="taken-status">Taken</span>
+      </template>
       <button class="edit-button" @click="editMedications(schedule)">Edit</button>
       <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
     </ScheduleRowItem>
