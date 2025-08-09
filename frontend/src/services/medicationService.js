@@ -32,7 +32,7 @@ export default {
   updateMedication(id, medicationData) {
     return apiClient.put(`/medications/${id}`, medicationData);
   },
-  deletemedication(id) {
+  deleteMedication(id) {
     return apiClient.delete(`/medications/${id}`);
   },
 };
