@@ -32,7 +32,7 @@ export const useCaregiverStore = defineStore('caregiver', {
       const senior = this.assignedSeniors.find((s) => s.id === seniorId);
       if (senior) {
         const med = senior.medications.find((m) => m.id === medId);
-        if (med) med.taken = true;
+        if (med) med.isTaken = true;
       }
     },
 
