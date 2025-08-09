@@ -8,12 +8,16 @@
           <input v-model="form.name" required />
         </label>
         <label class="form-field">
+          Dosage:
+          <input v-model="form.dosage" required />
+        </label>
+        <label class="form-field">
           Time:
           <input v-model="form.time" required placeholder="e.g. 08:00 AM" />
         </label>
         <label class="form-field checkbox-field">
           Taken:
-          <input v-model="form.taken" type="checkbox" />
+          <input v-model="form.isTaken" type="checkbox" />
         </label>
         <div class="actions">
           <button class="submit-btn" type="submit">{{ isEdit ? 'Update' : 'Add' }}</button>
@@ -37,15 +41,16 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
-const form = reactive({ name: '', time: '', taken: false });
+const form = reactive({ name: '', dosage: '', time: '', isTaken: false });
 
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
       form.name = val.name || '';
+      form.dosage = val.dosage || '';
       form.time = val.time || '';
-      form.taken = val.taken || false;
+      form.isTaken = val.isTaken || false;
     }
   },
   { immediate: true },
