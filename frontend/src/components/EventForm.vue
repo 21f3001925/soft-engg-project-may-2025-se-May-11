@@ -64,14 +64,17 @@ watch(
   { immediate: true },
 );
 
-function handleSubmit() {
-  // Ensure date_time is in ISO format
+async function handleSubmit() {
+  const { event_id, service_provider_id, ...rest } = { ...props.modelValue, ...form };
   const payload = {
-    ...props.modelValue,
-    ...form,
+    ...rest,
     date_time: form.date_time ? new Date(form.date_time).toISOString() : undefined,
   };
+  // Explicitly delete service_provider_id if it somehow got in
+  delete payload.service_provider_id;
+  console.log('Submitting event payload:', payload);
   emit('submit', payload);
+  close();
 }
 
 function close() {

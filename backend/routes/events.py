@@ -14,7 +14,9 @@ class EventSchema(Schema):
     date_time = fields.DateTime(required=True)
     location = fields.Str(required=True)
     description = fields.Str()
-    service_provider_id = fields.Str(required=True)
+    service_provider_id = fields.Str()
+    class Meta:
+        unknown = 'exclude'
 
 
 class EventJoinSchema(Schema):
@@ -94,6 +96,14 @@ class EventResource(MethodView):
     def put(self, update_data, event_id):
         event = Event.query.get_or_404(event_id)
         for key, value in update_data.items():
+            if key == "date_time":
+                if isinstance(value, str):
+                    try:
+                        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    except Exception:
+                        continue  # skip setting date_time if conversion fails
+                if not isinstance(value, datetime):
+                    continue  # skip if still not a datetime
             setattr(event, key, value)
         db.session.commit()
         return {

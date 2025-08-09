@@ -9,7 +9,8 @@ const emergencyStore = useEmergencyStore();
 const caregiverStore = useCaregiverStore();
 const route = useRoute();
 
-const seniorId = parseInt(route.params.id);
+//const seniorId = parseInt(route.params.id);
+const seniorId = 1;
 const selectedContact = ref(null);
 const showModal = ref(false);
 const isEdit = ref(false);
@@ -20,7 +21,9 @@ onMounted(async () => {
   await emergencyStore.fetchContactsForSenior(seniorId);
 });
 
-const contacts = computed(() => emergencyStore.contacts.filter((c) => c.seniorId === seniorId));
+const contacts = computed(() =>
+  emergencyStore.contacts.filter((c) => c.seniorId == seniorId)
+);
 
 const seniorName = computed(() => {
   const senior = caregiverStore.assignedSeniors?.find((s) => s.id === seniorId);

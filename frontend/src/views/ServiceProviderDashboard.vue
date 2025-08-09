@@ -40,7 +40,8 @@ async function deleteEvent(item) {
 async function handleFormSubmit(eventData) {
   try {
     if (isEdit.value) {
-      await providerStore.updateEvent(eventData.event_id || eventData.id, eventData);
+      // Use the ID from selectedItem, not from eventData
+      await providerStore.updateEvent(selectedItem.value.event_id || selectedItem.value.id, eventData);
       showToast(`Updated: "${eventData.name}"`);
     } else {
       await providerStore.addEvent(eventData);

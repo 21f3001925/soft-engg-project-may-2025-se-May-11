@@ -37,11 +37,8 @@ export const useProviderStore = defineStore('provider', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await providerService.updateEvent(id, eventData);
-        const index = this.events.findIndex((e) => e.event_id === id);
-        if (index !== -1) {
-          this.events[index] = response.data;
-        }
+        await providerService.updateEvent(id, eventData); // id in URL, eventData as body
+        await this.fetchEvents();
       } catch (err) {
         this.error = `Failed to update event: ${err.response?.data?.message || err.message}`;
         throw err;
