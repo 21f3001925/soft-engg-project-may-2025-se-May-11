@@ -35,7 +35,7 @@ class EventList(MethodView):
     @events_bp.doc(
         summary="All events organised by various service providers are listed when the route is called."
     )
-    @events_bp.response(200, EventSchema(many=True))
+    #@events_bp.response(200, EventSchema(many=True))
     def get(self):
         events = Event.query.all()
         result = [
