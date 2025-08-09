@@ -19,7 +19,7 @@ export const useEmergencyStore = defineStore('emergency', {
 
     async deleteContact(contactId) {
       await emergencyService.deleteEmergencyContact(contactId);
-      this.contacts = this.contacts.filter((c) => c.id !== contactId);
+      this.contacts = this.contacts.filter((c) => c.contact_id !== contactId);
     },
 
     async addContact(contact) {
@@ -28,8 +28,10 @@ export const useEmergencyStore = defineStore('emergency', {
     },
 
     async updateContact(contact) {
-      const response = await emergencyService.updateEmergencyContact(contact.id, contact);
-      const index = this.contacts.findIndex((c) => c.id === contact.id);
+      const { contact_id, name, relation, phone } = contact;
+      const payload = { name, relation, phone }; // Only these 3 fields!
+      const response = await emergencyService.updateEmergencyContact(contact_id, payload);
+      const index = this.contacts.findIndex((c) => c.contact_id === contact_id);
       if (index !== -1) {
         this.contacts[index] = response.data;
       }
