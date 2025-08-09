@@ -34,5 +34,11 @@ export const useUserStore = defineStore('user', {
     updateProfilePic(base64Image) {
       this.user.profilePic = base64Image;
     },
+    setUser(userData) {
+      this.user = { ...this.user, ...userData };
+      if (userData.avatar_url) {
+        this.user.profilePic = userData.avatar_url;
+      }
+    },
   },
 });
