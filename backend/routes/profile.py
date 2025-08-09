@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required, get_current_user
@@ -93,6 +94,7 @@ class AvatarUploadResource(MethodView):
             avatar_folder = os.path.join(upload_folder, "avatars")
             os.makedirs(avatar_folder, exist_ok=True)
             file.save(os.path.join(avatar_folder, filename))
-            user.avatar_url = f"static/uploads/avatars/{filename}"
+            timestamp = datetime.now().timestamp()
+            user.avatar_url = f"static/uploads/avatars/{filename}?t={timestamp}"
             db.session.commit()
         return user
