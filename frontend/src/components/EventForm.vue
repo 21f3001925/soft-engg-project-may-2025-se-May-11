@@ -8,12 +8,16 @@
           <input v-model="form.name" required />
         </label>
         <label class="form-field">
-          Time:
-          <input v-model="form.time" required placeholder="e.g. 04:00 PM" />
+          Date & Time:
+          <input v-model="form.date_time" type="datetime-local" required />
         </label>
         <label class="form-field">
-          Details:
-          <input v-model="form.details" required placeholder="Location / Info" />
+          Description:
+          <input v-model="form.description" required placeholder="Description" />
+        </label>
+        <label class="form-field">
+          Location:
+          <input v-model="form.location" required placeholder="Location / Info" />
         </label>
         <div class="actions">
           <button class="submit-btn" type="submit">{{ isEdit ? 'Update' : 'Add' }}</button>
@@ -37,22 +41,37 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
-const form = reactive({ name: '', time: '', details: '' });
+const form = reactive({
+  name: '',
+  date_time: '',
+  description: '',
+  location: '',
+});
 
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
       form.name = val.name || '';
-      form.time = val.time || '';
-      form.details = val.details || '';
+      // Convert ISO string to input format for datetime-local
+      form.date_time = val.date_time
+        ? val.date_time.slice(0, 16)
+        : '';
+      form.description = val.description || '';
+      form.location = val.location || '';
     }
   },
   { immediate: true },
 );
 
 function handleSubmit() {
-  emit('submit', { ...props.modelValue, ...form });
+  // Ensure date_time is in ISO format
+  const payload = {
+    ...props.modelValue,
+    ...form,
+    date_time: form.date_time ? new Date(form.date_time).toISOString() : undefined,
+  };
+  emit('submit', payload);
 }
 
 function close() {
