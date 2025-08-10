@@ -13,7 +13,9 @@ const loading = ref(false);
 const error = ref('');
 
 function handleGoogleSignIn() {
-  alert('Google sign-in coming soon!');
+  // Redirect to backend Google OAuth endpoint
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1';
+  window.location.href = `${backendUrl}/oauth/google/login`;
 }
 
 const handleLogin = async () => {

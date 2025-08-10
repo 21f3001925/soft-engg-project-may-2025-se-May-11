@@ -55,7 +55,9 @@ const handleRegister = async () => {
 };
 
 function handleGoogleSignUp() {
-  alert('Google sign-up coming soon!');
+  // Redirect to backend Google OAuth endpoint (same as login)
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1';
+  window.location.href = `${backendUrl}/oauth/google/login`;
 }
 </script>
 
