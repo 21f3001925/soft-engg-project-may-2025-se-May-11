@@ -1,54 +1,47 @@
 <script setup>
-import { ref } from 'vue';
-import { useUserStore } from '../store/userStore';
+import { ref, onMounted } from 'vue';
+import { useEmergencyStore } from '../store/emergencyStore';
+import EmergencyContactForm from '../components/EmergencyContactForm.vue';
 
-const userStore = useUserStore();
-
-const contacts = ref(Object.entries(userStore.friends).map(([name, number]) => ({ name, number })));
+const emergencyStore = useEmergencyStore();
 
 const showModal = ref(false);
-const selectedName = ref('');
-const selectedNumber = ref('');
 const isEdit = ref(false);
-const editIndex = ref(null);
+const selectedContact = ref(null);
+const editId = ref(null);
 const toastMessage = ref('');
 
+onMounted(() => {
+  emergencyStore.fetchContactsForSenior();
+});
+
 function addContact() {
-  selectedName.value = '';
-  selectedNumber.value = '';
+  selectedContact.value = { name: '', relation: '', phone: '' };
   isEdit.value = false;
   showModal.value = true;
 }
 
-function editContact(index) {
-  selectedName.value = contacts.value[index].name;
-  selectedNumber.value = String(contacts.value[index].number);
+function editContact(contact) {
+  selectedContact.value = { ...contact };
   isEdit.value = true;
-  editIndex.value = index;
+  editId.value = contact.contact_id;
   showModal.value = true;
 }
 
-function deleteContact(index) {
-  contacts.value.splice(index, 1);
+async function deleteContact(contact) {
+  await emergencyStore.deleteContact(contact.contact_id);
   showToast('Contact deleted');
 }
 
-function handleSubmit() {
-  if (selectedName.value.trim() === '' || selectedNumber.value.trim() === '') {
-    showToast('Name and number are required');
-    return;
-  }
-
-  const newContact = { name: selectedName.value, number: selectedNumber.value };
-
+async function handleFormSubmit(contactData) {
+  console.log('Submitting contact:', contactData);
   if (isEdit.value) {
-    contacts.value[editIndex.value] = newContact;
+    await emergencyStore.updateContact({ ...contactData, contact_id: editId.value });
     showToast('Contact updated');
   } else {
-    contacts.value.push(newContact);
+    await emergencyStore.addContact(contactData);
     showToast('Contact added');
   }
-
   showModal.value = false;
 }
 
@@ -63,31 +56,27 @@ function showToast(msg) {
     <h1>Edit Your Contacts</h1>
     <br />
 
-    <div v-if="contacts.length === 0" class="empty">No contacts added yet.</div>
+    <div v-if="emergencyStore.contacts.length === 0" class="empty">No contacts added yet.</div>
 
     <ul v-else class="contact-list">
-      <li v-for="(contact, index) in contacts" :key="index" class="contact-item">
-        <span>{{ contact.name }} - {{ contact.number }}</span>
+      <li v-for="contact in emergencyStore.contacts" :key="contact.contact_id" class="contact-item">
+        <span>{{ contact.name }} ({{ contact.relation }}) - {{ contact.phone }}</span>
         <div class="buttons">
-          <button class="edit-button" @click="editContact(index)">Edit</button>
-          <button class="delete-button" @click="deleteContact(index)">Delete</button>
+          <button class="edit-button" @click="editContact(contact)">Edit</button>
+          <button class="delete-button" @click="deleteContact(contact)">Delete</button>
         </div>
       </li>
     </ul>
 
     <button class="add-btn" @click="addContact">Add Contact</button>
 
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal">
-        <h3>{{ isEdit ? 'Edit Contact' : 'Add Contact' }}</h3>
-        <input v-model="selectedName" placeholder="Enter contact name" />
-        <input v-model="selectedNumber" placeholder="Enter contact number" />
-        <div class="modal-buttons">
-          <button class="submit-btn" @click="handleSubmit">{{ isEdit ? 'Update' : 'Add' }}</button>
-          <button class="cancel-btn" @click="showModal = false">Cancel</button>
-        </div>
-      </div>
-    </div>
+    <EmergencyContactForm
+      v-if="showModal"
+      :model-value="selectedContact"
+      :is-edit="isEdit"
+      @submit="handleFormSubmit"
+      @close="showModal = false"
+    />
 
     <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>

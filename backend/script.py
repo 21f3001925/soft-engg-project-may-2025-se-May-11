@@ -1,88 +1,61 @@
-import uuid
-import random
-from datetime import datetime, timezone
+# script.py
 from werkzeug.security import generate_password_hash
-
-from app import create_app  # Import your Flask app factory
 from extensions import db
-from models import User, Role, SeniorCitizen, Caregiver, CaregiverAssignment
-
-app = create_app()
+from models import User, Role, SeniorCitizen, Caregiver, ServiceProvider
+from app import app  # assuming app is defined in app.py
 
 with app.app_context():
-    # Step 1: Ensure roles exist
-    role_names = ["admin", "caregiver", "senior_citizen"]
-    role_objects = {}
+    db.drop_all()
+    db.create_all()
 
-    for role_name in role_names:
-        role = Role.query.filter_by(name=role_name).first()
-        if not role:
-            role = Role(
-                id=str(uuid.uuid4()),
-                name=role_name,
-                description=f"Role for {role_name}",
-            )
-            db.session.add(role)
-        role_objects[role_name] = role
+    # Create roles
+    senior_role = Role(name="senior_citizen", description="Senior Citizen role")
+    caregiver_role = Role(name="caregiver", description="Caregiver role")
+    service_provider_role = Role(
+        name="service_provider", description="Service Provider role"
+    )
+    db.session.add_all([senior_role, caregiver_role, service_provider_role])
+    db.session.commit()
+
+    # Create Senior Citizen user
+    senior_user = User(
+        username="senior1",
+        email="senior1@example.com",
+        password=generate_password_hash("password123"),
+        name="John Senior",
+    )
+    senior_user.roles.append(senior_role)
+    db.session.add(senior_user)
+    db.session.commit()
+
+    senior_profile = SeniorCitizen(
+        user_id=senior_user.user_id, font_size="medium", theme="light"
+    )
+    db.session.add(senior_profile)
+
+    # Create Caregiver user
+    caregiver_user = User(
+        username="caregiver1",
+        email="caregiver1@example.com",
+        password=generate_password_hash("password123"),
+        name="Mary Care",
+    )
+    caregiver_user.roles.append(caregiver_role)
+    db.session.add(caregiver_user)
+    db.session.commit()
+
+    caregiver_profile = Caregiver(user_id=caregiver_user.user_id)
+    db.session.add(caregiver_profile)
+
+    # Create Service Provider
+    service_provider = ServiceProvider(
+        name="Golden Care Services",
+        contact_email="contact@goldencare.com",
+        phone_number="123-456-7890",
+        services_offered="Home Care, Nursing, Therapy",
+    )
+    db.session.add(service_provider)
 
     db.session.commit()
 
-    # Step 2: Create dummy users
-    users = []
-    seniors = []
-    caregivers = []
-
-    for i in range(10):
-        # Assign roles in a round-robin fashion
-        role_name = role_names[i % len(role_names)]
-        user = User(
-            user_id=str(uuid.uuid4()),
-            username=f"user{i}",
-            email=f"user{i}@example.com",
-            password=generate_password_hash("password123"),
-            phone_number=f"+91123456{i:03}",
-            active=True,
-            name=f"User {i}",
-            created_at=datetime.now(timezone.utc),
-        )
-        user.roles.append(role_objects[role_name])
-        db.session.add(user)
-        db.session.flush()  # Get the ID immediately
-
-        if role_name == "senior_citizen":
-            senior = SeniorCitizen(
-                user_id=user.user_id,
-                age=random.randint(60, 85),
-                font_size=random.choice(["small", "medium", "large"]),
-                theme=random.choice(["light", "dark"]),
-                news_categories="health,finance,technology",
-            )
-            db.session.add(senior)
-            seniors.append(senior)
-
-        elif role_name == "caregiver":
-            caregiver = Caregiver(user_id=user.user_id)
-            db.session.add(caregiver)
-            caregivers.append(caregiver)
-
-        users.append(user)
-
-    db.session.commit()
-
-    # Step 3: Assign seniors to caregivers
-    if seniors and caregivers:
-        for caregiver in caregivers:
-            assigned_seniors = random.sample(seniors, k=min(2, len(seniors)))
-            for senior in assigned_seniors:
-                assignment = CaregiverAssignment(
-                    caregiver_id=caregiver.user_id, senior_id=senior.user_id
-                )
-                db.session.add(assignment)
-
-    db.session.commit()
-
-    print("✅ Database populated with:")
-    print(f" - {len(users)} users")
-    print(f" - {len(seniors)} senior citizens")
-    print(f" - {len(caregivers)} caregivers")
-    print(" - Seniors assigned to caregivers")
+    print("Database populated successfully.")
