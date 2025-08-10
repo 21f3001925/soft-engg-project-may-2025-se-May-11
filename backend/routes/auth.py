@@ -24,26 +24,38 @@ class SignupResource(MethodView):
     @auth_blp.alt_response(400, schema=MsgSchema())
     @auth_blp.alt_response(409, schema=MsgSchema())
     def post(self, data):
-        username = data["username"]
-        email = data["email"]
+        # Either email or phone_number must be provided
+        email = data.get("email")
         password = data["password"]
         role_name = data["role"]
         phone_number = data.get("phone_number")
         session = db.session
-        if (
-            db.session.query(User)
-            .filter((User.username == username) | (User.email == email))
-            .first()
-        ):
 
-            abort(409, message="Username or email already exists")
+        if not email and not phone_number:
+            abort(400, message="Either email or phone number is required")
+        if email and db.session.query(User).filter(User.email == email).first():
+            abort(409, message="Email already exists")
+        if (
+            phone_number
+            and db.session.query(User).filter(User.phone_number == phone_number).first()
+        ):
+            abort(409, message="Phone number already exists")
         hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
         role = db.session.query(Role).filter_by(name=role_name).first()
         if not role:
             abort(400, message="Invalid role specified")
+
+        # Generate a unique username server-side
+        base_username = email.split("@")[0] if email else f"user_{phone_number}"
+        candidate = base_username
+        suffix = 1
+        while db.session.query(User).filter_by(username=candidate).first():
+            candidate = f"{base_username}{suffix}"
+            suffix += 1
+
         user = User(
-            username=username,
+            username=candidate,
             email=email,
             password=hashed_pw,
             phone_number=phone_number,
@@ -75,12 +87,10 @@ class LoginResource(MethodView):
     @auth_blp.response(200, TokenSchema())
     @auth_blp.alt_response(401, schema=MsgSchema())
     def post(self, data):
-        # Accept username OR email OR phone
+        # Accept email OR phone
         password = data["password"]
         user = None
-        if data.get("username"):
-            user = db.session.query(User).filter_by(username=data["username"]).first()
-        elif data.get("email"):
+        if data.get("email"):
             user = db.session.query(User).filter_by(email=data["email"]).first()
         elif data.get("phone_number"):
             user = (
@@ -96,4 +106,4 @@ class LoginResource(MethodView):
         ):
             access_token = create_access_token(identity=str(user.user_id))
             return {"access_token": access_token}, 200
-        abort(401, message="Bad username or password")
+        abort(401, message="Bad email or password")

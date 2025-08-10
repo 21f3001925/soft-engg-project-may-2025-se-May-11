@@ -2,16 +2,14 @@ from marshmallow import Schema, fields
 
 
 class SignupSchema(Schema):
-    username = fields.Str(required=True)
-    email = fields.Email(required=True)
+    email = fields.Email(required=False)
     password = fields.Str(required=True)
     role = fields.Str(required=True)
     phone_number = fields.Str(required=False)
 
 
 class LoginSchema(Schema):
-    # One of username, email, or phone must be provided
-    username = fields.Str(required=False)
+    # One of email or phone_number must be provided
     email = fields.Email(required=False)
     phone_number = fields.Str(required=False)
     password = fields.Str(required=True)
