@@ -1,13 +1,23 @@
 <script setup>
 import { useUserStore } from '../store/userStore';
 import catImg from '../assets/cat.png';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import profileService from '../services/profileService';
 
 const userStore = useUserStore();
 const user = ref(userStore.user);
 const friends = userStore.friends;
 const stats = userStore.stats;
+const tempAvatarUrl = ref(null); // New ref for temporary avatar URL
+
+const profilePicUrl = computed(() => {
+  if (tempAvatarUrl.value) {
+    return tempAvatarUrl.value; // Use temporary URL for immediate preview
+  } else if (user.value.profilePic) {
+    return user.value.profilePic; // Rely on backend to provide unique URL
+  }
+  return catImg;
+});
 
 onMounted(async () => {
   try {
@@ -35,8 +45,15 @@ const cancelEdit = () => {
 
 const saveProfile = async () => {
   try {
-    // Exclude avatar_url from the data sent for profile update
-    const { avatar_url, ...profileData } = user.value;
+    const {
+      avatar_url,
+      topics_liked,
+      comments_posted,
+      appointments_missed,
+      medications_missed,
+      total_screentime,
+      ...profileData
+    } = user.value;
     const response = await profileService.updateProfile(profileData);
     userStore.setUser(response.data);
     user.value = response.data;
@@ -56,6 +73,9 @@ const onFileChange = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
+  // Display the selected image immediately
+  tempAvatarUrl.value = URL.createObjectURL(file);
+
   try {
     const response = await profileService.uploadAvatar(file);
     userStore.setUser(response.data);
@@ -64,6 +84,9 @@ const onFileChange = async (event) => {
   } catch (error) {
     console.error('Error uploading avatar:', error);
     alert('Failed to upload avatar. Please try again later.');
+  } finally {
+    URL.revokeObjectURL(tempAvatarUrl.value); // Clean up the temporary URL
+    tempAvatarUrl.value = null; // Clear the temporary URL ref
   }
 };
 
@@ -75,7 +98,7 @@ function emergencyContacts() {
 <template>
   <div class="profile-page">
     <div class="card user-profile">
-      <img class="user-avatar" :src="user.profilePic || catImg" alt="User Avatar" />
+      <img class="user-avatar" :src="profilePicUrl" alt="User Avatar" />
       <div class="file-upload-wrapper">
         <button class="upload-button" @click="$refs.fileInput.click()">Change Photo</button>
         <input type="file" accept="image/*" @change="onFileChange" ref="fileInput" style="display: none" />
