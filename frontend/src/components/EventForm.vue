@@ -54,9 +54,7 @@ watch(
     if (val) {
       form.name = val.name || '';
       // Convert ISO string to input format for datetime-local
-      form.date_time = val.date_time
-        ? val.date_time.slice(0, 16)
-        : '';
+      form.date_time = val.date_time ? val.date_time.slice(0, 16) : '';
       form.description = val.description || '';
       form.location = val.location || '';
     }
