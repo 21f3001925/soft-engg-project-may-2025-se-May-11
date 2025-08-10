@@ -28,6 +28,7 @@ class SignupResource(MethodView):
         email = data["email"]
         password = data["password"]
         role_name = data["role"]
+        phone_number = data.get("phone_number")
         session = db.session
         if (
             db.session.query(User)
@@ -41,7 +42,12 @@ class SignupResource(MethodView):
         role = db.session.query(Role).filter_by(name=role_name).first()
         if not role:
             abort(400, message="Invalid role specified")
-        user = User(username=username, email=email, password=hashed_pw)
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pw,
+            phone_number=phone_number,
+        )
         user.roles.append(role)
         session.add(user)
         session.commit()
@@ -69,9 +75,19 @@ class LoginResource(MethodView):
     @auth_blp.response(200, TokenSchema())
     @auth_blp.alt_response(401, schema=MsgSchema())
     def post(self, data):
-        username = data["username"]
+        # Accept username OR email OR phone
         password = data["password"]
-        user = db.session.query(User).filter_by(username=username).first()
+        user = None
+        if data.get("username"):
+            user = db.session.query(User).filter_by(username=data["username"]).first()
+        elif data.get("email"):
+            user = db.session.query(User).filter_by(email=data["email"]).first()
+        elif data.get("phone_number"):
+            user = (
+                db.session.query(User)
+                .filter_by(phone_number=data["phone_number"])
+                .first()
+            )
 
         if (
             user
