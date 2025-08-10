@@ -38,7 +38,11 @@ export const useMedicationStore = defineStore('medication', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await medicationService.updateMedication(id, medicationData);
+        // Exclude medication_id and senior_id from the payload
+        const payload = { ...medicationData };
+        delete payload.medication_id;
+        delete payload.senior_id;
+        const response = await medicationService.updateMedication(id, payload);
         const index = this.medications.findIndex((m) => m.medication_id === id);
         if (index !== -1) {
           this.medications[index] = response.data;
