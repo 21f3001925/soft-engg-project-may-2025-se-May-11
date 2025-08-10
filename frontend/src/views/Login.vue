@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import mockApiService from '../services/mockApiService';
+import authService from '../services/authService';
 import { Mail, Phone } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -20,12 +20,16 @@ const handleLogin = async () => {
   error.value = '';
   loading.value = true;
   try {
-    const response = await mockApiService.login();
-    if (response.status === 200) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      router.push('/dashboard');
+    const payload = { password: password.value };
+    if (loginMethod.value === 'email') {
+      payload.email = email.value;
+    } else if (loginMethod.value === 'phone') {
+      payload.phone_number = phone.value;
     }
+    const response = await authService.login(payload);
+    const token = response.data.access_token;
+    localStorage.setItem('token', token);
+    router.push('/dashboard');
   } catch (err) {
     error.value = 'Invalid credentials';
   } finally {
