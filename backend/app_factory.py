@@ -46,7 +46,17 @@ def create_app(config_class=None):
     socketio.init_app(app)
     mail.init_app(app)
     jwt = JWTManager(app)
-    CORS(app)
+
+    CORS(
+        app,
+        origins="*",
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
+
+    user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+    Security(app, user_datastore)
+
     api = Api(app)
     init_oauth(app)
 
@@ -61,9 +71,6 @@ def create_app(config_class=None):
     api.register_blueprint(news_bp)
     api.register_blueprint(emergency_contacts_blp)
     api.register_blueprint(emergency_blp)
-
-    user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-    Security(app, user_datastore)
 
     with app.app_context():
         db.create_all()
