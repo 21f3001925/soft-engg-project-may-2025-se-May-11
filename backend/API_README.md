@@ -14,16 +14,25 @@ This API is foundational for all user interactions, enabling secure user authent
 
 - **Endpoint:** `/api/v1/auth/signup`
 - **Method:** `POST`
-- **Description:** Registers a new user account (caregiver, senior citizen, or service provider).
+- **Description:** Registers a new user account (caregiver, senior citizen, or service provider). Server generates a unique username internally. Either email or phone_number is required.
 - **Request Body Example:**
+
   ```json
   {
-    "username": "testuser",
     "email": "test@example.com",
     "password": "password123",
     "role": "senior_citizen"
   }
+
+  or
+
+  {
+    "phone_number": "+919876543210",
+    "password": "password123",
+    "role": "caregiver"
+  }
   ```
+
 - **Response Example (201 Created):**
   ```json
   {
@@ -33,7 +42,12 @@ This API is foundational for all user interactions, enabling secure user authent
 - **Error Response Example (409 Conflict):**
   ```json
   {
-    "msg": "Username or email already exists"
+    "msg": "Email already exists"
+  }
+  ```
+  ```json
+  {
+    "msg": "Phone number already exists"
   }
   ```
 
@@ -41,14 +55,23 @@ This API is foundational for all user interactions, enabling secure user authent
 
 - **Endpoint:** `/api/v1/auth/login`
 - **Method:** `POST`
-- **Description:** Authenticates a user with username and password, returning an access token.
+- **Description:** Authenticates a user with email or phone_number plus password, returning an access token.
 - **Request Body Example:**
+
   ```json
   {
-    "username": "testuser",
+    "email": "testuser@test.com",
+    "password": "password123"
+  }
+
+  or
+
+  {
+    "phone_number": "+919876543210",
     "password": "password123"
   }
   ```
+
 - **Response Example (200 OK):**
   ```json
   {
@@ -58,7 +81,7 @@ This API is foundational for all user interactions, enabling secure user authent
 - **Error Response Example (401 Unauthorized):**
   ```json
   {
-    "msg": "Bad username or password"
+    "msg": "Bad email or password"
   }
   ```
 
@@ -482,7 +505,6 @@ This API allows users to manage their profile information, including personal de
 - **Response Example (200 OK):**
   ```json
   {
-    "username": "testuser",
     "email": "test@example.com",
     "name": "Test User",
     "avatar_url": "/static/uploads/avatars/default.png"
@@ -550,7 +572,6 @@ This API allows users to manage their profile information, including personal de
 - **Response Example (200 OK):**
   ```json
   {
-    "username": "testuser",
     "email": "test@example.com",
     "name": "Test User",
     "avatar_url": "/static/uploads/avatars/new_avatar.png"

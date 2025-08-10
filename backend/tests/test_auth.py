@@ -20,7 +20,6 @@ class TestAuth:
         response = client.post(
             "/api/v1/auth/signup",
             json={
-                "username": "testuser",
                 "email": "test@example.com",
                 "password": "password123",
                 "role": "caregiver",
@@ -34,23 +33,21 @@ class TestAuth:
         token_data = decode_token(data["access_token"])
         assert "sub" in token_data  # user_id is stored in `sub`
 
-    def test_signup_duplicate_user(self, client, db_session):
+    def test_signup_duplicate_email(self, client, db_session):
         # First signup
         client.post(
             "/api/v1/auth/signup",
             json={
-                "username": "testuser",
                 "email": "test@example.com",
                 "password": "password123",
                 "role": "caregiver",
             },
         )
 
-        # Try signing up again with same username/email
+        # Try signing up again with same email
         response = client.post(
             "/api/v1/auth/signup",
             json={
-                "username": "testuser",
                 "email": "test@example.com",
                 "password": "password123",
                 "role": "caregiver",
@@ -58,13 +55,12 @@ class TestAuth:
         )
 
         assert response.status_code == 409
-        assert response.get_json()["message"] == "Username or email already exists"
+        assert response.get_json()["message"] == "Email already exists"
 
     def test_signup_invalid_role(self, client, db_session):
         response = client.post(
             "/api/v1/auth/signup",
             json={
-                "username": "badroleuser",
                 "email": "badrole@example.com",
                 "password": "password123",
                 "role": "alien",  # Not a valid role
@@ -74,22 +70,41 @@ class TestAuth:
         assert response.status_code == 400
         assert response.get_json()["message"] == "Invalid role specified"
 
-    def test_login_success(self, client, db_session):
+    def test_login_success_with_email(self, client, db_session):
         # First signup
         client.post(
             "/api/v1/auth/signup",
             json={
-                "username": "loginuser",
                 "email": "login@example.com",
                 "password": "mypassword",
                 "role": "senior_citizen",
             },
         )
 
-        # Then login
+        # Then login with email
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "loginuser", "password": "mypassword"},
+            json={"email": "login@example.com", "password": "mypassword"},
+        )
+
+        assert response.status_code == 200
+        assert "access_token" in response.get_json()
+
+    def test_login_success_with_phone(self, client, db_session):
+        # Signup using phone only
+        client.post(
+            "/api/v1/auth/signup",
+            json={
+                "phone_number": "+919876543210",
+                "password": "mypassword",
+                "role": "senior_citizen",
+            },
+        )
+
+        # Then login with phone
+        response = client.post(
+            "/api/v1/auth/login",
+            json={"phone_number": "+919876543210", "password": "mypassword"},
         )
 
         assert response.status_code == 200
@@ -100,27 +115,51 @@ class TestAuth:
         client.post(
             "/api/v1/auth/signup",
             json={
-                "username": "wrongpass",
                 "email": "wrongpass@example.com",
                 "password": "rightpassword",
-                "role": "SeniorCitizen",
+                "role": "senior_citizen",
             },
         )
 
         # Try logging in with wrong password
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "wrongpass", "password": "wrongpassword"},
+            json={"email": "wrongpass@example.com", "password": "wrongpassword"},
         )
 
         assert response.status_code == 401
-        assert response.get_json()["message"] == "Bad username or password"
+        assert response.get_json()["message"] == "Bad email or password"
+
+    def test_signup_duplicate_phone(self, client, db_session):
+        # First signup with phone
+        client.post(
+            "/api/v1/auth/signup",
+            json={
+                "phone_number": "+919876543210",
+                "password": "password123",
+                "role": "caregiver",
+            },
+        )
+
+        # Duplicate with same phone
+        response = client.post(
+            "/api/v1/auth/signup",
+            json={
+                "phone_number": "+919876543210",
+                "password": "password123",
+                "role": "caregiver",
+            },
+        )
+
+        assert response.status_code == 409
+        assert response.get_json()["message"] == "Phone number already exists"
 
     def test_login_nonexistent_user(self, client):
         # Attempt login for a non-existent user
         response = client.post(
-            "/api/v1/auth/login", json={"username": "ghost", "password": "nope"}
+            "/api/v1/auth/login",
+            json={"email": "ghost@example.com", "password": "nope"},
         )
 
         assert response.status_code == 401
-        assert response.get_json()["message"] == "Bad username or password"
+        assert response.get_json()["message"] == "Bad email or password"
