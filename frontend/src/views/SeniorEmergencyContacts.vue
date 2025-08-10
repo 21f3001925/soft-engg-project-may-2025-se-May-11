@@ -21,9 +21,7 @@ onMounted(async () => {
   await emergencyStore.fetchContactsForSenior(seniorId);
 });
 
-const contacts = computed(() =>
-  emergencyStore.contacts.filter((c) => c.senior_id == seniorId)
-);
+const contacts = computed(() => emergencyStore.contacts.filter((c) => c.senior_id == seniorId));
 
 const seniorName = computed(() => {
   const senior = caregiverStore.assignedSeniors?.find((s) => s.id === seniorId);
