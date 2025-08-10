@@ -5,6 +5,7 @@ from models import User, Role, db
 import os
 from schemas.auth import TokenSchema, MsgSchema
 from flask import redirect, url_for, current_app
+import secrets
 
 oauth_blp = Blueprint(
     "OAuth",
@@ -32,7 +33,11 @@ class GoogleOAuthCallbackResource(MethodView):
     @oauth_blp.alt_response(401, schema=MsgSchema())
     @oauth_blp.alt_response(400, schema=MsgSchema())
     def get(self):
-        token = current_app.oauth.google.authorize_access_token()
+        try:
+            token = current_app.oauth.google.authorize_access_token()
+        except Exception as e:
+            abort(500, message=f"Failed to get access token from Google: {str(e)}")
+
         user_info = token.get("userinfo")
         if not user_info:
             abort(401, message="Failed to get user info from Google.")
@@ -56,7 +61,8 @@ class GoogleOAuthCallbackResource(MethodView):
                 username = f"{base_username}{counter}"
                 counter += 1
 
-            user = User(username=username, email=email, password=None)
+            dummy_password = f"oauth_user_{secrets.token_urlsafe(32)}"
+            user = User(username=username, email=email, password=dummy_password)
             user.roles.append(role)
             db.session.add(user)
             db.session.commit()
