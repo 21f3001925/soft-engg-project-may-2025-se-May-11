@@ -37,19 +37,32 @@ class GoogleOAuthCallbackResource(MethodView):
         if not user_info:
             abort(401, message="Failed to get user info from Google.")
         email = user_info.get("email")
-        username = user_info.get("name")
+        google_name = user_info.get("name")
         user = db.session.query(User).filter_by(email=email).first()
         if not user:
             role = db.session.query(Role).filter_by(name="caregiver").first()
             if not role:
                 abort(400, message="Default role not found.")
+
+            # Generate unique username from Google name or email
+            base_username = (
+                google_name.replace(" ", "_").lower()
+                if google_name
+                else email.split("@")[0]
+            )
+            username = base_username
+            counter = 1
+            while db.session.query(User).filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+
             user = User(username=username, email=email, password=None)
             user.roles.append(role)
             db.session.add(user)
             db.session.commit()
         access_token = create_access_token(identity=str(user.user_id))
         frontend_url = os.environ.get(
-            "FRONTEND_URL", "http://localhost:3000/oauth/callback"
+            "FRONTEND_URL", "http://localhost:5173/oauth/callback"
         )
         redirect_url = f"{frontend_url}?token={access_token}"
         return redirect(redirect_url)

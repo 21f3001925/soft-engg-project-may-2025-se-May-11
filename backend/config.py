@@ -22,9 +22,9 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.environ.get(
         "GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"
     )
-    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
     NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
-    BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
+    BASE_URL = os.environ.get("BASE_URL", "http://localhost:5001")
     API_SPEC_OPTIONS = {
         "servers": [{"url": BASE_URL}],
         "security": [{"jwt": []}],
