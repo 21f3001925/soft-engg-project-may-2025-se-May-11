@@ -34,25 +34,15 @@ events_bp = Blueprint(
 
 @events_bp.route("")
 class EventList(MethodView):
-
+    @jwt_required()
+    @roles_accepted("service_provider", "senior_citizen")
     @events_bp.doc(
         summary="All events organised by various service providers are listed when the route is called."
     )
-    # @events_bp.response(200, EventSchema(many=True))
+    @events_bp.response(200, EventSchema(many=True))
     def get(self):
         events = Event.query.all()
-        result = [
-            {
-                "event_id": event.event_id,
-                "name": event.name,
-                "description": event.description,
-                "date_time": event.date_time.isoformat() if event.date_time else None,
-                "location": event.location,
-                "service_provider_id": event.service_provider_id,
-            }
-            for event in events
-        ]
-        return result
+        return events
 
     @events_bp.doc(summary="Service provider can add a new event using this endpoint.")
     @events_bp.arguments(EventSchema)
@@ -66,7 +56,8 @@ class EventList(MethodView):
 
 @events_bp.route("/<string:event_id>")
 class EventResource(MethodView):
-
+    @jwt_required()
+    @roles_accepted("service_provider", "senior_citizen")
     @events_bp.doc(
         summary="To get specific event details, service provider can use this route with the event id."
     )
