@@ -15,8 +15,9 @@ class EventSchema(Schema):
     location = fields.Str(required=True)
     description = fields.Str()
     service_provider_id = fields.Str()
+
     class Meta:
-        unknown = 'exclude'
+        unknown = "exclude"
 
 
 class EventJoinSchema(Schema):
@@ -37,7 +38,7 @@ class EventList(MethodView):
     @events_bp.doc(
         summary="All events organised by various service providers are listed when the route is called."
     )
-    #@events_bp.response(200, EventSchema(many=True))
+    # @events_bp.response(200, EventSchema(many=True))
     def get(self):
         events = Event.query.all()
         result = [
@@ -60,14 +61,7 @@ class EventList(MethodView):
         event = Event(**new_data)
         db.session.add(event)
         db.session.commit()
-        return {
-            "event_id": event.event_id,
-            "name": event.name,
-            "description": event.description,
-            "date_time": event.date_time.isoformat() if event.date_time else None,
-            "location": event.location,
-            "service_provider_id": event.service_provider_id,
-        }
+        return event
 
 
 @events_bp.route("/<string:event_id>")
@@ -79,14 +73,7 @@ class EventResource(MethodView):
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
         event = Event.query.get_or_404(event_id)
-        return {
-            "event_id": event.event_id,
-            "name": event.name,
-            "description": event.description,
-            "date_time": event.date_time.isoformat() if event.date_time else None,
-            "location": event.location,
-            "service_provider_id": event.service_provider_id,
-        }
+        return event
 
     @events_bp.doc(
         summary="To update event details, service provider can use this route with the event id."
@@ -101,19 +88,12 @@ class EventResource(MethodView):
                     try:
                         value = datetime.fromisoformat(value.replace("Z", "+00:00"))
                     except Exception:
-                        continue  # skip setting date_time if conversion fails
+                        continue
                 if not isinstance(value, datetime):
-                    continue  # skip if still not a datetime
+                    continue
             setattr(event, key, value)
         db.session.commit()
-        return {
-            "event_id": event.event_id,
-            "name": event.name,
-            "description": event.description,
-            "date_time": event.date_time.isoformat() if event.date_time else None,
-            "location": event.location,
-            "service_provider_id": event.service_provider_id,
-        }
+        return event
 
     @jwt_required()
     @roles_accepted("service_provider")
