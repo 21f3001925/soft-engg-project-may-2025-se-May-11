@@ -21,7 +21,7 @@ class GoogleOAuthLoginResource(MethodView):
     )
     @oauth_blp.response(302)
     def get(self):
-        redirect_uri = url_for("oauth.GoogleOAuthCallbackResource", _external=True)
+        redirect_uri = url_for("OAuth.GoogleOAuthCallbackResource", _external=True)
         return current_app.oauth.google.authorize_redirect(redirect_uri)
 
 
