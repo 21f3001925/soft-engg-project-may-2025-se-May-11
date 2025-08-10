@@ -24,7 +24,11 @@ export const useEmergencyStore = defineStore('emergency', {
 
     async addContact(contact) {
       const response = await emergencyService.addEmergencyContact(contact);
-      this.contacts.push(response.data);
+      const newContact = {
+        ...response.data,
+        seniorId: response.data.seniorId ?? response.data.senior_id,
+      };
+      this.contacts.push(newContact);
     },
 
     async updateContact(contact) {
