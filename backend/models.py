@@ -81,6 +81,7 @@ class SeniorCitizen(db.Model):
         db.ForeignKey("user.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
+    age = db.Column(db.Integer)
     font_size = db.Column(db.String)
     theme = db.Column(db.String)
     news_categories = db.Column(db.String)  # Comma-separated news categories
