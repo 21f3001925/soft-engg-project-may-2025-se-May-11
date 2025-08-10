@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Mail, Phone } from 'lucide-vue-next';
+import authService from '../services/authService';
 
 const router = useRouter();
 const registerMethod = ref('email');
@@ -12,7 +13,7 @@ const confirmPassword = ref('');
 const loading = ref(false);
 const error = ref('');
 const success = ref('');
-const role = ref('Care Taker');
+const role = ref('senior_citizen');
 
 const handleRegister = async () => {
   error.value = '';
@@ -30,11 +31,27 @@ const handleRegister = async () => {
     return;
   }
   loading.value = true;
-  setTimeout(() => {
+  try {
+    const payload = {
+      password: password.value,
+      role: role.value,
+    };
+    if (email.value) {
+      payload.email = email.value;
+    }
+    if (registerMethod.value === 'phone') {
+      payload.phone_number = phone.value;
+    }
+    const resp = await authService.signup(payload);
+    if (resp.status === 201) {
+      success.value = 'Registration successful! You can now log in.';
+      setTimeout(() => router.push('/login'), 1200);
+    }
+  } catch (e) {
+    error.value = e?.response?.data?.message || 'Registration failed.';
+  } finally {
     loading.value = false;
-    success.value = 'Registration successful! You can now log in.';
-    setTimeout(() => router.push('/login'), 1200);
-  }, 1000);
+  }
 };
 
 function handleGoogleSignUp() {
@@ -188,9 +205,9 @@ function handleGoogleSignUp() {
             class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition text-base bg-white"
             required
           >
-            <option>Senior Citizen</option>
-            <option>Care Taker</option>
-            <option>Community Member</option>
+            <option value="senior_citizen">Senior Citizen</option>
+            <option value="caregiver">Caregiver</option>
+            <option value="service_provider">Service Provider</option>
           </select>
         </div>
         <div v-if="error" class="text-red-500 text-sm text-center">{{ error }}</div>

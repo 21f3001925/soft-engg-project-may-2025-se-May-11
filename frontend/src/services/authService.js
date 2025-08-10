@@ -5,4 +5,7 @@ export default {
   login(credentials) {
     return apiClient.post('/auth/login', credentials);
   },
+  signup(payload) {
+    return apiClient.post('/auth/signup', payload);
+  },
 };
