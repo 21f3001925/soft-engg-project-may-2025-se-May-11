@@ -7,11 +7,14 @@ import profileService from './services/profileService';
 const userStore = useUserStore();
 
 onMounted(async () => {
-  try {
-    const profileResponse = await profileService.getProfile();
-    userStore.setUser(profileResponse.data);
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const profileResponse = await profileService.getProfile();
+      userStore.setUser(profileResponse.data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
   }
 });
 </script>
