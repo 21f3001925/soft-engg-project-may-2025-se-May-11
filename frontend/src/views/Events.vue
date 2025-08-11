@@ -7,27 +7,28 @@ const toastMessage = ref('');
 
 onMounted(async () => {
   await eventStore.getEvents();
+  await eventStore.fetchJoinedEventIds();
 });
 
 const events = computed(() => eventStore.events || []);
+const joinedEventIds = computed(() => eventStore.joinedEventIds || []);
 
-// async function deleteEvent(item) {
-//   if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
-//     try {
-//       await eventStore.deleteEvent(item.event_id); // Pass the event ID
-//       showToast(`Deleted: "${item.name}"`);
-//     } catch (err) {
-//      showToast(`Error deleting event: ${err.message}`, 'error');
-//    }
-//  }
-//}
+async function setReminder(event) {
+  try {
+    await eventStore.joinEvent(event.event_id);
+    await eventStore.fetchJoinedEventIds(); // Refresh after joining
+    showToast(`Reminder set and joined: "${event.name}"`);
+  } catch (err) {
+    showToast(eventStore.error || 'Failed to join event', 'error');
+  }
+}
 
-// function showToast(message) {
-//   toastMessage.value = message;
-//   setTimeout(() => {
-//     toastMessage.value = '';
-//   }, 2000);
-// }
+function showToast(message) {
+  toastMessage.value = message;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
+}
 </script>
 
 <template>
@@ -40,11 +41,18 @@ const events = computed(() => eventStore.events || []);
       <div v-for="event in events" :key="event.event_id" class="event-card">
         <div class="event-info">
           <div class="event-title">{{ event.name }}</div>
-          <div class="event-date">{{ event.time }}</div>
-          <div class="event-location">{{ event.details }}</div>
+          <div class="event-date">{{ event.date_time }}</div>
+          <div class="event-location">{{ event.location }}</div>
         </div>
         <div class="event-actions">
-          <button class="reminder-button" @click="setReminder(event)">Set Reminder</button>
+          <button
+            v-if="!joinedEventIds.includes(event.event_id)"
+            class="reminder-button"
+            @click="setReminder(event)"
+          >
+            Set Reminder
+          </button>
+          <span v-else style="color: green; font-weight: bold;">Reminder Set</span>
         </div>
       </div>
     </div>

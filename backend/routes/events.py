@@ -146,3 +146,19 @@ class EventJoin(MethodView):
             )
 
         return {"message": "Successfully joined event and reminder scheduled"}, 200
+
+
+class JoinedEventsSchema(Schema):
+    event_ids = fields.List(fields.Str())
+
+
+@events_bp.route("/joined")
+class JoinedEvents(MethodView):
+    @jwt_required()
+    @roles_accepted("senior_citizen")
+    @events_bp.response(200, JoinedEventsSchema)
+    def get(self):
+        senior_id = get_jwt_identity()
+        joined = EventAttendance.query.filter_by(senior_id=senior_id).all()
+        event_ids = [ea.event_id for ea in joined]
+        return {"event_ids": event_ids}

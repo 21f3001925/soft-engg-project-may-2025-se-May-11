@@ -37,7 +37,10 @@ export default {
   deleteEvents(event_id) {
     return apiClient.delete(`/events/${event_id}`);
   },
-  joinAEvent() {
-    return apiClient.post('/events/join');
+  joinAEvent(event_id) {
+    return apiClient.post('/events/join', { event_id });
+  },
+  getJoinedEvents() {
+    return apiClient.get('/events/joined');
   },
 };
