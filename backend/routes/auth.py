@@ -1,10 +1,16 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_current_user
 from models import User, Role, db, Caregiver, SeniorCitizen, ServiceProvider
 
 import bcrypt
-from schemas.auth import SignupSchema, LoginSchema, TokenSchema, MsgSchema
+from schemas.auth import (
+    SignupSchema,
+    LoginSchema,
+    TokenSchema,
+    MsgSchema,
+    ChangePasswordSchema,
+)
 
 auth_blp = Blueprint(
     "Auth",
@@ -107,3 +113,37 @@ class LoginResource(MethodView):
             access_token = create_access_token(identity=str(user.user_id))
             return {"access_token": access_token}, 200
         abort(401, message="Bad email or password")
+
+
+@auth_blp.route("/change-password")
+class ChangePasswordResource(MethodView):
+    @auth_blp.doc(summary="Change user's password")
+    @auth_blp.arguments(ChangePasswordSchema())
+    @auth_blp.response(200, MsgSchema())
+    @auth_blp.alt_response(400, schema=MsgSchema())
+    @auth_blp.alt_response(401, schema=MsgSchema())
+    @jwt_required()
+    def post(self, data):
+        user_id = get_current_user().user_id
+        user = db.session.query(User).filter_by(user_id=user_id).first()
+
+        if not user:
+            abort(401, message="User not found.")
+
+        current_password = data["current_password"]
+        new_password = data["new_password"]
+        confirm_new_password = data["confirm_new_password"]
+
+        if not bcrypt.checkpw(current_password.encode(), user.password.encode()):
+            abort(401, message="Invalid current password.")
+
+        if new_password != confirm_new_password:
+            abort(400, message="New password and confirmation do not match.")
+
+        if len(new_password) < 6:
+            abort(400, message="New password must be at least 6 characters long.")
+
+        user.password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+        db.session.commit()
+
+        return {"msg": "Password changed successfully"}, 200
