@@ -1,8 +1,11 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
+import { useUserStore } from '../store/userStore';
+import reminderService from '../services/reminderService';
 
 const scheduleStore = useScheduleStore();
+const userStore = useUserStore();
 const toastMessage = ref('');
 
 onMounted(async () => {
@@ -11,8 +14,21 @@ onMounted(async () => {
 
 const events = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
 
-function setReminder(item) {
-  showToast(`Reminder set for: "${item.name}"`);
+async function setReminder(item) {
+  try {
+    const reminderData = {
+      appointment_id: item.id,
+      title: item.name,
+      location: item.details,
+      date_time: item.time,
+      email: userStore.user.email,
+    };
+    await reminderService.scheduleReminder(reminderData);
+    showToast(`Reminder set for: "${item.name}"`);
+  } catch (error) {
+    console.error('Error setting reminder:', error);
+    showToast(`Failed to set reminder for: "${item.name}"`);
+  }
 }
 
 function deleteEvent(item) {
