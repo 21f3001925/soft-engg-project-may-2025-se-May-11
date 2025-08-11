@@ -2,7 +2,7 @@
 
 (
   cd backend
-  poetry run gunicorn --bind 127.0.0.1:5000 --reload "app:app"
+  poetry run gunicorn --bind 127.0.0.1:5001 --reload "app:app"
 ) &
 BACKEND_PID=$!
 
@@ -24,7 +24,7 @@ cleanup() {
 
     echo "Forcing shutdown of any remaining processes..."
 
-    lsof -ti:5000 | xargs kill -9 2>/dev/null
+    lsof -ti:5001 | xargs kill -9 2>/dev/null
     pkill -f "node.*npm" 2>/dev/null
     pkill -f "gunicorn" 2>/dev/null
 
