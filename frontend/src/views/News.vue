@@ -80,13 +80,18 @@ const formatDate = (dateString) => {
           />
           <select
             v-model="selectedCategory"
-            class="w-full pl-12 pr-3 py-3 border-2 border-gray-200 rounded-xl text-base bg-white cursor-pointer transition-colors focus:outline-none focus:border-blue-600"
+            class="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl text-base bg-white cursor-pointer transition-colors focus:outline-none focus:border-blue-600 appearance-none"
           >
             <option value="">All Categories</option>
             <option v-for="category in categories" :key="category" :value="category">
               {{ category.charAt(0).toUpperCase() + category.slice(1) }}
             </option>
           </select>
+          <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
         </div>
 
         <button
