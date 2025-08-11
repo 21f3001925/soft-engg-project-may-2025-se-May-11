@@ -21,3 +21,9 @@ class TokenSchema(Schema):
 
 class MsgSchema(Schema):
     msg = fields.Str()
+
+
+class ChangePasswordSchema(Schema):
+    current_password = fields.Str(required=True)
+    new_password = fields.Str(required=True)
+    confirm_new_password = fields.Str(required=True)
