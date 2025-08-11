@@ -1,24 +1,15 @@
 <script setup>
 import { useUserStore } from '../store/userStore';
-import catImg from '../assets/cat.png';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import profileService from '../services/profileService';
 import emergencyService from '../services/emergencyService';
+import { useAvatar } from '../composables/useAvatar';
 
 const userStore = useUserStore();
 const user = ref(userStore.user);
 const emergencyContacts = ref(userStore.emergencyContacts);
 const stats = userStore.stats;
-const tempAvatarUrl = ref(null); // New ref for temporary avatar URL
-
-const profilePicUrl = computed(() => {
-  if (tempAvatarUrl.value) {
-    return tempAvatarUrl.value; // Use temporary URL for immediate preview
-  } else if (user.value.profilePic) {
-    return user.value.profilePic; // Rely on backend to provide unique URL
-  }
-  return catImg;
-});
+const { avatarUrl: profilePicUrl } = useAvatar();
 
 onMounted(async () => {
   try {
@@ -86,9 +77,6 @@ const onFileChange = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  // Display the selected image immediately
-  tempAvatarUrl.value = URL.createObjectURL(file);
-
   try {
     const response = await profileService.uploadAvatar(file);
     userStore.setUser(response.data);
@@ -97,9 +85,6 @@ const onFileChange = async (event) => {
   } catch (error) {
     console.error('Error uploading avatar:', error);
     alert('Failed to upload avatar. Please try again later.');
-  } finally {
-    URL.revokeObjectURL(tempAvatarUrl.value); // Clean up the temporary URL
-    tempAvatarUrl.value = null; // Clear the temporary URL ref
   }
 };
 
