@@ -42,6 +42,9 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(255), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=True)
     password = db.Column(db.String(255), nullable=False)
+    age = db.Column(db.Integer, nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
     active = db.Column(db.Boolean(), default=True)
     fs_uniquifier = db.Column(
@@ -85,6 +88,11 @@ class SeniorCitizen(db.Model):
     font_size = db.Column(db.String)
     theme = db.Column(db.String)
     news_categories = db.Column(db.String)  # Comma-separated news categories
+    topics_liked = db.Column(db.Integer, default=0)
+    comments_posted = db.Column(db.Integer, default=0)
+    appointments_missed = db.Column(db.Integer, default=0)
+    medications_missed = db.Column(db.Integer, default=0)
+    total_screentime = db.Column(db.Integer, default=0)
 
     user = relationship("User", back_populates="senior_citizen")
     appointments = relationship(
