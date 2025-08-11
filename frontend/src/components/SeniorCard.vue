@@ -2,24 +2,24 @@
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
-const senior = defineProps(['senior']);
+const props = defineProps(['senior']);
 
 function viewMedications() {
-  router.push({ name: 'SeniorMedications', params: { id: senior.senior.id } });
+  router.push({ name: 'SeniorMedications', params: { id: props.senior.id } });
 }
 function viewAppointments() {
-  router.push({ name: 'SeniorAppointments', params: { id: senior.senior.id } });
+  router.push({ name: 'SeniorAppointments', params: { id: props.senior.id } });
 }
 function viewEmergencyContacts() {
-  router.push({ name: 'SeniorEmergencyContacts', params: { id: senior.senior.id } });
+  router.push({ name: 'SeniorEmergencyContacts', params: { id: props.senior.id } });
 }
 </script>
 
 <template>
   <div class="senior-card">
-    <h3><strong>Name:</strong> {{ senior.senior.name }}</h3>
-    <p><strong>Age:</strong> {{ senior.senior.age }}</p>
-    <p><strong>Phone:</strong> {{ senior.senior.phone }}</p>
+    <h3><strong>Name:</strong> {{ props.senior.name }}</h3>
+    <p><strong>Age:</strong> {{ props.senior.age }}</p>
+    <p><strong>Phone:</strong> {{ props.senior.phone }}</p>
 
     <div class="actions">
       <button @click="viewMedications">Manage Medications</button>

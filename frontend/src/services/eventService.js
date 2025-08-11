@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/v1';
+const API_URL = 'http://localhost:5000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -37,7 +37,10 @@ export default {
   deleteEvents(event_id) {
     return apiClient.delete(`/events/${event_id}`);
   },
-  joinAEvent() {
-    return apiClient.post('/events/join');
+  joinAEvent(event_id) {
+    return apiClient.post('/events/join', { event_id });
+  },
+  getJoinedEvents() {
+    return apiClient.get('/events/joined');
   },
 };

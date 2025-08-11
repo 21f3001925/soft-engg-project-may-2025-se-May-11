@@ -8,15 +8,9 @@ export const useUserStore = defineStore('user', {
       age: 75,
       city: 'Noida',
       country: 'India',
-      emergencyNumber: 1234567890,
-      profilePic: null,
+      phone_number: 1234567890,
     },
-    friends: {
-      'Narendra Modi': 1234567890,
-      'Elon Musk': 1234567890,
-      'Donald Trump': 1234567890,
-      'Vladimir Putin': 123456890,
-    },
+    emergencyContacts: [],
     stats: {
       topicsLiked: 200,
       commentsPosted: 50,
@@ -31,8 +25,11 @@ export const useUserStore = defineStore('user', {
   }),
 
   actions: {
-    updateProfilePic(base64Image) {
-      this.user.profilePic = base64Image;
+    setUser(userData) {
+      this.user = { ...this.user, ...userData };
+    },
+    setEmergencyContacts(contacts) {
+      this.emergencyContacts = contacts;
     },
   },
 });

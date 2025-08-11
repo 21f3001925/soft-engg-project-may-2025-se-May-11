@@ -55,7 +55,7 @@ class EmergencyContactsResource(MethodView):
         summary="Add a new emergency contact for the logged in senior citizen."
     )
     @emergency_contacts_blp.arguments(EmergencyContactSchema())
-    @emergency_contacts_blp.response(201, EmergencyContactAddResponseSchema())
+    @emergency_contacts_blp.response(201, EmergencyContactResponseSchema())
     @emergency_contacts_blp.alt_response(
         400, schema=EmergencyContactAddResponseSchema()
     )
@@ -73,11 +73,8 @@ class EmergencyContactsResource(MethodView):
             )
             session.add(contact)
             session.commit()
-            resp = {
-                "message": "Emergency contact added",
-                "contact_id": contact.contact_id,
-            }
-            return resp, 201
+            session.refresh(contact)
+            return contact
         except Exception as e:
             session.rollback()
             abort(400, message=str(e))

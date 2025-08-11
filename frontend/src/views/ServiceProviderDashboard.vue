@@ -1,20 +1,20 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useScheduleStore } from '../store/scheduleStore';
+import { useProviderStore } from '../store/providerStore';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 import EventForm from '../components/EventForm.vue';
 
-const scheduleStore = useScheduleStore();
+const providerStore = useProviderStore();
 const selectedItem = ref(null);
 const showModal = ref(false);
 const isEdit = ref(false);
 const toastMessage = ref('');
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
+  await providerStore.fetchEvents();
 });
 
-const appointments = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
+const events = computed(() => providerStore.events || []);
 
 function openAddModal() {
   selectedItem.value = null;
@@ -28,27 +28,29 @@ function openEditModal(item) {
   showModal.value = true;
 }
 
-function deleteEvent(item) {
-  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((e) => e.id !== item.id);
-  showToast(`Deleted: "${item.name}"`);
+async function deleteEvent(item) {
+  try {
+    await providerStore.deleteEvent(item.event_id || item.id);
+    showToast(`Deleted: "${item.name}"`);
+  } catch (err) {
+    showToast('Failed to delete event');
+  }
 }
 
-function handleFormSubmit(eventData) {
-  if (isEdit.value) {
-    const index = scheduleStore.schedule.items.findIndex((e) => e.id === eventData.id);
-    if (index !== -1) {
-      scheduleStore.schedule.items[index] = { ...eventData };
+async function handleFormSubmit(eventData) {
+  try {
+    if (isEdit.value) {
+      // Use the ID from selectedItem, not from eventData
+      await providerStore.updateEvent(selectedItem.value.event_id || selectedItem.value.id, eventData);
       showToast(`Updated: "${eventData.name}"`);
+    } else {
+      await providerStore.addEvent(eventData);
+      showToast(`Added new event: "${eventData.name}"`);
     }
-  } else {
-    scheduleStore.schedule.items.push({
-      ...eventData,
-      id: Date.now(),
-      type: 'event',
-    });
-    showToast(`Added new event: "${eventData.name}"`);
+    showModal.value = false;
+  } catch (err) {
+    showToast('Failed to save event');
   }
-  showModal.value = false;
 }
 
 function showToast(msg) {
@@ -63,16 +65,16 @@ function showToast(msg) {
   <div class="appointments">
     <h1>Manage Local Events</h1>
 
-    <div v-if="scheduleStore.schedule.loading" class="loading">Loading events...</div>
-    <div v-else-if="scheduleStore.schedule.error" class="error">
-      {{ scheduleStore.schedule.error }}
+    <div v-if="providerStore.loading" class="loading">Loading events...</div>
+    <div v-else-if="providerStore.error" class="error">
+      {{ providerStore.error }}
     </div>
-    <div v-else-if="appointments.length === 0" class="empty">No events scheduled</div>
+    <div v-else-if="events.length === 0" class="empty">No events scheduled</div>
 
     <div v-else class="appointment-list">
       <ScheduleRowItem
-        v-for="item in appointments"
-        :key="item.id"
+        v-for="item in events"
+        :key="item.event_id || item.id"
         :schedule="item"
         :hide-type="true"
         :compact-layout="true"

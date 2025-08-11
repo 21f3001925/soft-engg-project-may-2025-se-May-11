@@ -1,8 +1,22 @@
 <script setup>
 import { useUserStore } from './store/userStore';
 import TopNavBar from './components/TopNavBar.vue';
+import { onMounted } from 'vue';
+import profileService from './services/profileService';
 
 const userStore = useUserStore();
+
+onMounted(async () => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const profileResponse = await profileService.getProfile();
+      userStore.setUser(profileResponse.data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  }
+});
 </script>
 
 <template>

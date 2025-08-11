@@ -5,6 +5,7 @@ from models import User, Role, db
 import os
 from schemas.auth import TokenSchema, MsgSchema
 from flask import redirect, url_for, current_app
+import secrets
 
 oauth_blp = Blueprint(
     "OAuth",
@@ -21,7 +22,7 @@ class GoogleOAuthLoginResource(MethodView):
     )
     @oauth_blp.response(302)
     def get(self):
-        redirect_uri = url_for("oauth.GoogleOAuthCallbackResource", _external=True)
+        redirect_uri = url_for("OAuth.GoogleOAuthCallbackResource", _external=True)
         return current_app.oauth.google.authorize_redirect(redirect_uri)
 
 
@@ -32,24 +33,42 @@ class GoogleOAuthCallbackResource(MethodView):
     @oauth_blp.alt_response(401, schema=MsgSchema())
     @oauth_blp.alt_response(400, schema=MsgSchema())
     def get(self):
-        token = current_app.oauth.google.authorize_access_token()
+        try:
+            token = current_app.oauth.google.authorize_access_token()
+        except Exception as e:
+            abort(500, message=f"Failed to get access token from Google: {str(e)}")
+
         user_info = token.get("userinfo")
         if not user_info:
             abort(401, message="Failed to get user info from Google.")
         email = user_info.get("email")
-        username = user_info.get("name")
+        google_name = user_info.get("name")
         user = db.session.query(User).filter_by(email=email).first()
         if not user:
             role = db.session.query(Role).filter_by(name="caregiver").first()
             if not role:
                 abort(400, message="Default role not found.")
-            user = User(username=username, email=email, password=None)
+
+            # Generate unique username from Google name or email
+            base_username = (
+                google_name.replace(" ", "_").lower()
+                if google_name
+                else email.split("@")[0]
+            )
+            username = base_username
+            counter = 1
+            while db.session.query(User).filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            dummy_password = f"oauth_user_{secrets.token_urlsafe(32)}"
+            user = User(username=username, email=email, password=dummy_password)
             user.roles.append(role)
             db.session.add(user)
             db.session.commit()
         access_token = create_access_token(identity=str(user.user_id))
         frontend_url = os.environ.get(
-            "FRONTEND_URL", "http://localhost:3000/oauth/callback"
+            "FRONTEND_URL", "http://localhost:5173/oauth/callback"
         )
         redirect_url = f"{frontend_url}?token={access_token}"
         return redirect(redirect_url)

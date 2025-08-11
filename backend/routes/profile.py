@@ -1,12 +1,18 @@
+from datetime import datetime
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required, get_current_user
-from models import db
+from models import db, User
 import bcrypt
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app
-from schemas.profile import ProfileSchema, ChangePasswordSchema, AvatarUploadSchema
+from schemas.profile import (
+    ProfileSchema,
+    ChangePasswordSchema,
+    AvatarUploadSchema,
+    SeniorSchema,
+)
 
 
 profile_bp = Blueprint(
@@ -93,6 +99,21 @@ class AvatarUploadResource(MethodView):
             avatar_folder = os.path.join(upload_folder, "avatars")
             os.makedirs(avatar_folder, exist_ok=True)
             file.save(os.path.join(avatar_folder, filename))
-            user.avatar_url = f"static/uploads/avatars/{filename}"
+            timestamp = datetime.now().timestamp()
+            user.avatar_url = f"static/uploads/avatars/{filename}?t={timestamp}"
             db.session.commit()
         return user
+
+
+@profile_bp.route("/caregiver/seniors")
+class CaregiverSeniorsResource(MethodView):
+    @jwt_required()
+    @profile_bp.doc(summary="Get the list of seniors assigned to the current caregiver")
+    @profile_bp.response(200, SeniorSchema(many=True))
+    def get(self):
+        user = User.query.get("007b3fe8-6e33-4317-896d-88d5a651061a")
+        if not user.caregiver:
+            abort(403, message="User is not a caregiver")
+
+        seniors = [assignment.senior.user for assignment in user.caregiver.assignments]
+        return seniors

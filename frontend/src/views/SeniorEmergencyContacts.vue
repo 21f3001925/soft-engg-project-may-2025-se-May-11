@@ -9,7 +9,8 @@ const emergencyStore = useEmergencyStore();
 const caregiverStore = useCaregiverStore();
 const route = useRoute();
 
-const seniorId = parseInt(route.params.id);
+//const seniorId = parseInt(route.params.id);
+const seniorId = 1;
 const selectedContact = ref(null);
 const showModal = ref(false);
 const isEdit = ref(false);
@@ -20,7 +21,7 @@ onMounted(async () => {
   await emergencyStore.fetchContactsForSenior(seniorId);
 });
 
-const contacts = computed(() => emergencyStore.contacts.filter((c) => c.seniorId === seniorId));
+const contacts = computed(() => emergencyStore.contacts.filter((c) => c.senior_id == seniorId));
 
 const seniorName = computed(() => {
   const senior = caregiverStore.assignedSeniors?.find((s) => s.id === seniorId);
@@ -39,23 +40,27 @@ function editContact(contact) {
   showModal.value = true;
 }
 
-function deleteContact(contactId) {
-  emergencyStore.contacts = emergencyStore.contacts.filter((c) => c.id !== contactId);
+async function deleteContact(contactId) {
+  await emergencyStore.deleteContact(contactId);
   showToast('Contact deleted');
 }
 
-function handleSubmit(newContact) {
+async function handleSubmit(newContact) {
   if (isEdit.value) {
-    const index = emergencyStore.contacts.findIndex((c) => c.id === newContact.id);
-    if (index !== -1) {
-      emergencyStore.contacts[index] = { ...newContact };
-      showToast('Contact updated');
-    }
+    // Only pass name, relation, phone, and contact_id
+    await emergencyStore.updateContact({
+      contact_id: selectedContact.value.contact_id,
+      name: newContact.name,
+      relation: newContact.relation,
+      phone: newContact.phone,
+    });
+    showToast('Contact updated');
   } else {
-    emergencyStore.contacts.push({
-      ...newContact,
-      id: Date.now(),
-      seniorId,
+    // Only pass name, relation, phone, and senior_id for add
+    await emergencyStore.addContact({
+      name: newContact.name,
+      relation: newContact.relation,
+      phone: newContact.phone,
     });
     showToast('Contact added');
   }
@@ -75,11 +80,11 @@ function showToast(msg) {
     <div v-if="contacts.length === 0" class="empty">No contacts available.</div>
 
     <ul v-else class="contact-list">
-      <li v-for="contact in contacts" :key="contact.id" class="contact-item">
+      <li v-for="contact in contacts" :key="contact.contact_id" class="contact-item">
         <span>{{ contact.name }} - {{ contact.phone }}</span>
         <div class="buttons">
           <button class="edit-btn" @click="editContact(contact)">Edit</button>
-          <button class="delete-btn" @click="deleteContact(contact.id)">Delete</button>
+          <button class="delete-btn" @click="deleteContact(contact.contact_id)">Delete</button>
         </div>
       </li>
     </ul>
