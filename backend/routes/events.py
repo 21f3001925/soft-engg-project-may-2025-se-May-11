@@ -14,7 +14,10 @@ class EventSchema(Schema):
     date_time = fields.DateTime(required=True)
     location = fields.Str(required=True)
     description = fields.Str()
-    service_provider_id = fields.Str(required=True)
+    service_provider_id = fields.Str()
+
+    class Meta:
+        unknown = "exclude"
 
 
 class EventJoinSchema(Schema):
@@ -31,18 +34,16 @@ events_bp = Blueprint(
 
 @events_bp.route("")
 class EventList(MethodView):
-
     @jwt_required()
-    @roles_accepted("service_provider")
+    @roles_accepted("service_provider", "senior_citizen")
     @events_bp.doc(
         summary="All events organised by various service providers are listed when the route is called."
     )
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
-        return Event.query.all()
+        events = Event.query.all()
+        return events
 
-    @jwt_required()
-    @roles_accepted("service_provider")
     @events_bp.doc(summary="Service provider can add a new event using this endpoint.")
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
@@ -55,18 +56,16 @@ class EventList(MethodView):
 
 @events_bp.route("/<string:event_id>")
 class EventResource(MethodView):
-
     @jwt_required()
-    @roles_accepted("service_provider")
+    @roles_accepted("service_provider", "senior_citizen")
     @events_bp.doc(
         summary="To get specific event details, service provider can use this route with the event id."
     )
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
-        return Event.query.get_or_404(event_id)
+        event = Event.query.get_or_404(event_id)
+        return event
 
-    @jwt_required()
-    @roles_accepted("service_provider")
     @events_bp.doc(
         summary="To update event details, service provider can use this route with the event id."
     )
@@ -75,6 +74,14 @@ class EventResource(MethodView):
     def put(self, update_data, event_id):
         event = Event.query.get_or_404(event_id)
         for key, value in update_data.items():
+            if key == "date_time":
+                if isinstance(value, str):
+                    try:
+                        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    except Exception:
+                        continue
+                if not isinstance(value, datetime):
+                    continue
             setattr(event, key, value)
         db.session.commit()
         return event

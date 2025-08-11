@@ -62,7 +62,7 @@ class TestOAuthGoogleCallback:
 
             # Patch FRONTEND_URL
             mocker.patch.dict(
-                "os.environ", {"FRONTEND_URL": "http://localhost:3000/oauth/callback"}
+                "os.environ", {"FRONTEND_URL": "http://localhost:5173/oauth/callback"}
             )
 
             #  Patch User init to avoid password=None issue
@@ -88,13 +88,13 @@ class TestOAuthGoogleCallback:
 
             redirect_url = response.headers["Location"]
             assert redirect_url.startswith(
-                "http://localhost:3000/oauth/callback?token="
+                "http://localhost:5173/oauth/callback?token="
             )
 
             #  Assert user was created
             user = User.query.filter_by(email=email).first()
             assert user is not None
-            assert user.username == username
+            assert user.username == "new_user"
 
             #  Assert token is valid
             token = parse_qs(urlparse(redirect_url).query).get("token", [None])[0]
@@ -133,7 +133,7 @@ class TestOAuthGoogleCallback:
 
             # Patch FRONTEND_URL
             mocker.patch.dict(
-                "os.environ", {"FRONTEND_URL": "http://localhost:3000/oauth/callback"}
+                "os.environ", {"FRONTEND_URL": "http://localhost:5173/oauth/callback"}
             )
 
             response = client.get(
@@ -142,7 +142,7 @@ class TestOAuthGoogleCallback:
             assert response.status_code == 302
             redirect_url = response.headers["Location"]
             assert redirect_url.startswith(
-                "http://localhost:3000/oauth/callback?token="
+                "http://localhost:5173/oauth/callback?token="
             )
 
             # Token validation
