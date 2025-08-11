@@ -40,7 +40,7 @@ class User(db.Model, UserMixin):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     username = db.Column(db.String(255), unique=True, nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=True)
     password = db.Column(db.String(255), nullable=False)
     age = db.Column(db.Integer, nullable=True)
     city = db.Column(db.String(100), nullable=True)
@@ -84,6 +84,7 @@ class SeniorCitizen(db.Model):
         db.ForeignKey("user.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
+    age = db.Column(db.Integer)
     font_size = db.Column(db.String)
     theme = db.Column(db.String)
     news_categories = db.Column(db.String)  # Comma-separated news categories

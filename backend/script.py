@@ -1,161 +1,131 @@
-import uuid
+# script.py
 from datetime import datetime, timedelta, timezone
+import secrets
 
-from werkzeug.security import generate_password_hash
+from flask import Flask
 from extensions import db
-from app import create_app  # assuming you have create_app in your Flask app
 from models import (
     Role,
     User,
     SeniorCitizen,
     Caregiver,
     CaregiverAssignment,
+    ServiceProvider,
+    Event,
     Appointment,
     Medication,
     EmergencyContact,
-    Feedback,
-    ServiceProvider,
-    Event,
-    EventAttendance,
-    Alert,
-    AlertType,
-    ReferenceType,
 )
 
-app = create_app()
+# Flask app + DB setup
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///senior_citizen.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
 
-with app.app_context():
+
+def create_dummy_data():
     db.drop_all()
     db.create_all()
 
-    # Create Roles
-    role_senior = Role(name="senior", description="Senior citizen user")
-    role_caregiver = Role(name="caregiver", description="Caregiver user")
+    # Roles
+    role_senior = Role(name="senior", description="Senior Citizen")
+    role_caregiver = Role(name="caregiver", description="Caregiver")
     db.session.add_all([role_senior, role_caregiver])
-    db.session.commit()
 
-    # Create Users
+    # Senior User
     senior_user = User(
-        username="john_senior",
-        email="john@example.com",
-        password=generate_password_hash("password123"),
-        age=75,
-        city="New York",
-        country="USA",
-        phone_number="1234567890",
-        name="John Doe",
+        username="senior1",
+        email="senior1@example.com",
+        password="password123",
+        name="John Senior",
+        fs_uniquifier=secrets.token_urlsafe(32),
+        created_at=datetime.now(timezone.utc),
     )
     senior_user.roles.append(role_senior)
-
-    caregiver_user = User(
-        username="mary_caregiver",
-        email="mary@example.com",
-        password=generate_password_hash("password123"),
-        age=45,
-        city="New York",
-        country="USA",
-        phone_number="0987654321",
-        name="Mary Smith",
-    )
-    caregiver_user.roles.append(role_caregiver)
-
-    db.session.add_all([senior_user, caregiver_user])
-    db.session.commit()
-
-    # SeniorCitizen & Caregiver profiles
-    senior_profile = SeniorCitizen(
-        user_id=senior_user.user_id,
+    senior = SeniorCitizen(
+        user=senior_user,
+        age=75,
         font_size="medium",
         theme="light",
-        news_categories="health,finance",
-        topics_liked=5,
-        comments_posted=2,
+        news_categories="health,technology",
     )
-    caregiver_profile = Caregiver(user_id=caregiver_user.user_id)
-    db.session.add_all([senior_profile, caregiver_profile])
-    db.session.commit()
 
-    # Assign caregiver to senior
-    assignment = CaregiverAssignment(
-        caregiver_id=caregiver_profile.user_id, senior_id=senior_profile.user_id
+    # Caregiver User
+    caregiver_user = User(
+        username="caregiver1",
+        email="caregiver1@example.com",
+        password="password123",
+        name="Jane Caregiver",
+        fs_uniquifier=secrets.token_urlsafe(32),
+        created_at=datetime.now(timezone.utc),
     )
-    db.session.add(assignment)
+    caregiver_user.roles.append(role_caregiver)
+    caregiver = Caregiver(user=caregiver_user)
 
-    # Emergency Contact
-    contact = EmergencyContact(
-        name="Jane Emergency",
-        relation="Daughter",
-        phone="555-1234",
-        email="jane@example.com",
-        senior_id=senior_user.user_id,
+    # Assignment
+    assignment = CaregiverAssignment(caregiver=caregiver, senior=senior)
+
+    # Service Provider
+    sp = ServiceProvider(
+        name="Happy Seniors Services",
+        contact_email="contact@hss.com",
+        phone_number="1234567890",
+        services_offered="events,healthcare",
     )
-    db.session.add(contact)
 
-    # Appointment
+    # Event
+    event = Event(
+        name="Health Checkup Camp",
+        date_time=datetime.now(timezone.utc) + timedelta(days=3),
+        location="Community Center",
+        description="Free health checkups for seniors.",
+        service_provider=sp,
+    )
+
+    # Appointment for Senior
     appointment = Appointment(
         title="Doctor Visit",
         date_time=datetime.now(timezone.utc) + timedelta(days=2),
-        location="City Clinic",
-        reminder_time=datetime.now(timezone.utc) + timedelta(days=1),
-        senior_id=senior_profile.user_id,
+        location="City Hospital",
+        senior=senior,
     )
-    db.session.add(appointment)
 
-    # Medication
+    # Medication for Senior
     medication = Medication(
         name="Aspirin",
-        dosage="1 pill",
-        time=datetime.now(timezone.utc) + timedelta(hours=8),
-        senior_id=senior_profile.user_id,
+        dosage="75mg",
+        time=datetime.now(timezone.utc) + timedelta(hours=5),
+        senior=senior,
     )
-    db.session.add(medication)
 
-    # Service Provider & Event
-    provider = ServiceProvider(
-        name="Community Center",
-        contact_email="info@community.org",
-        phone_number="555-9876",
-        services_offered="Health workshops, exercise classes",
+    # Emergency Contact
+    emergency_contact = EmergencyContact(
+        name="Mike Emergency",
+        relation="Son",
+        phone="9876543210",
+        email="mike@example.com",
+        senior=senior_user,
     )
-    db.session.add(provider)
+
+    db.session.add_all(
+        [
+            senior_user,
+            senior,
+            caregiver_user,
+            caregiver,
+            assignment,
+            sp,
+            event,
+            appointment,
+            medication,
+            emergency_contact,
+        ]
+    )
     db.session.commit()
+    print("Dummy data created successfully!")
 
-    event = Event(
-        name="Yoga for Seniors",
-        date_time=datetime.now(timezone.utc) + timedelta(days=3),
-        location="Community Hall",
-        description="Gentle yoga session",
-        service_provider_id=provider.service_provider_id,
-    )
-    db.session.add(event)
-    db.session.commit()
 
-    # Event Attendance
-    attendance = EventAttendance(
-        senior_id=senior_profile.user_id, event_id=event.event_id
-    )
-    db.session.add(attendance)
-
-    # Alert
-    alert = Alert(
-        recipient_user_id=senior_user.user_id,
-        alert_type=AlertType.missed_medication,
-        message="You missed your morning Aspirin dose.",
-        reference_type=ReferenceType.medication,
-        reference_id=medication.medication_id,
-    )
-    db.session.add(alert)
-
-    # Feedback/News
-    news = Feedback(
-        api_article_id=str(uuid.uuid4()),
-        title="Senior Health Tips",
-        description="Daily exercises for seniors to stay healthy",
-        url="https://example.com/article",
-        source="Health News",
-        category="health",
-    )
-    db.session.add(news)
-
-    db.session.commit()
-    print("✅ Database populated with sample data.")
+if __name__ == "__main__":
+    with app.app_context():
+        create_dummy_data()

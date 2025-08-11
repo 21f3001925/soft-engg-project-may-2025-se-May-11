@@ -8,6 +8,10 @@
           <input v-model="form.name" required />
         </label>
         <label class="form-field">
+          Relation:
+          <input v-model="form.relation" required />
+        </label>
+        <label class="form-field">
           Phone:
           <input v-model="form.phone" required />
         </label>
@@ -33,12 +37,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
-const form = reactive({ name: '', phone: '' });
+const form = reactive({ name: '', relation: '', phone: '' });
 
 watch(
   () => props.modelValue,
   (val) => {
     form.name = val?.name || '';
+    form.relation = val?.relation || '';
     form.phone = val?.phone || '';
   },
   { immediate: true },
