@@ -3,10 +3,11 @@ import { useUserStore } from '../store/userStore';
 import catImg from '../assets/cat.png';
 import { ref, onMounted, computed } from 'vue';
 import profileService from '../services/profileService';
+import emergencyService from '../services/emergencyService';
 
 const userStore = useUserStore();
 const user = ref(userStore.user);
-const friends = userStore.friends;
+const emergencyContacts = ref(userStore.emergencyContacts);
 const stats = userStore.stats;
 const tempAvatarUrl = ref(null); // New ref for temporary avatar URL
 
@@ -21,9 +22,13 @@ const profilePicUrl = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await profileService.getProfile();
-    userStore.setUser(response.data);
-    user.value = response.data;
+    const profileResponse = await profileService.getProfile();
+    userStore.setUser(profileResponse.data);
+    user.value = profileResponse.data;
+
+    const emergencyContactsResponse = await emergencyService.getEmergencyContacts();
+    userStore.setEmergencyContacts(emergencyContactsResponse.data);
+    emergencyContacts.value = emergencyContactsResponse.data;
   } catch (error) {
     console.error('Error fetching profile:', error);
     alert('Failed to load profile data. Please try again later.');
@@ -54,6 +59,14 @@ const saveProfile = async () => {
       total_screentime,
       ...profileData
     } = user.value;
+
+    // Remove null and undefined values
+    Object.keys(profileData).forEach((key) => {
+      if (profileData[key] === null || profileData[key] === undefined) {
+        delete profileData[key];
+      }
+    });
+
     const response = await profileService.updateProfile(profileData);
     userStore.setUser(response.data);
     user.value = response.data;
@@ -66,7 +79,7 @@ const saveProfile = async () => {
 };
 
 const contactEmergency = () => {
-  alert(`Calling emergency number: ${userStore.user.emergencyNumber}`);
+  alert(`Calling emergency number: ${userStore.user.phone_number}`);
 };
 
 const onFileChange = async (event) => {
@@ -90,7 +103,7 @@ const onFileChange = async (event) => {
   }
 };
 
-function emergencyContacts() {
+function goToEmergencyContacts() {
   window.location.href = '/emergency-contacts';
 }
 </script>
@@ -110,7 +123,7 @@ function emergencyContacts() {
           <p><strong>Age:</strong> {{ user.age }}</p>
           <p><strong>City:</strong> {{ user.city }}</p>
           <p><strong>Country:</strong> {{ user.country }}</p>
-          <p><strong>Emergency Number:</strong> {{ user.emergencyNumber }}</p>
+          <p><strong>Phone Number:</strong> {{ user.phone_number }}</p>
           <p v-if="user.news_categories"><strong>News Categories:</strong> {{ user.news_categories }}</p>
           <button class="edit-button" @click="editProfile">Edit Profile</button>
         </div>
@@ -120,7 +133,7 @@ function emergencyContacts() {
           <p><strong>Age:</strong> <input type="number" v-model="user.age" /></p>
           <p><strong>City:</strong> <input type="text" v-model="user.city" /></p>
           <p><strong>Country:</strong> <input type="text" v-model="user.country" /></p>
-          <p><strong>Emergency Number:</strong> <input type="text" v-model="user.emergencyNumber" /></p>
+          <p><strong>Phone Number:</strong> <input type="text" v-model="user.phone_number" /></p>
           <p v-if="user.news_categories">
             <strong>News Categories:</strong> <input type="text" v-model="user.news_categories" />
           </p>
@@ -128,18 +141,18 @@ function emergencyContacts() {
           <button class="edit-button" @click="cancelEdit">Cancel</button>
         </div>
       </div>
-      <button class="emergency-button" @click="contactEmergency">Contact Emergency Number</button>
+      <button class="emergency-button" @click="contactEmergency">Notify Emergency Contacts</button>
     </div>
 
     <div class="card friends-list">
-      <h3 style="margin-top: 1px"><b>Your Contacts</b></h3>
+      <h3 style="margin-top: 1px"><b>Your Emergency Contacts</b></h3>
       <hr />
       <br />
       <div>
-        <div v-for="(number, name) in friends" :key="name" class="friend-item">{{ name }}</div>
+        <div v-for="contact in emergencyContacts" :key="contact.contact_id" class="friend-item">{{ contact.name }}</div>
       </div>
 
-      <button class="edit-button" @click="emergencyContacts">Edit Contacts</button>
+      <button class="edit-button" @click="goToEmergencyContacts">Edit Contacts</button>
     </div>
 
     <div class="card user-stats">
