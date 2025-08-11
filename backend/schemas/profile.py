@@ -6,7 +6,12 @@ class ProfileSchema(Schema):
     email = fields.Email()
     name = fields.Str()
     avatar_url = fields.Str(dump_only=True)
-    news_categories = fields.Str(allow_none=True)
+    news_categories = fields.Method("get_news_categories")
+
+    def get_news_categories(self, obj):
+        if hasattr(obj, "senior_citizen") and obj.senior_citizen:
+            return obj.senior_citizen.news_categories
+        return None
 
 
 class ChangePasswordSchema(Schema):
