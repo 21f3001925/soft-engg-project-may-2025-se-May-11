@@ -1,3 +1,13 @@
 venv/
 __pycache__/
 .DS_Store
+venv/
+__pycache__/
+.DS_Store
+.env
+.venv/
+celerybeat-schedule
+celerybeat-schedule.db
+static/
+instance/senior_citizen.db
+instance/senior_citizen.db-journal

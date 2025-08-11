@@ -1,43 +1,76 @@
 <script setup>
-import { onMounted, computed } from 'vue';
-import { useScheduleStore } from '../store/scheduleStore';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import { onMounted, computed, ref } from 'vue';
 
-const scheduleStore = useScheduleStore();
+const toastMessage = ref('');
+import { useMedicationStore } from '../store/medicationStore';
+import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import MedicationForm from '../components/MedicationForm.vue';
+
+const medicationStore = useMedicationStore();
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
-  await scheduleStore.fetchAllMedications();
+  await medicationStore.fetchMedications();
 });
 
-const medications = computed(() => scheduleStore.allMedications.items);
+const medications = computed(() => medicationStore.medications);
 
-function editMedications() {
-  console.log('Edit button clicked!');
-}
-
-function markAsTaken() {
-  console.log('Mark as taken button clicked!');
-}
+const showModal = ref(false);
+const selectedMedication = ref(null);
+const isEdit = ref(false);
 
 function addMedications() {
-  console.log('Add medication button clicked!');
+  selectedMedication.value = null;
+  isEdit.value = false;
+  showModal.value = true;
 }
 
-function deleteMedication() {
-  console.log('Delete medication button clicked!');
+function editMedications(item) {
+  selectedMedication.value = item;
+  isEdit.value = true;
+  showModal.value = true;
+}
+
+async function deleteMedication(item) {
+  await medicationStore.deleteMedication(item.medication_id);
+  showToast(`Deleted "${item.name}"`);
+}
+
+async function markAsTaken(item) {
+  await medicationStore.markAsTaken(item);
+  showToast(`Marked "${item.name}" as taken`);
+}
+
+async function handleFormSubmit(medication) {
+  const medicationData = { ...medication };
+  if (isEdit.value) {
+    await medicationStore.updateMedication(medication.medication_id, medicationData);
+    showToast(`Updated "${medication.name}"`);
+  } else {
+    await medicationStore.addMedication(medicationData);
+    showToast(`Added "${medication.name}"`);
+  }
+  showModal.value = false;
+}
+
+function showToast(message) {
+  toastMessage.value = message;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 2000);
 }
 </script>
 
 <template>
+  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+
   <div class="medications">
     <h1 style="text-align: center">Your Medications</h1>
   </div>
 
-  <div v-if="scheduleStore.schedule.loading" class="loading">Loading medications...</div>
+  <div v-if="medicationStore.loading" class="loading">Loading medications...</div>
 
-  <div v-else-if="scheduleStore.schedule.error" class="error">
-    {{ scheduleStore.schedule.error }}
+  <div v-else-if="medicationStore.error" class="error">
+    {{ medicationStore.error }}
   </div>
 
   <div v-else-if="medications.length === 0" class="empty">No medications for today</div>
@@ -50,26 +83,31 @@ function deleteMedication() {
       :hide-type="true"
       :compact-layout="true"
     >
-      <!-- Buttons passed from parent to this row -->
-      <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
+      <template v-if="!schedule.isTaken">
+        <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
+      </template>
+      <template v-else>
+        <span class="taken-status">Taken</span>
+      </template>
       <button class="edit-button" @click="editMedications(schedule)">Edit</button>
       <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
     </ScheduleRowItem>
   </div>
 
   <div>
-    <button class="add-button" @click="addMedications(schedule)">Add Medication</button>
-    <div></div>
+    <button class="add-button" @click="addMedications">Add Medication</button>
   </div>
+
+  <MedicationForm
+    v-if="showModal"
+    :model-value="selectedMedication"
+    :is-edit="isEdit"
+    @submit="handleFormSubmit"
+    @close="showModal = false"
+  />
 </template>
 
 <style scoped>
-.medication-style {
-  color: #1480be;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
 .medications {
   padding: 2rem;
   max-width: 1200px;
@@ -83,16 +121,7 @@ function deleteMedication() {
   margin-top: 1px;
 }
 
-.med-stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
 .med-schedule-list {
-  display: flex;
-  flex-direction: column;
   display: flex;
   flex-direction: column;
   background-color: white;
@@ -125,17 +154,49 @@ function deleteMedication() {
 
 .add-button {
   margin-top: 15px;
-  margin-left: 236px;
+  margin-left: 680px;
   background-color: rgb(81, 188, 231);
-  text-decoration-color: black;
 }
 
 .delete-button {
   background-color: red;
 }
 
-.schedule-actions {
-  display: flex;
-  gap: 0.5rem;
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 </style>

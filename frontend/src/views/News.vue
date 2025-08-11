@@ -92,6 +92,7 @@ h1 {
 .news-summary {
   font-size: 1rem;
   margin-bottom: 1rem;
+  color: black;
 }
 
 .news-link {

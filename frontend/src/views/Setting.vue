@@ -1,56 +1,97 @@
-<script setup></script>
+<script setup>
+import { useUserStore } from '../store/userStore';
+
+const userStore = useUserStore();
+
+const setFontSize = (size) => {
+  userStore.accessibility.fontSize = size;
+};
+
+const toggleDarkMode = () => {
+  userStore.accessibility.darkMode = !userStore.accessibility.darkMode;
+};
+</script>
+
 <template>
-  <h1>Settings</h1>
-  <div class="settings-page">
-    <ul class="settings-list">
-      <li>
-        <RouterLink to="/settings/font-size">Change font size</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="/settings/change-password">Change Password</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="/settings/notifications">Notification Preferences</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="/settings/theme">Change theme</RouterLink>
-      </li>
-    </ul>
+  <div class="settings-container">
+    <h2>Accessibility Settings</h2>
+
+    <div class="setting-group">
+      <label>Font Size:</label>
+      <select v-model="userStore.accessibility.fontSize" class="styled-select">
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label>Dark Mode:</label>
+      <input type="checkbox" v-model="userStore.accessibility.darkMode" class="styled-checkbox" />
+    </div>
+
+    <h2>Notification Preferences</h2>
+    <div class="placeholder">[Notification preference will be added here]</div>
+
+    <h2>Change Password</h2>
+    <div class="placeholder">[Add password change fields here]</div>
   </div>
 </template>
 
 <style scoped>
-.settings-page {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
+.settings-container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 30px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  font-family: sans-serif;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.settings-list {
-  list-style: none;
-  padding: 0;
+h2 {
+  margin-top: 20px;
+  font-size: 22px;
+  color: #333;
 }
 
-.settings-list li {
-  margin: 1rem 0;
-  font-size: 1.1rem;
+.setting-group {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.settings-list a {
-  text-decoration: none;
-  color: #1480be;
-  font-weight: bold;
+label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
 }
 
-.settings-list a:hover {
-  text-decoration: underline;
+.styled-select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  transition: border-color 0.2s;
+  color: white;
 }
-h1 {
+
+.styled-select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.styled-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
+.placeholder {
+  padding: 10px;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
   text-align: center;
-  color: #14a0f1;
+  color: #888;
+  font-size: 14px;
 }
 </style>

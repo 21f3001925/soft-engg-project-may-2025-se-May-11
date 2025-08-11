@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import mockApiService from '../services/mockApiService.js';
+import medicationService from '../services/medicationService';
 
 export const useScheduleStore = defineStore('schedule', {
   state: () => ({
@@ -17,10 +18,10 @@ export const useScheduleStore = defineStore('schedule', {
 
   getters: {
     upcomingAppointments: (state) => {
-      return state.schedule.items.filter((item) => item.type === 'appointment' && !item.taken);
+      return state.schedule.items.filter((item) => item.type === 'appointment' || item.type === 'event');
     },
     medications: (state) => {
-      return state.schedule.items.filter((item) => item.type === 'medication');
+      return state.allMedications.items;
     },
   },
 
@@ -42,7 +43,7 @@ export const useScheduleStore = defineStore('schedule', {
       this.allMedications.loading = true;
       this.allMedications.error = null;
       try {
-        const response = await mockApiService.getAllMedications();
+        const response = await medicationService.getMedications();
         this.allMedications.items = response.data;
       } catch (error) {
         this.allMedications.error = error;
