@@ -9,18 +9,18 @@ onMounted(async () => {
   await eventStore.getEvents();
 });
 
-const events = computed(() => eventStore.events.items.filter((item) => item.type === 'event'));
+const events = computed(() => eventStore.events || []);
 
-async function deleteEvent(item) {
-  if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
-    try {
-      await eventStore.deleteEvent(item.event_id); // Pass the event ID
-      showToast(`Deleted: "${item.name}"`);
-    } catch (err) {
-      showToast(`Error deleting event: ${err.message}`, 'error');
-    }
-  }
-}
+// async function deleteEvent(item) {
+//   if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+//     try {
+//       await eventStore.deleteEvent(item.event_id); // Pass the event ID
+//       showToast(`Deleted: "${item.name}"`);
+//     } catch (err) {
+//      showToast(`Error deleting event: ${err.message}`, 'error');
+//    }
+//  }
+//}
 
 // function showToast(message) {
 //   toastMessage.value = message;
@@ -37,7 +37,7 @@ async function deleteEvent(item) {
     <div v-if="events.length === 0" class="empty">No upcoming events. Click below to add one!</div>
 
     <div v-else class="event-list">
-      <div v-for="event in events" :key="event.id" class="event-card">
+      <div v-for="event in events" :key="event.event_id" class="event-card">
         <div class="event-info">
           <div class="event-title">{{ event.name }}</div>
           <div class="event-date">{{ event.time }}</div>
@@ -45,7 +45,6 @@ async function deleteEvent(item) {
         </div>
         <div class="event-actions">
           <button class="reminder-button" @click="setReminder(event)">Set Reminder</button>
-          <button class="delete-button" @click="deleteEvent(event)">Delete</button>
         </div>
       </div>
     </div>
