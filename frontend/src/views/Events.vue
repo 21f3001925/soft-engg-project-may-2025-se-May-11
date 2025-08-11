@@ -42,6 +42,7 @@ function showToast(message) {
         <div class="event-info">
           <div class="event-title">{{ event.name }}</div>
           <div class="event-date">{{ event.date_time }}</div>
+          <div class="event-description">{{ event.description }}</div>
           <div class="event-location">{{ event.location }}</div>
         </div>
         <div class="event-actions">
@@ -110,7 +111,7 @@ h1 {
 
 .event-info {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr); /* 4 columns for 4 fields */
   gap: 1rem;
   width: 100%;
 }
