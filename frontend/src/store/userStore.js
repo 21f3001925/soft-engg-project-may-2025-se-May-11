@@ -8,15 +8,10 @@ export const useUserStore = defineStore('user', {
       age: 75,
       city: 'Noida',
       country: 'India',
-      emergencyNumber: 1234567890,
+      phone_number: 1234567890,
       profilePic: null,
     },
-    friends: {
-      'Narendra Modi': 1234567890,
-      'Elon Musk': 1234567890,
-      'Donald Trump': 1234567890,
-      'Vladimir Putin': 123456890,
-    },
+    emergencyContacts: [],
     stats: {
       topicsLiked: 200,
       commentsPosted: 50,
@@ -39,6 +34,9 @@ export const useUserStore = defineStore('user', {
       if (userData.avatar_url) {
         this.user.profilePic = userData.avatar_url;
       }
+    },
+    setEmergencyContacts(contacts) {
+      this.emergencyContacts = contacts;
     },
   },
 });
