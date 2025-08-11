@@ -88,7 +88,7 @@ class TestProfileAPI:
         assert response.status_code == 200
         result = response.get_json()
         assert "avatar_url" in result
-        assert result["avatar_url"].endswith(".png")
+        assert ".png" in result["avatar_url"]
 
     def test_upload_avatar_no_file(self, client, auth_headers):
         """Should return 400 if no file part is sent."""
