@@ -1,22 +1,15 @@
 <script setup>
 import { useUserStore } from '../store/userStore';
-import catImg from '../assets/cat.png';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import profileService from '../services/profileService';
 import emergencyService from '../services/emergencyService';
+import { useAvatar } from '../composables/useAvatar';
 
 const userStore = useUserStore();
 const user = ref(userStore.user);
 const emergencyContacts = ref(userStore.emergencyContacts);
 const stats = userStore.stats;
-
-const profilePicUrl = computed(() => {
-  if (user.value.avatar_url) {
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
-    return `${baseUrl}/${user.value.avatar_url}`;
-  }
-  return catImg;
-});
+const { avatarUrl: profilePicUrl } = useAvatar();
 
 onMounted(async () => {
   try {

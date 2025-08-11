@@ -3,8 +3,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, Bell, ChevronDown, X } from 'lucide-vue-next';
 import logo from '../assets/vue.svg';
-import avatar from '../assets/cat.png';
 import { useNotificationStore } from '../store/notificationStore';
+import { useAvatar } from '../composables/useAvatar';
 
 const router = useRouter();
 const route = useRoute();
@@ -20,6 +20,7 @@ const userDropdownOpen = ref(false);
 const notificationDropdownOpen = ref(false);
 
 const notifications = computed(() => notificationStore.notifications);
+const { avatarUrl: userAvatar } = useAvatar();
 
 const handleLogout = () => {
   localStorage.removeItem('token');
@@ -165,7 +166,7 @@ onBeforeUnmount(() => {
                 class="flex items-center gap-2 p-1 rounded-full hover:bg-blue-50 transition"
                 @click.stop="userDropdownOpen = !userDropdownOpen"
               >
-                <img :src="avatar" alt="Avatar" class="h-8 w-8 rounded-full border border-gray-200" />
+                <img :src="userAvatar" alt="Avatar" class="h-8 w-8 rounded-full border border-gray-200" />
                 <ChevronDown class="w-4 h-4 text-gray-500" />
               </button>
               <div
