@@ -91,6 +91,11 @@ def create_app(config_class=None):
     def hello_world():
         return "Hello, World! from Backend"
 
+    # Serve static files (avatars)
+    @app.route("/static/<path:filename>")
+    def static_files(filename):
+        return app.send_from_directory("static", filename)
+
     @app.teardown_appcontext
     def remove_session(exception=None):
         pass

@@ -9,13 +9,11 @@ const userStore = useUserStore();
 const user = ref(userStore.user);
 const emergencyContacts = ref(userStore.emergencyContacts);
 const stats = userStore.stats;
-const tempAvatarUrl = ref(null); // New ref for temporary avatar URL
 
 const profilePicUrl = computed(() => {
-  if (tempAvatarUrl.value) {
-    return tempAvatarUrl.value; // Use temporary URL for immediate preview
-  } else if (user.value.profilePic) {
-    return user.value.profilePic; // Rely on backend to provide unique URL
+  if (user.value.avatar_url) {
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+    return `${baseUrl}/${user.value.avatar_url}`;
   }
   return catImg;
 });
@@ -86,9 +84,6 @@ const onFileChange = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  // Display the selected image immediately
-  tempAvatarUrl.value = URL.createObjectURL(file);
-
   try {
     const response = await profileService.uploadAvatar(file);
     userStore.setUser(response.data);
@@ -97,9 +92,6 @@ const onFileChange = async (event) => {
   } catch (error) {
     console.error('Error uploading avatar:', error);
     alert('Failed to upload avatar. Please try again later.');
-  } finally {
-    URL.revokeObjectURL(tempAvatarUrl.value); // Clean up the temporary URL
-    tempAvatarUrl.value = null; // Clear the temporary URL ref
   }
 };
 

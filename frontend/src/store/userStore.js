@@ -9,7 +9,6 @@ export const useUserStore = defineStore('user', {
       city: 'Noida',
       country: 'India',
       phone_number: 1234567890,
-      profilePic: null,
     },
     emergencyContacts: [],
     stats: {
@@ -26,14 +25,8 @@ export const useUserStore = defineStore('user', {
   }),
 
   actions: {
-    updateProfilePic(base64Image) {
-      this.user.profilePic = base64Image;
-    },
     setUser(userData) {
       this.user = { ...this.user, ...userData };
-      if (userData.avatar_url) {
-        this.user.profilePic = userData.avatar_url;
-      }
     },
     setEmergencyContacts(contacts) {
       this.emergencyContacts = contacts;
