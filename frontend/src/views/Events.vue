@@ -46,14 +46,10 @@ function showToast(message) {
           <div class="event-location">{{ event.location }}</div>
         </div>
         <div class="event-actions">
-          <button
-            v-if="!joinedEventIds.includes(event.event_id)"
-            class="reminder-button"
-            @click="setReminder(event)"
-          >
+          <button v-if="!joinedEventIds.includes(event.event_id)" class="reminder-button" @click="setReminder(event)">
             Set Reminder
           </button>
-          <span v-else style="color: green; font-weight: bold;">Reminder Set</span>
+          <span v-else style="color: green; font-weight: bold">Reminder Set</span>
         </div>
       </div>
     </div>
