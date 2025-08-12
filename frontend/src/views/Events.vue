@@ -20,7 +20,6 @@ onMounted(async () => {
 const events = computed(() => eventStore.events || []);
 const joinedEventIds = computed(() => eventStore.joinedEventIds || []);
 
-
 async function setReminder(item) {
   try {
     const reminderData = {
