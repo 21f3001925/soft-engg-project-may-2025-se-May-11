@@ -37,11 +37,13 @@ function timeAgo(isoTime) {
       <div v-if="newsFeedStore.loading" class="text-gray-400 text-center py-4">Loading news...</div>
       <div v-else-if="newsFeedStore.error" class="text-red-500 text-center py-4">{{ newsFeedStore.error }}</div>
       <div
+
         v-else
         v-for="item in newsFeedStore.formattedNews"
+        v-for="item in newsFeedStore.news"
+        v-else
         :key="item.id"
         class="group p-4 bg-white rounded-xl border border-gray-100 hover:border-green-200 hover:shadow-sm transition-all duration-300"
-      >
         <div class="flex items-start space-x-3">
           <img :src="item.thumbnail" alt="thumbnail" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
           <div class="flex-1">

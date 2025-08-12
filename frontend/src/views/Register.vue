@@ -74,8 +74,8 @@ function handleGoogleSignUp() {
       </div>
       <button
         type="button"
-        @click="handleGoogleSignUp"
         class="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-base shadow hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        @click="handleGoogleSignUp"
       >
         <span class="inline-block w-5 h-5">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
@@ -120,10 +120,10 @@ function handleGoogleSignUp() {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="registerMethod = 'email'"
           role="tab"
           :aria-selected="registerMethod === 'email'"
           aria-controls="email-panel"
+          @click="registerMethod = 'email'"
         >
           <Mail class="w-5 h-5 mr-1" /> Email
         </button>
@@ -134,16 +134,16 @@ function handleGoogleSignUp() {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="registerMethod = 'phone'"
           role="tab"
           :aria-selected="registerMethod === 'phone'"
           aria-controls="phone-panel"
+          @click="registerMethod = 'phone'"
         >
           <Phone class="w-5 h-5 mr-1" /> Phone Number
         </button>
       </div>
       <div class="text-xs text-gray-500 mb-4 text-center">Choose how you want to register: Email or Phone Number.</div>
-      <form @submit.prevent="handleRegister" class="space-y-5">
+      <form class="space-y-5" @submit.prevent="handleRegister">
         <div v-if="registerMethod === 'email'" id="email-panel" role="tabpanel">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input

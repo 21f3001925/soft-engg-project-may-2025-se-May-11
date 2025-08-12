@@ -27,7 +27,7 @@ const toggleDarkMode = () => {
 
     <div class="setting-group">
       <label>Dark Mode:</label>
-      <input type="checkbox" v-model="userStore.accessibility.darkMode" class="styled-checkbox" />
+      <input v-model="userStore.accessibility.darkMode" type="checkbox" class="styled-checkbox" />
     </div>
 
     <h2>Notification Preferences</h2>

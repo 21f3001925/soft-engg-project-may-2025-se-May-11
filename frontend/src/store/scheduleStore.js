@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import mockApiService from '../services/mockApiService.js';
-import medicationService from '../services/medicationService';
+import appointmentService from '../services/appointmentService.js';
+import medicationService from '../services/medicationService.js';
 
 export const useScheduleStore = defineStore('schedule', {
   state: () => ({
@@ -26,12 +26,24 @@ export const useScheduleStore = defineStore('schedule', {
   },
 
   actions: {
-    async fetchSchedules() {
+    async getAppointments() {
       this.schedule.loading = true;
       this.schedule.error = null;
       try {
-        const response = await mockApiService.getSchedules();
-        this.schedule.items = response.data;
+        const response = await appointmentService.getAppointments();
+
+        if (Array.isArray(response.data)) {
+          this.schedule.items = response.data.map((appt) => ({
+            id: appt.appointment_id,
+            title: appt.title,
+            date_time: appt.date_time,
+            location: appt.location,
+            reminder_time: appt.reminder_time || null,
+            type: appt.type || 'appointment', // so filtering works
+          }));
+        } else {
+          this.schedule.items = [];
+        }
       } catch (error) {
         this.schedule.error = error;
       } finally {

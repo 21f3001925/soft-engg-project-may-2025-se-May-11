@@ -52,8 +52,8 @@ const handleLogin = async () => {
         <p class="text-sm text-gray-500">Sign in to your SeniorCare dashboard</p>
       </div>
       <button
-        @click="handleGoogleSignIn"
         class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white shadow-md hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 font-bold text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 mb-6"
+        @click="handleGoogleSignIn"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
           <g>
@@ -96,10 +96,10 @@ const handleLogin = async () => {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="loginMethod = 'email'"
           role="tab"
           :aria-selected="loginMethod === 'email'"
           aria-controls="email-panel"
+          @click="loginMethod = 'email'"
         >
           <Mail class="w-5 h-5 mr-1" /> Email
         </button>
@@ -110,16 +110,16 @@ const handleLogin = async () => {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="loginMethod = 'phone'"
           role="tab"
           :aria-selected="loginMethod === 'phone'"
           aria-controls="phone-panel"
+          @click="loginMethod = 'phone'"
         >
           <Phone class="w-5 h-5 mr-1" /> Phone Number
         </button>
       </div>
       <div class="text-xs text-gray-500 mb-4 text-center">Choose how you want to sign in: Email or Phone Number.</div>
-      <form @submit.prevent="handleLogin" class="space-y-5">
+      <form class="space-y-5" @submit.prevent="handleLogin">
         <div v-if="loginMethod === 'email'" id="email-panel" role="tabpanel">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input

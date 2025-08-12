@@ -22,7 +22,7 @@ const updateGreeting = () => {
 };
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
+  await scheduleStore.getAppointments();
   await scheduleStore.fetchAllMedications();
   timer = setInterval(() => {
     currentTime.value = new Date();
