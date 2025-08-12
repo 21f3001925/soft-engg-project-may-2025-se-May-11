@@ -67,17 +67,16 @@ class SignupResource(MethodView):
             phone_number=phone_number,
         )
         user.roles.append(role)
-        session.add(user)
-        session.commit()
 
-        role_model_map = {
-            "caregiver": Caregiver,
-            "senior_citizen": SeniorCitizen,
-            "service_provider": ServiceProvider,
-        }
-        model_class = role_model_map.get(role_name)
-        if model_class:
-            session.add(model_class(user_id=user.user_id))
+        # Create the role-specific model and associate it with the user
+        if role_name == "senior_citizen":
+            user.senior_citizen = SeniorCitizen()
+        elif role_name == "caregiver":
+            user.caregiver = Caregiver()
+        elif role_name == "service_provider":
+            user.service_provider = ServiceProvider()
+
+        session.add(user)
         session.commit()
 
         access_token = create_access_token(identity=str(user.user_id))

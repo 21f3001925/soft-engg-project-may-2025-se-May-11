@@ -8,12 +8,11 @@ export const useMedicationStore = defineStore('medication', {
     error: null,
   }),
   actions: {
-    async fetchMedications() {
+    async fetchMedications(seniorId) {
       this.loading = true;
       this.error = null;
       try {
-        const response = await medicationService.getMedications();
-
+        const response = await medicationService.getMedications(seniorId);
         this.medications = response.data;
       } catch (err) {
         this.error = `Failed to load medications: ${err.response?.data?.message || err.message}`;
@@ -21,12 +20,12 @@ export const useMedicationStore = defineStore('medication', {
         this.loading = false;
       }
     },
-    async addMedication(medicationData) {
+    async addMedication(medicationData, seniorId) {
       this.loading = true;
       this.error = null;
       try {
-        await medicationService.addMedication(medicationData);
-        await this.fetchMedications(medicationData.senior_id);
+        await medicationService.addMedication(medicationData, seniorId);
+        await this.fetchMedications(seniorId);
       } catch (err) {
         this.error = `Failed to add medication: ${err.response?.data?.message || err.message}`;
         throw err;
@@ -34,18 +33,27 @@ export const useMedicationStore = defineStore('medication', {
         this.loading = false;
       }
     },
-    async updateMedication(id, medicationData) {
+    async updateMedication(id, medicationData, seniorId) {
       this.loading = true;
       this.error = null;
       try {
-        // Exclude medication_id and senior_id from the payload
-        const payload = { ...medicationData };
-        delete payload.medication_id;
-        delete payload.senior_id;
-        const response = await medicationService.updateMedication(id, payload);
+        const payload = {
+          name: medicationData.name,
+          dosage: medicationData.dosage,
+          time: medicationData.time,
+          isTaken: medicationData.isTaken,
+        };
+
+        Object.keys(payload).forEach((key) => {
+          if (payload[key] === undefined) {
+            delete payload[key];
+          }
+        });
+
+        const response = await medicationService.updateMedication(id, payload, seniorId);
         const index = this.medications.findIndex((m) => m.medication_id === id);
         if (index !== -1) {
-          this.medications[index] = response.data;
+          this.medications[index] = { ...this.medications[index], ...response.data };
         }
       } catch (err) {
         this.error = `Failed to update medication: ${err.response?.data?.message || err.message}`;
@@ -55,27 +63,29 @@ export const useMedicationStore = defineStore('medication', {
       }
     },
 
-    async deleteMedication(id) {
+    async deleteMedication(id, seniorId) {
       this.loading = true;
       this.error = null;
       try {
-        await medicationService.deleteMedication(id);
-        await this.fetchMedications();
+        await medicationService.deleteMedication(id, seniorId);
+        this.medications = this.medications.filter((m) => m.medication_id !== id);
       } catch (err) {
         this.error = `Failed to delete medication: ${err.response?.data?.message || err.message}`;
+        await this.fetchMedications(seniorId);
         throw err;
       } finally {
         this.loading = false;
       }
     },
 
+    // --- FIX: Restored the missing markAsTaken function ---
     async markAsTaken(medication) {
       try {
-        const updatedMedication = { ...medication, isTaken: !medication.isTaken };
-        await this.updateMedication(medication.medication_id, updatedMedication);
+        // The seniorId will be undefined for the senior's own view, which is correct.
+        await this.updateMedication(medication.medication_id, { isTaken: true }, medication.senior_id);
       } catch (err) {
-        this.error = `Failed to mark as taken: ${err.response?.data?.message || err.message}`;
-        throw err;
+        // Error will be caught and displayed by the updateMedication action
+        console.error('Failed to mark as taken:', err);
       }
     },
   },
