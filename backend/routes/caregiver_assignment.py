@@ -12,6 +12,8 @@ class SeniorSchema(Schema):
     id = fields.Str(attribute="user_id")
     name = fields.Str(attribute="username")
     email = fields.Str()
+    age = fields.Int()
+    phone = fields.Str(attribute="phone_number")
 
 
 class AssignSchema(Schema):
