@@ -10,7 +10,12 @@ class ProfileSchema(Schema):
     country = fields.Str(allow_none=True)
     phone_number = fields.Str(allow_none=True)
     avatar_url = fields.Str(dump_only=True)
-    news_categories = fields.Str(allow_none=True)
+    news_categories = fields.Method("get_news_categories")
+
+    def get_news_categories(self, obj):
+        if hasattr(obj, "senior_citizen") and obj.senior_citizen:
+            return obj.senior_citizen.news_categories
+
     topics_liked = fields.Method("get_topics_liked")
     comments_posted = fields.Method("get_comments_posted")
     appointments_missed = fields.Method("get_appointments_missed")
