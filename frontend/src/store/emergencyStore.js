@@ -10,11 +10,7 @@ export const useEmergencyStore = defineStore('emergency', {
   actions: {
     async fetchContactsForSenior() {
       const response = await emergencyService.getEmergencyContacts();
-      console.log('Fetched contacts:', response.data); // <-- Add this
-      this.contacts = response.data.map((c) => ({
-        ...c,
-        seniorId: c.seniorId ?? c.senior_id,
-      }));
+      this.contacts = response.data;
     },
 
     async deleteContact(contactId) {

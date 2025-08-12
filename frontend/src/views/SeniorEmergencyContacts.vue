@@ -1,32 +1,28 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useEmergencyStore } from '../store/emergencyStore';
 import { useCaregiverStore } from '../store/caregiverStore';
+import { useEmergencyStore } from '../store/emergencyStore';
 import EmergencyContactForm from '../components/EmergencyContactForm.vue';
 
-const emergencyStore = useEmergencyStore();
 const caregiverStore = useCaregiverStore();
-const route = useRoute();
+const emergencyStore = useEmergencyStore();
 
-//const seniorId = parseInt(route.params.id);
-const seniorId = 1;
+const assignedSenior = computed(() => caregiverStore.assignedSeniors[0] || null);
+const seniorId = computed(() => assignedSenior.value?.id);
+
 const selectedContact = ref(null);
 const showModal = ref(false);
 const isEdit = ref(false);
 const toastMessage = ref('');
 
 onMounted(async () => {
-  await caregiverStore.fetchSeniors?.();
-  await emergencyStore.fetchContactsForSenior(seniorId);
+  await caregiverStore.fetchAssignedSeniors();
+  await emergencyStore.fetchContactsForSenior();
 });
 
-const contacts = computed(() => emergencyStore.contacts.filter((c) => c.senior_id == seniorId));
+const contacts = computed(() => emergencyStore.contacts);
 
-const seniorName = computed(() => {
-  const senior = caregiverStore.assignedSeniors?.find((s) => s.id === seniorId);
-  return senior ? senior.name : 'Senior';
-});
+const seniorName = computed(() => assignedSenior.value?.name || 'Senior');
 
 function addContact() {
   selectedContact.value = null;
