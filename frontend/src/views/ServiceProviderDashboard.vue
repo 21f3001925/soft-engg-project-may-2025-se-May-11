@@ -111,17 +111,7 @@ async function removeAttendeeFromEvent(senior) {
       >
         <button class="edit-button" @click="openEditModal(item)">Edit</button>
         <button class="cancel-button" @click="deleteEvent(item)">Delete</button>
-        <button class="attendees-button" @click="openAttendeesModal(item)">
-          Show Attendees
-        </button>
-        <ul v-if="showAttendeesFor === (item.event_id || item.id)">
-          <li v-for="senior in attendees[item.event_id || item.id]" :key="senior.user_id">
-            {{ senior.name }} ({{ senior.email }})
-          </li>
-          <li v-if="attendees[item.event_id || item.id] && attendees[item.event_id || item.id].length === 0">
-            No attendees yet
-          </li>
-        </ul>
+        <button class="attendees-button" @click="openAttendeesModal(item)">Show Attendees</button>
       </ScheduleRowItem>
     </div>
 
@@ -151,7 +141,11 @@ async function removeAttendeeFromEvent(senior) {
         </div>
         <h3><strong>Attendees:</strong></h3>
         <ul>
-          <li v-for="senior in attendeesForEvent" :key="senior.user_id" style="display: flex; align-items: center; gap: 0.5rem;">
+          <li
+            v-for="senior in attendeesForEvent"
+            :key="senior.user_id"
+            style="display: flex; align-items: center; gap: 0.5rem"
+          >
             <span>{{ senior.name }} ({{ senior.email }})</span>
             <button class="remove-attendee-btn" @click="removeAttendeeFromEvent(senior)">Remove</button>
           </li>
