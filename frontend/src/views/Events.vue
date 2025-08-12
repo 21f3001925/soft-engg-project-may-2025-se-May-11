@@ -1,23 +1,36 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue';
-import { useScheduleStore } from '../store/scheduleStore';
+import { onMounted, ref, computed } from 'vue';
+import { useEventStore } from '../store/eventStore';
 
-const scheduleStore = useScheduleStore();
+const eventStore = useEventStore();
 const toastMessage = ref('');
 
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
+  await eventStore.getEvents();
+  await eventStore.fetchJoinedEventIds();
 });
 
-const events = computed(() => scheduleStore.schedule.items.filter((item) => item.type === 'event'));
+const events = computed(() => eventStore.events || []);
+const joinedEventIds = computed(() => eventStore.joinedEventIds || []);
 
-function setReminder(item) {
-  showToast(`Reminder set for: "${item.name}"`);
+async function setReminder(event) {
+  try {
+    await eventStore.joinEvent(event.event_id);
+    await eventStore.fetchJoinedEventIds(); // Refresh after joining
+    showToast(`Reminder set and joined: "${event.name}"`);
+  } catch (err) {
+    showToast(eventStore.error || 'Failed to join event', 'error');
+  }
 }
 
-function deleteEvent(item) {
-  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((e) => e.id !== item.id);
-  showToast(`Deleted: "${item.name}"`);
+async function cancelReminder(event) {
+  try {
+    await eventStore.unjoinEvent(event.event_id);
+    await eventStore.fetchJoinedEventIds(); // Refresh after leaving
+    showToast(`Reminder canceled for: "${event.name}"`);
+  } catch (err) {
+    showToast(eventStore.error || 'Failed to cancel reminder', 'error');
+  }
 }
 
 function showToast(message) {
@@ -35,15 +48,21 @@ function showToast(message) {
     <div v-if="events.length === 0" class="empty">No upcoming events. Click below to add one!</div>
 
     <div v-else class="event-list">
-      <div v-for="event in events" :key="event.id" class="event-card">
+      <div v-for="event in events" :key="event.event_id" class="event-card">
         <div class="event-info">
           <div class="event-title">{{ event.name }}</div>
-          <div class="event-date">{{ event.time }}</div>
-          <div class="event-location">{{ event.details }}</div>
+          <div class="event-date">{{ event.date_time }}</div>
+          <div class="event-description">{{ event.description }}</div>
+          <div class="event-location">{{ event.location }}</div>
         </div>
         <div class="event-actions">
-          <button class="reminder-button" @click="setReminder(event)">Set Reminder</button>
-          <button class="delete-button" @click="deleteEvent(event)">Delete</button>
+          <button v-if="!joinedEventIds.includes(event.event_id)" class="reminder-button" @click="setReminder(event)">
+            Set Reminder
+          </button>
+          <span v-else>
+            <span style="color: green; font-weight: bold">Reminder Set</span>
+            <button class="cancel-button" @click="cancelReminder(event)" style="margin-left: 10px">Cancel</button>
+          </span>
         </div>
       </div>
     </div>
@@ -101,7 +120,7 @@ h1 {
 
 .event-info {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr); /* 4 columns for 4 fields */
   gap: 1rem;
   width: 100%;
 }
@@ -130,7 +149,7 @@ h1 {
   cursor: pointer;
 }
 
-.delete-button {
+.cancel-button {
   background-color: red;
   color: white;
   padding: 6px 12px;
