@@ -91,8 +91,8 @@ class SeniorCitizen(db.Model):
         primary_key=True,
     )
     age = db.Column(db.Integer)
-    font_size = db.Column(db.String)
-    theme = db.Column(db.String)
+    font_size = db.Column(db.String, default="small")
+    theme = db.Column(db.String, default="light")
     news_categories = db.Column(db.String)  # Comma-separated news categories
     topics_liked = db.Column(db.Integer, default=0)
     comments_posted = db.Column(db.Integer, default=0)

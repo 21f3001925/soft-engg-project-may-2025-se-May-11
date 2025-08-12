@@ -1,8 +1,15 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
+import { useScheduleStore } from '../store/scheduleStore';
+import { useUserStore } from '../store/userStore';
+import reminderService from '../services/reminderService';
 import { useEventStore } from '../store/eventStore';
 
+const scheduleStore = useScheduleStore();
+const userStore = useUserStore();
+
 const eventStore = useEventStore();
+
 const toastMessage = ref('');
 
 onMounted(async () => {
@@ -13,13 +20,20 @@ onMounted(async () => {
 const events = computed(() => eventStore.events || []);
 const joinedEventIds = computed(() => eventStore.joinedEventIds || []);
 
-async function setReminder(event) {
+async function setReminder(item) {
   try {
-    await eventStore.joinEvent(event.event_id);
-    await eventStore.fetchJoinedEventIds(); // Refresh after joining
-    showToast(`Reminder set and joined: "${event.name}"`);
-  } catch (err) {
-    showToast(eventStore.error || 'Failed to join event', 'error');
+    const reminderData = {
+      appointment_id: item.id,
+      title: item.name,
+      location: item.details,
+      date_time: item.time,
+      email: userStore.user.email,
+    };
+    await reminderService.scheduleReminder(reminderData);
+    showToast(`Reminder set for: "${item.name}"`);
+  } catch (error) {
+    console.error('Error setting reminder:', error);
+    showToast(`Failed to set reminder for: "${item.name}"`);
   }
 }
 
