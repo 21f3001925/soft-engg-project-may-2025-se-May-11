@@ -54,10 +54,17 @@ onUnmounted(() => {
             <h2
               class="dashboard-title text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-1"
             >
-              {{ greeting }}, {{ userStore.user.username }} !
+              {{ greeting }},
+              {{
+                userStore.user?.username && userStore.user.username.trim() !== ''
+                  ? userStore.user.username
+                  : 'getting your name...'
+              }}
+              !
             </h2>
             <p class="text-xs text-gray-500 hidden md:block">Welcome to your health dashboard</p>
           </div>
+
           <div class="flex items-center space-x-2 bg-white/80 rounded-full px-4 py-2 shadow border border-gray-100">
             <span class="text-lg font-mono text-gray-700">{{
               currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

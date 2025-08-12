@@ -38,12 +38,8 @@ onMounted(() => {
         </p>
       </div>
 
-      <div v-if="contactStore.error" class="text-red-200 mb-2" role="alert">
-        {{ contactStore.error }}
-      </div>
-
       <a
-        v-if="contactStore.contacts && contactStore.contacts.length > 0"
+        v-if="contactStore.contacts && contactStore.contacts.length > 0 && contactStore.contacts[0].phone"
         :href="`tel:${contactStore.contacts[0].phone}`"
         class="w-full h-25 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
         aria-label="Call emergency contact"
@@ -54,6 +50,16 @@ onMounted(() => {
           <div class="text-sm opacity-90">Emergency Contact</div>
         </div>
       </a>
+
+      <div
+        v-else
+        class="w-full h-25 bg-gray-300 text-gray-600 border-2 border-gray-400 text-lg font-semibold rounded-xl mb-2 flex items-center justify-center space-x-3"
+      >
+        <Phone class="h-6 w-6" />
+        <div>
+          <div>Please add a number</div>
+        </div>
+      </div>
 
       <router-link to="/profile" class="block mt-2 text-xs text-red-100 underline hover:text-white transition-colors">
         Manage Emergency Contacts
