@@ -5,10 +5,13 @@ import MedicationsSection from '../components/MedicationsSection.vue';
 import AppointmentsSection from '../components/AppointmentsSection.vue';
 import NewsFeedSection from '../components/NewsFeedSection.vue';
 import EmergencyContactSection from '../components/EmergencyContactSection.vue';
+import { useEmergencyStore } from '../store/emergencyStore';
 import SocialHubSection from '../components/SocialHubSection.vue';
+import { useUserStore } from '../store/userStore';
 
 const scheduleStore = useScheduleStore();
-
+const emergencyStore = useEmergencyStore();
+const userStore = useUserStore();
 const currentTime = ref(new Date());
 const greeting = ref('');
 
@@ -24,6 +27,10 @@ const updateGreeting = () => {
 onMounted(async () => {
   await scheduleStore.getAppointments();
   await scheduleStore.fetchAllMedications();
+  // Fetch emergency contacts here:
+  if (emergencyStore.contacts.length === 0) {
+    await emergencyStore.fetchContactsForSenior();
+  }
   timer = setInterval(() => {
     currentTime.value = new Date();
     updateGreeting();
@@ -47,7 +54,7 @@ onUnmounted(() => {
             <h2
               class="dashboard-title text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-1"
             >
-              {{ greeting }}, Ramesh!
+              {{ greeting }}, {{ userStore.user.username }} !
             </h2>
             <p class="text-xs text-gray-500 hidden md:block">Welcome to your health dashboard</p>
           </div>
