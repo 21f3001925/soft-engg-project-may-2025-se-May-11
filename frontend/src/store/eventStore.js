@@ -109,5 +109,19 @@ export const useEventStore = defineStore('event', {
         this.loading = false;
       }
     },
+
+    async unjoinEvent(event_id) {
+      this.loading = true;
+      this.error = null;
+      try {
+        await eventService.unjoinEvent(event_id);
+        await this.fetchJoinedEventIds();
+      } catch (err) {
+        this.error = `Failed to cancel event: ${err.response?.data?.message || err.message}`;
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 });

@@ -19,6 +19,9 @@ export default {
   joinAEvent(event_id) {
     return apiClient.post('/events/join', { event_id });
   },
+  unjoinEvent(event_id) {
+    return apiClient.post('/events/unjoin', { event_id });
+  },
   getJoinedEvents() {
     return apiClient.get('/events/joined');
   },

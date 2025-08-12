@@ -23,6 +23,16 @@ async function setReminder(event) {
   }
 }
 
+async function cancelReminder(event) {
+  try {
+    await eventStore.unjoinEvent(event.event_id);
+    await eventStore.fetchJoinedEventIds(); // Refresh after leaving
+    showToast(`Reminder canceled for: "${event.name}"`);
+  } catch (err) {
+    showToast(eventStore.error || 'Failed to cancel reminder', 'error');
+  }
+}
+
 function showToast(message) {
   toastMessage.value = message;
   setTimeout(() => {
@@ -46,10 +56,19 @@ function showToast(message) {
           <div class="event-location">{{ event.location }}</div>
         </div>
         <div class="event-actions">
-          <button v-if="!joinedEventIds.includes(event.event_id)" class="reminder-button" @click="setReminder(event)">
+          <button
+            v-if="!joinedEventIds.includes(event.event_id)"
+            class="reminder-button"
+            @click="setReminder(event)"
+          >
             Set Reminder
           </button>
-          <span v-else style="color: green; font-weight: bold">Reminder Set</span>
+          <span v-else>
+            <span style="color: green; font-weight: bold">Reminder Set</span>
+            <button class="cancel-button" @click="cancelReminder(event)" style="margin-left: 10px;">
+              Cancel
+            </button>
+          </span>
         </div>
       </div>
     </div>
@@ -136,7 +155,7 @@ h1 {
   cursor: pointer;
 }
 
-.delete-button {
+.cancel-button {
   background-color: red;
   color: white;
   padding: 6px 12px;

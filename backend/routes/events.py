@@ -162,3 +162,25 @@ class JoinedEvents(MethodView):
         joined = EventAttendance.query.filter_by(senior_id=senior_id).all()
         event_ids = [ea.event_id for ea in joined]
         return {"event_ids": event_ids}
+
+
+@events_bp.route("/unjoin", methods=["POST"])
+class EventUnjoin(MethodView):
+    @jwt_required()
+    @roles_accepted("senior_citizen")
+    @events_bp.arguments(EventJoinSchema)
+    @events_bp.response(200, description="Successfully cancelled event attendance")
+    @events_bp.alt_response(404, description="Attendance not found")
+    def post(self, data):
+        senior_id = get_jwt_identity()
+        event_id = data["event_id"]
+
+        attendance = EventAttendance.query.filter_by(
+            senior_id=senior_id, event_id=event_id
+        ).first()
+        if not attendance:
+            abort(404, message="You are not attending this event.")
+
+        db.session.delete(attendance)
+        db.session.commit()
+        return {"message": "Successfully cancelled event attendance"}, 200
