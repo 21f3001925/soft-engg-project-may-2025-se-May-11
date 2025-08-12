@@ -45,9 +45,7 @@ async function assignSenior() {
         </select>
         <button @click="assignSenior" :disabled="!selectedSenior">Assign</button>
         <div v-if="assignError" class="error">{{ assignError }}</div>
-        <div v-if="caregiverStore.availableSeniors.length === 0" class="empty">
-          No unassigned seniors available.
-        </div>
+        <div v-if="caregiverStore.availableSeniors.length === 0" class="empty">No unassigned seniors available.</div>
       </div>
     </div>
 
