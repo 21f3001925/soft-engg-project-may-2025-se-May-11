@@ -22,6 +22,7 @@ from routes.emergency_contacts import emergency_contacts_blp
 from routes.reminder import reminder_blp
 from routes.appointments import appointments_blp
 from routes.emergency import emergency_blp
+from routes.accessibility import accessibility_bp
 
 from config import Config
 
@@ -71,6 +72,7 @@ def create_app(config_class=None):
     api.register_blueprint(news_bp)
     api.register_blueprint(emergency_contacts_blp)
     api.register_blueprint(emergency_blp)
+    api.register_blueprint(accessibility_bp)
 
     with app.app_context():
         db.create_all()

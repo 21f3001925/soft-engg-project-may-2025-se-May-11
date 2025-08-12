@@ -234,8 +234,9 @@ def sample_emergency_contact(senior_user):
 
 
 @pytest.fixture
-def sample_provider():
+def sample_provider(provider_user):
     new_provider = ServiceProvider(
+        user_id=provider_user.user_id,
         name="Sample Provider",
         contact_email="xyzmail.com",
         phone_number="+1234567890",

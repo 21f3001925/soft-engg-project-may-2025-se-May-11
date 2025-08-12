@@ -6,6 +6,8 @@ export const useProviderStore = defineStore('provider', {
     providers: [],
     loading: false,
     error: null,
+    events: [],
+    attendees: {},
   }),
   actions: {
     async fetchEvents() {
@@ -55,6 +57,33 @@ export const useProviderStore = defineStore('provider', {
         await this.fetchEvents();
       } catch (err) {
         this.error = `Failed to delete event: ${err.response?.data?.message || err.message}`;
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async fetchEventAttendees(event_id) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await providerService.getEventAttendees(event_id);
+        this.attendees[event_id] = response.data;
+        return response.data;
+      } catch (err) {
+        this.error = `Failed to fetch attendees: ${err.response?.data?.message || err.message}`;
+        return [];
+      } finally {
+        this.loading = false;
+      }
+    },
+    async removeAttendee(event_id, senior_id) {
+      this.loading = true;
+      this.error = null;
+      try {
+        await providerService.removeAttendee(event_id, senior_id);
+        await this.fetchEventAttendees(event_id);
+      } catch (err) {
+        this.error = `Failed to remove attendee: ${err.response?.data?.message || err.message}`;
         throw err;
       } finally {
         this.loading = false;

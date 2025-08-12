@@ -25,4 +25,10 @@ export default {
   deleteEvent(id) {
     return apiClient.delete(`/events/${id}`);
   },
+  getEventAttendees(event_id) {
+    return apiClient.get(`/events/${event_id}/attendees`);
+  },
+  removeAttendee(event_id, senior_id) {
+    return apiClient.post('/events/unjoin', { event_id, senior_id });
+  },
 };

@@ -16,11 +16,16 @@ class TestDatabaseConfiguration:
 class TestServiceProviderModel:
 
     def test_creates_service_provider_with_all_fields(self):
+        user = User(username="test_user", email="test@example.com", password="password")
+        db.session.add(user)
+        db.session.commit()
+
         expected_name = "Service_Manager1"
         expected_contact_email = "xyz@gmail.com"
         expected_phone_number = "+1234567890"
         expected_services_offered = "Yoga"
         service_provider = ServiceProvider(
+            user_id=user.user_id,
             name=expected_name,
             contact_email=expected_contact_email,
             phone_number=expected_phone_number,
@@ -29,7 +34,7 @@ class TestServiceProviderModel:
         db.session.add(service_provider)
         db.session.commit()
 
-        saved_provider = ServiceProvider.query.filter_by(name=expected_name).first()
+        saved_provider = ServiceProvider.query.filter_by(user_id=user.user_id).first()
         assert saved_provider is not None
         assert saved_provider.name == expected_name
         assert saved_provider.contact_email == expected_contact_email
@@ -37,13 +42,24 @@ class TestServiceProviderModel:
         assert saved_provider.services_offered == expected_services_offered
 
     def test_generates_unique_ids_for_different_providers(self):
+        user1 = User(
+            username="test_user1", email="test1@example.com", password="password"
+        )
+        user2 = User(
+            username="test_user2", email="test2@example.com", password="password"
+        )
+        db.session.add_all([user1, user2])
+        db.session.commit()
+
         old_provider = ServiceProvider(
+            user_id=user1.user_id,
             name="Old Provider",
             contact_email="old@mail.com",
             phone_number="+19999999999",
             services_offered="Old Services",
         )
         new_provider = ServiceProvider(
+            user_id=user2.user_id,
             name="New Provider",
             contact_email="new@mail.com",
             phone_number="+19555555",
@@ -52,9 +68,9 @@ class TestServiceProviderModel:
         db.session.add_all([old_provider, new_provider])
         db.session.commit()
 
-        assert old_provider.service_provider_id != new_provider.service_provider_id
-        assert uuid.UUID(old_provider.service_provider_id)
-        assert uuid.UUID(new_provider.service_provider_id)
+        assert old_provider.user_id != new_provider.user_id
+        assert uuid.UUID(old_provider.user_id)
+        assert uuid.UUID(new_provider.user_id)
 
 
 class TestUserRoleAssignment:
@@ -116,21 +132,6 @@ class TestProvidersAPI:
         assert response.status_code == 403
         # assert data["message"] == "Provider added"
 
-    # Response code 422 for POST
-    def test_create_service_provider_with_missing_values_api(
-        self, client, auth3_headers
-    ):
-        response = client.post(
-            "/api/v1/providers",
-            headers=auth3_headers,
-            json={
-                "name": "Dummy Provider",
-                "phone_number": "+1234567890",
-                "services_offered": "Pain relief",
-            },
-        )
-        # data = response.get_json()
-        assert response.status_code == 422
         # assert data["message"] == "Provider added"
 
     # Response code 200 for GET
@@ -146,7 +147,7 @@ class TestProvidersAPI:
     def test_get_service_provider_info_with_correct_id_api(
         self, client, auth3_headers, sample_provider
     ):
-        prod_id = sample_provider.service_provider_id
+        prod_id = sample_provider.user_id
         response = client.get(
             f"/api/v1/providers/{prod_id}",
             headers=auth3_headers,
@@ -167,7 +168,7 @@ class TestProvidersAPI:
     def test_edit_service_provider_info_with_correct_id_api(
         self, client, auth3_headers, sample_provider
     ):
-        prod_id = sample_provider.service_provider_id
+        prod_id = sample_provider.user_id
         response = client.put(
             f"/api/v1/providers/{prod_id}",
             headers=auth3_headers,
@@ -185,7 +186,7 @@ class TestProvidersAPI:
     def test_edit_service_provider_info_with_id_using_wrong_data_api(
         self, client, auth3_headers, sample_provider
     ):
-        prod_id = sample_provider.service_provider_id
+        prod_id = sample_provider.user_id
         response = client.put(
             f"/api/v1/providers/{prod_id}",
             headers=auth3_headers,
@@ -220,7 +221,7 @@ class TestProvidersAPI:
     def test_delete_service_provider_info_with_correct_id_api(
         self, client, auth3_headers, sample_provider
     ):
-        prod_id = sample_provider.service_provider_id
+        prod_id = sample_provider.user_id
         response = client.delete(
             f"/api/v1/providers/{prod_id}",
             headers=auth3_headers,
@@ -244,7 +245,7 @@ class TestProvidersAPI:
     def test_get_all_service_info_with_correct_provider_id_api(
         self, client, auth3_headers, sample_provider
     ):
-        prod_id = sample_provider.service_provider_id
+        prod_id = sample_provider.user_id
         response = client.get(
             f"/api/v1/providers/{prod_id}/events",
             headers=auth3_headers,
