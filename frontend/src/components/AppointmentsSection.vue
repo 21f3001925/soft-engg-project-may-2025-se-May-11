@@ -1,11 +1,28 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import { Calendar, ChevronRight, MapPin, Clock, Shield } from 'lucide-vue-next';
+import { getReminderTime } from '../services/timeutils.js';
 
+const currentTime = ref(new Date());
 const scheduleStore = useScheduleStore();
-const appointments = computed(() => scheduleStore.upcomingAppointments.slice(0, 5));
+const appointments = computed(() =>
+  scheduleStore.upcomingAppointments.slice(0, 5).map((appt) => ({
+    ...appt,
+    reminderLeft: getReminderTime(appt.reminder_time || appt.date_time, currentTime.value),
+  })),
+);
 
+onMounted(() => {
+  scheduleStore.getAppointments();
+  const timer = setInterval(() => {
+    currentTime.value = new Date(); // triggers reactivity and component re-renders
+  }, 60000);
+
+  onUnmounted(() => {
+    clearInterval(timer);
+  });
+});
 // Form state
 const title = ref('');
 const dateTime = ref('');
@@ -51,7 +68,6 @@ const submitForm = async () => {
 // Fetch appointments on mounted
 scheduleStore.getAppointments();
 </script>
-
 <template>
   <div class="mb-10 p-8 rounded-3xl shadow-xl border border-purple-100 bg-gradient-to-br from-white to-purple-50/30">
     <div class="flex items-center justify-between mb-2">
@@ -64,10 +80,10 @@ scheduleStore.getAppointments();
         <span>Appointments</span>
       </div>
     </div>
+
     <div class="text-purple-500 text-sm mb-6 ml-14">Your schedule looks great!</div>
 
-    <!-- Appointment list -->
-    <div class="space-y-4 mb-8">
+    <div class="space-y-4">
       <div
         v-for="appt in appointments"
         :key="appt.id"
@@ -76,12 +92,13 @@ scheduleStore.getAppointments();
         <div class="flex items-center justify-between mb-3">
           <span
             class="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-semibold"
+            >{{ new Date(appt.date_time).toLocaleDateString() }}</span
           >
-            {{ appt.date }}
-          </span>
           <div class="flex items-center space-x-1 text-purple-600">
             <Clock class="w-4 h-4" />
-            <span class="text-sm font-medium">{{ appt.time }}</span>
+            <span class="text-sm font-medium">{{
+              new Date(appt.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }}</span>
           </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -89,78 +106,36 @@ scheduleStore.getAppointments();
             <Shield class="w-3 h-3 text-white" />
           </div>
           <span class="text-sm font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{{
-            appt.name
+            appt.title
           }}</span>
         </div>
         <div class="flex items-center text-xs text-gray-500 mt-2 ml-8">
           <MapPin class="w-3 h-3 mr-1" />
-          {{ appt.details }}
+          {{ appt.location }}
+        </div>
+        <div class="text-xs text-purple-600 mt-1 ml-8 italic flex items-center space-x-1">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 text-purple-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+          <span>Reminder: {{ appt.reminderLeft }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Appointment form -->
-    <div class="mb-10 p-6 bg-white rounded-xl border border-gray-200 shadow-sm max-w-md">
-      <h2 class="text-xl font-semibold mb-4 text-purple-700">Add New Appointment</h2>
-      <form class="space-y-4" @submit.prevent="submitForm">
-        <div>
-          <label class="block text-gray-700 mb-1" for="title">Title *</label>
-          <input
-            id="title"
-            v-model="title"
-            type="text"
-            placeholder="Appointment title"
-            required
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1" for="dateTime">Date & Time *</label>
-          <input
-            id="dateTime"
-            v-model="dateTime"
-            type="datetime-local"
-            required
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1" for="location">Location *</label>
-          <input
-            id="location"
-            v-model="location"
-            type="text"
-            placeholder="Appointment location"
-            required
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1" for="reminderTime">Reminder Time (optional)</label>
-          <input
-            id="reminderTime"
-            v-model="reminderTime"
-            type="datetime-local"
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            class="w-full py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition"
-          >
-            Add Appointment
-          </button>
-        </div>
-      </form>
-
-      <p v-if="formError" class="text-red-600 mt-3">{{ formError }}</p>
-      <p v-if="formSuccess" class="text-green-600 mt-3">{{ formSuccess }}</p>
-    </div>
+    <!-- Form messages -->
+    <p v-if="formError" class="text-red-600 mt-3">{{ formError }}</p>
+    <p v-if="formSuccess" class="text-green-600 mt-3">{{ formSuccess }}</p>
 
     <router-link
       to="/appointments"

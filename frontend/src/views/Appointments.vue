@@ -153,16 +153,43 @@ onMounted(getAppointments);
     </div>
 
     <!-- Small add/update form -->
-    <div v-if="showForm" class="form-popup">
-      <h3>{{ editingId ? 'Edit Appointment' : 'Add Appointment' }}</h3>
-      <form @submit.prevent="submitAppointment">
-        <input v-model="formData.title" placeholder="Title" required />
-        <input v-model="formData.date_time" type="datetime-local" required />
-        <input v-model="formData.location" placeholder="Location" />
+    <div v-if="showForm" class="form-popup p-6 bg-black rounded-xl shadow-md max-w-md mx-auto">
+      <h3 class="text-xl font-semibold mb-4 text-white-800">
+        {{ editingId ? 'Edit Appointment' : 'Add Appointment' }}
+      </h3>
+      <form @submit.prevent="submitAppointment" class="space-y-4">
+        <input
+          v-model="formData.title"
+          placeholder="Title"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
+        />
+        <input
+          v-model="formData.date_time"
+          type="datetime-local"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
+        />
+        <input
+          v-model="formData.location"
+          placeholder="Location"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
+        />
 
-        <div class="form-actions">
-          <button type="submit">{{ editingId ? 'Update' : 'Save' }}</button>
-          <button type="button" @click="showForm = false">Cancel</button>
+        <div class="form-actions flex justify-end space-x-3 mt-4">
+          <button
+            type="submit"
+            class="px-5 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700 transition"
+          >
+            {{ editingId ? 'Update' : 'Save' }}
+          </button>
+          <button
+            type="button"
+            @click="showForm = false"
+            class="px-5 py-2 rounded-md bg-red-500 text-white hover:bg-red-700 transition"
+          >
+            Cancel
+          </button>
         </div>
       </form>
     </div>
