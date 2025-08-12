@@ -163,6 +163,10 @@ class JoinedEventsSchema(Schema):
 class JoinedEvents(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen")
+    @events_bp.doc(
+        summary="Get all event IDs the current senior citizen has joined.",
+        description="Returns a list of event IDs that the currently authenticated senior citizen has joined. Useful for displaying which events the user is attending.",
+    )
     @events_bp.response(200, JoinedEventsSchema)
     def get(self):
         senior_id = get_jwt_identity()
@@ -175,6 +179,10 @@ class JoinedEvents(MethodView):
 class EventUnjoin(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "service_provider")
+    @events_bp.doc(
+        summary="Cancel event attendance for a senior citizen.",
+        description="Allows a senior citizen to cancel their attendance for an event, or a service provider to remove a senior from an event by specifying both event_id and senior_id.",
+    )
     @events_bp.arguments(EventJoinSchema)
     @events_bp.response(200, description="Successfully cancelled event attendance")
     @events_bp.alt_response(404, description="Attendance not found")
@@ -198,6 +206,10 @@ class EventUnjoin(MethodView):
 class EventAttendees(MethodView):
     @jwt_required()
     @roles_accepted("service_provider")
+    @events_bp.doc(
+        summary="Get list of attendees for a specific event.",
+        description="Returns a list of users (with name and email) who have joined the specified event. Only accessible by service providers.",
+    )
     @events_bp.response(200, AttendeeSchema(many=True))
     def get(self, event_id):
         # Get all EventAttendance records for this event
