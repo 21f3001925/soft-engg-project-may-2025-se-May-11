@@ -136,7 +136,7 @@ def send_daily_news_update():
 def check_missed_medications():
     app = get_flask_app()
     with app.app_context():
-        from models import User, Medication, CaregiverAssignment
+        from models import User, Medication, CaregiverAssignment, db
 
         now = datetime.utcnow()
         cutoff = now - timedelta(minutes=10)
@@ -148,6 +148,13 @@ def check_missed_medications():
             senior_user = User.query.get(med.senior_id)
             if not senior_user:
                 continue
+
+            # Increment medications_missed for the senior citizen
+            if senior_user.senior_citizen:  # Check if the user is a senior citizen
+                senior_user.senior_citizen.medications_missed += 1
+                db.session.add(senior_user.senior_citizen)  # Add to session for update
+                db.session.commit()  # Commit the change
+
             assignment = CaregiverAssignment.query.filter_by(
                 senior_id=senior_user.user_id
             ).first()
@@ -157,7 +164,7 @@ def check_missed_medications():
                     msg = (
                         f"ALERT: {senior_user.name} may have missed their dose of "
                         f"{med.dosage} of {med.name}, which was due at "
-                        f"{med.time.strftime('%I:%M %p')}."
+                        f"{med.time.strftime('%I:%M %p')}. Medications missed count: {senior_user.senior_citizen.medications_missed if senior_user.senior_citizen else 'N/A'}."
                     )
                     if caregiver_user.phone_number:
                         send_sms(caregiver_user.phone_number, msg)
