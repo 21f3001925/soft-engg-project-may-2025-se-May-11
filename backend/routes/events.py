@@ -2,7 +2,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
-from models import db, Event, EventAttendance
+from models import db, Event, EventAttendance, User
 from marshmallow import Schema, fields
 from tasks import send_event_reminder
 from datetime import timedelta, datetime
@@ -22,6 +22,13 @@ class EventSchema(Schema):
 
 class EventJoinSchema(Schema):
     event_id = fields.Str(required=True)
+    senior_id = fields.Str(required=False)  # Optional for provider
+
+
+class AttendeeSchema(Schema):
+    user_id = fields.Str()
+    name = fields.Str()
+    email = fields.Str()
 
 
 events_bp = Blueprint(
@@ -167,13 +174,14 @@ class JoinedEvents(MethodView):
 @events_bp.route("/unjoin", methods=["POST"])
 class EventUnjoin(MethodView):
     @jwt_required()
-    @roles_accepted("senior_citizen")
+    @roles_accepted("senior_citizen", "service_provider")
     @events_bp.arguments(EventJoinSchema)
     @events_bp.response(200, description="Successfully cancelled event attendance")
     @events_bp.alt_response(404, description="Attendance not found")
     def post(self, data):
-        senior_id = get_jwt_identity()
         event_id = data["event_id"]
+        # For provider, allow specifying senior_id; for senior, use their own id
+        senior_id = data.get("senior_id") or get_jwt_identity()
 
         attendance = EventAttendance.query.filter_by(
             senior_id=senior_id, event_id=event_id
@@ -184,3 +192,22 @@ class EventUnjoin(MethodView):
         db.session.delete(attendance)
         db.session.commit()
         return {"message": "Successfully cancelled event attendance"}, 200
+
+
+@events_bp.route("/<string:event_id>/attendees")
+class EventAttendees(MethodView):
+    @jwt_required()
+    @roles_accepted("service_provider")
+    @events_bp.response(200, AttendeeSchema(many=True))
+    def get(self, event_id):
+        # Get all EventAttendance records for this event
+        attendances = EventAttendance.query.filter_by(event_id=event_id).all()
+        # Get the User records for each senior_id
+        seniors = User.query.filter(
+            User.user_id.in_([a.senior_id for a in attendances])
+        ).all()
+        # Return their basic info
+        return [
+            {"user_id": s.user_id, "name": s.username, "email": s.email}
+            for s in seniors
+        ]
