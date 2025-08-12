@@ -1,16 +1,20 @@
 import apiClient from './apiClient';
 
 export default {
-  getMedications() {
-    return apiClient.get('/medications');
+  getMedications(seniorId) {
+    const url = seniorId ? `/medications?senior_id=${seniorId}` : '/medications';
+    return apiClient.get(url);
   },
-  addMedication(medicationData) {
-    return apiClient.post('/medications', medicationData);
+  addMedication(medicationData, seniorId) {
+    const url = seniorId ? `/medications?senior_id=${seniorId}` : '/medications';
+    return apiClient.post(url, medicationData);
   },
-  updateMedication(id, medicationData) {
-    return apiClient.put(`/medications/${id}`, medicationData);
+  updateMedication(id, medicationData, seniorId) {
+    const url = seniorId ? `/medications/${id}?senior_id=${seniorId}` : `/medications/${id}`;
+    return apiClient.put(url, medicationData);
   },
-  deleteMedication(id) {
-    return apiClient.delete(`/medications/${id}`);
+  deleteMedication(id, seniorId) {
+    const url = seniorId ? `/medications/${id}?senior_id=${seniorId}` : `/medications/${id}`;
+    return apiClient.delete(url);
   },
 };

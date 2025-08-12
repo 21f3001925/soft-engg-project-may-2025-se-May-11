@@ -19,12 +19,11 @@ class AccessibilitySettingsResource(MethodView):
     @accessibility_bp.response(200, AccessibilitySettingsSchema)
     def get(self):
         user = get_current_user()
-        if not user.senior_citizen:
-            abort(400, message="User is not a senior citizen.")
-
         return {
-            "font_size": user.senior_citizen.font_size,
-            "theme": user.senior_citizen.theme,
+            "font_size": (
+                user.senior_citizen.font_size if user.senior_citizen else "small"
+            ),
+            "theme": user.senior_citizen.theme if user.senior_citizen else "light",
         }
 
     @jwt_required()

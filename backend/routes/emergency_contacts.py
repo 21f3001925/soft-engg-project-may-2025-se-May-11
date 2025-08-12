@@ -1,7 +1,8 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import EmergencyContact, db, User
+from flask import request
+from models import EmergencyContact, db, User, CaregiverAssignment
 
 from schemas.emergency_contact import (
     EmergencyContactSchema,
@@ -23,12 +24,36 @@ class EmergencyContactsResource(MethodView):
     @staticmethod
     def get_senior_id_from_user(user_id):
         user = User.query.get(user_id)
-        if user.roles[0].name == "senior_citizen":
+        user_roles = [role.name for role in user.roles]
+
+        if "senior_citizen" in user_roles:
             return user.user_id
-        elif user.senior_citizen:
-            return user.senior_citizen.user_id
+
+        elif "caregiver" in user_roles:
+            # For a caregiver, the senior_id MUST be provided as a query parameter.
+            senior_id = request.args.get("senior_id")
+            if not senior_id:
+                abort(
+                    400,
+                    message="A 'senior_id' query parameter is required for caregivers.",
+                )
+
+            # Verify that the logged-in caregiver (user.user_id) is linked to the
+            # senior they are trying to access (senior_id).
+            is_authorized = (
+                db.session.query(CaregiverAssignment)
+                .filter_by(caregiver_id=user.user_id, senior_id=senior_id)
+                .first()
+            )
+
+            if not is_authorized:
+                abort(
+                    403, message="You are not authorized to access this senior's data."
+                )
+
+            return senior_id
         else:
-            abort(404, message="Senior citizen not found")
+            abort(404, message="Senior citizen not found or user role is invalid.")
 
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
