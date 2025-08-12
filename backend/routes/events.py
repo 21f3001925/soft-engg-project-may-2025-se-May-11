@@ -2,7 +2,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
-from models import db, Event, EventAttendance
+from models import db, Event, EventAttendance, User
 from marshmallow import Schema, fields
 from tasks import send_event_reminder
 from datetime import timedelta, datetime
@@ -22,6 +22,13 @@ class EventSchema(Schema):
 
 class EventJoinSchema(Schema):
     event_id = fields.Str(required=True)
+    senior_id = fields.Str(required=False)  # Optional for provider
+
+
+class AttendeeSchema(Schema):
+    user_id = fields.Str()
+    name = fields.Str()
+    email = fields.Str()
 
 
 events_bp = Blueprint(
@@ -146,3 +153,73 @@ class EventJoin(MethodView):
             )
 
         return {"message": "Successfully joined event and reminder scheduled"}, 200
+
+
+class JoinedEventsSchema(Schema):
+    event_ids = fields.List(fields.Str())
+
+
+@events_bp.route("/joined")
+class JoinedEvents(MethodView):
+    @jwt_required()
+    @roles_accepted("senior_citizen")
+    @events_bp.doc(
+        summary="Get all event IDs the current senior citizen has joined.",
+        description="Returns a list of event IDs that the currently authenticated senior citizen has joined. Useful for displaying which events the user is attending.",
+    )
+    @events_bp.response(200, JoinedEventsSchema)
+    def get(self):
+        senior_id = get_jwt_identity()
+        joined = EventAttendance.query.filter_by(senior_id=senior_id).all()
+        event_ids = [ea.event_id for ea in joined]
+        return {"event_ids": event_ids}
+
+
+@events_bp.route("/unjoin", methods=["POST"])
+class EventUnjoin(MethodView):
+    @jwt_required()
+    @roles_accepted("senior_citizen", "service_provider")
+    @events_bp.doc(
+        summary="Cancel event attendance for a senior citizen.",
+        description="Allows a senior citizen to cancel their attendance for an event, or a service provider to remove a senior from an event by specifying both event_id and senior_id.",
+    )
+    @events_bp.arguments(EventJoinSchema)
+    @events_bp.response(200, description="Successfully cancelled event attendance")
+    @events_bp.alt_response(404, description="Attendance not found")
+    def post(self, data):
+        event_id = data["event_id"]
+        # For provider, allow specifying senior_id; for senior, use their own id
+        senior_id = data.get("senior_id") or get_jwt_identity()
+
+        attendance = EventAttendance.query.filter_by(
+            senior_id=senior_id, event_id=event_id
+        ).first()
+        if not attendance:
+            abort(404, message="You are not attending this event.")
+
+        db.session.delete(attendance)
+        db.session.commit()
+        return {"message": "Successfully cancelled event attendance"}, 200
+
+
+@events_bp.route("/<string:event_id>/attendees")
+class EventAttendees(MethodView):
+    @jwt_required()
+    @roles_accepted("service_provider")
+    @events_bp.doc(
+        summary="Get list of attendees for a specific event.",
+        description="Returns a list of users (with name and email) who have joined the specified event. Only accessible by service providers.",
+    )
+    @events_bp.response(200, AttendeeSchema(many=True))
+    def get(self, event_id):
+        # Get all EventAttendance records for this event
+        attendances = EventAttendance.query.filter_by(event_id=event_id).all()
+        # Get the User records for each senior_id
+        seniors = User.query.filter(
+            User.user_id.in_([a.senior_id for a in attendances])
+        ).all()
+        # Return their basic info
+        return [
+            {"user_id": s.user_id, "name": s.username, "email": s.email}
+            for s in seniors
+        ]

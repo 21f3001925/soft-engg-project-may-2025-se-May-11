@@ -10,4 +10,9 @@ const pinia = createPinia();
 app.use(router);
 app.use(pinia);
 
+// Initialize user store to load accessibility settings
+import { useUserStore } from './store/userStore';
+const userStore = useUserStore();
+userStore.initialize();
+
 app.mount('#app');

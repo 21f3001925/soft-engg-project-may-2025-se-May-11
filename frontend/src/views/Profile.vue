@@ -17,9 +17,11 @@ onMounted(async () => {
     userStore.setUser(profileResponse.data);
     user.value = profileResponse.data;
 
-    const emergencyContactsResponse = await emergencyService.getEmergencyContacts();
-    userStore.setEmergencyContacts(emergencyContactsResponse.data);
-    emergencyContacts.value = emergencyContactsResponse.data;
+    if (userStore.user.role === 'senior_citizen' || userStore.user.role === 'caregiver') {
+      const emergencyContactsResponse = await emergencyService.getEmergencyContacts();
+      userStore.setEmergencyContacts(emergencyContactsResponse.data);
+      emergencyContacts.value = emergencyContactsResponse.data;
+    }
   } catch (error) {
     console.error('Error fetching profile:', error);
     alert('Failed to load profile data. Please try again later.');

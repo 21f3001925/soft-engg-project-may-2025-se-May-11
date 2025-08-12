@@ -1,14 +1,20 @@
 <script setup>
 import { useUserStore } from '../store/userStore';
+import accessibilityService from '../services/accessibilityService';
+import ChangePasswordForm from '../components/ChangePasswordForm.vue';
 
 const userStore = useUserStore();
 
-const setFontSize = (size) => {
-  userStore.accessibility.fontSize = size;
+const setFontSize = async (event) => {
+  const newSize = event.target.value;
+  console.log('Setting.vue: Calling updateFontSize with', newSize);
+  await userStore.updateFontSize(newSize);
 };
 
-const toggleDarkMode = () => {
-  userStore.accessibility.darkMode = !userStore.accessibility.darkMode;
+const toggleDarkMode = async () => {
+  const newMode = !userStore.accessibility.darkMode;
+  console.log('Setting.vue: Calling updateDarkMode with', newMode);
+  await userStore.updateDarkMode(newMode);
 };
 </script>
 
@@ -18,7 +24,7 @@ const toggleDarkMode = () => {
 
     <div class="setting-group">
       <label>Font Size:</label>
-      <select v-model="userStore.accessibility.fontSize" class="styled-select">
+      <select :value="userStore.accessibility.fontSize" @change="setFontSize" class="styled-select">
         <option value="small">Small</option>
         <option value="medium">Medium</option>
         <option value="large">Large</option>
@@ -27,14 +33,19 @@ const toggleDarkMode = () => {
 
     <div class="setting-group">
       <label>Dark Mode:</label>
-      <input type="checkbox" v-model="userStore.accessibility.darkMode" class="styled-checkbox" />
+      <input
+        type="checkbox"
+        :checked="userStore.accessibility.darkMode"
+        @change="toggleDarkMode"
+        class="styled-checkbox"
+      />
     </div>
 
     <h2>Notification Preferences</h2>
     <div class="placeholder">[Notification preference will be added here]</div>
 
     <h2>Change Password</h2>
-    <div class="placeholder">[Add password change fields here]</div>
+    <ChangePasswordForm />
   </div>
 </template>
 

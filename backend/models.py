@@ -64,6 +64,12 @@ class User(db.Model, UserMixin):
     caregiver = db.relationship(
         "Caregiver", uselist=False, back_populates="user", cascade="all, delete-orphan"
     )
+    service_provider = db.relationship(
+        "ServiceProvider",
+        uselist=False,
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     alerts = db.relationship(
         "Alert", back_populates="recipient", cascade="all, delete-orphan"
     )
@@ -85,8 +91,8 @@ class SeniorCitizen(db.Model):
         primary_key=True,
     )
     age = db.Column(db.Integer)
-    font_size = db.Column(db.String)
-    theme = db.Column(db.String)
+    font_size = db.Column(db.String, default="small")
+    theme = db.Column(db.String, default="light")
     news_categories = db.Column(db.String)  # Comma-separated news categories
     topics_liked = db.Column(db.Integer, default=0)
     comments_posted = db.Column(db.Integer, default=0)
@@ -208,13 +214,16 @@ class Feedback(db.Model):
 
 class ServiceProvider(db.Model):
     __tablename__ = "service_provider"
-    service_provider_id = db.Column(
-        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("user.user_id", ondelete="CASCADE"),
+        primary_key=True,
     )
-    name = db.Column(db.String, nullable=False)
-    contact_email = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, nullable=True)
+    contact_email = db.Column(db.String, nullable=True)
     phone_number = db.Column(db.String)
     services_offered = db.Column(db.String)
+    user = relationship("User", back_populates="service_provider")
     events = relationship(
         "Event", back_populates="service_provider", cascade="all, delete-orphan"
     )
@@ -231,7 +240,7 @@ class Event(db.Model):
     description = db.Column(db.Text)
     service_provider_id = db.Column(
         db.String(36),
-        db.ForeignKey("service_provider.service_provider_id", ondelete="CASCADE"),
+        db.ForeignKey("service_provider.user_id", ondelete="CASCADE"),
     )
 
     service_provider = relationship("ServiceProvider", back_populates="events")
