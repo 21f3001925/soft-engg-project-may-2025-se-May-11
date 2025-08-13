@@ -29,9 +29,19 @@ const handleLogin = async () => {
       payload.phone_number = phone.value;
     }
     const response = await authService.login(payload);
+    console.log('LOGIN RESPONSE:', response.data);
     const token = response.data.access_token;
+    const roles = response.data.roles || [];
     localStorage.setItem('token', token);
-    router.push('/dashboard');
+    localStorage.setItem('roles', JSON.stringify(roles));
+    // Redirect based on role
+    if (roles.includes('caregiver')) {
+      router.push('/caregiver-dashboard');
+    } else if (roles.includes('service_provider')) {
+      router.push('/service-provider');
+    } else {
+      router.push('/dashboard');
+    }
   } catch (err) {
     error.value = 'Invalid credentials';
   } finally {

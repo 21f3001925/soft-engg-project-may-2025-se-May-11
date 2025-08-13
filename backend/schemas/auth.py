@@ -17,6 +17,7 @@ class LoginSchema(Schema):
 
 class TokenSchema(Schema):
     access_token = fields.Str()
+    roles = fields.List(fields.Str())
 
 
 class MsgSchema(Schema):
