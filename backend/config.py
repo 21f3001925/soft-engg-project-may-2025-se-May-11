@@ -46,8 +46,8 @@ class Config:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
-    CELERY_TIMEZONE = "Asia/Kolkata"
-    CELERY_ENABLE_UTC = False
+    CELERY_TIMEZONE = "UTC"
+    CELERY_ENABLE_UTC = True
     CELERY_BEAT_SCHEDULE = {
         "check-missed-medications-every-30-seconds": {
             "task": "tasks.check_missed_medications",
@@ -58,20 +58,20 @@ class Config:
             "schedule": crontab(hour=9, minute=0),
         },
     }
-    MAIL_SERVER = os.environ.get("MAIL_SERVER")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
-    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() in ["true", "on", "1"]
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.environ.get(
-        "MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME")
-    )
+    # MAIL_SERVER = os.environ.get("MAIL_SERVER")
+    # MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+    # MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() in ["true", "on", "1"]
+    # MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    # MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    # MAIL_DEFAULT_SENDER = os.environ.get(
+    #     "MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME")
+    # )
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "static/uploads")
 
     # Sample ENV configuration for Flask-Mail
-    # MAIL_SERVER = "smtp.gmail.com"
-    # MAIL_PORT = 587
-    # MAIL_USE_TLS = True
-    # MAIL_USERNAME = "your-email@gmail.com"
-    # MAIL_PASSWORD = "16 digit app password to be generated from google account"
-    # MAIL_DEFAULT_SENDER = "your-email@gmail.com"
+    MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = "rishitpant100@gmail.com"
+    MAIL_PASSWORD = "sajw qvaf onsn ekgw"
+    MAIL_DEFAULT_SENDER = "rishitpant100@gmail.com"

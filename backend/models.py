@@ -153,7 +153,7 @@ class Appointment(db.Model):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     title = db.Column(db.String)
-    date_time = db.Column(db.DateTime)
+    date_time = db.Column(db.DateTime(timezone=True))
     location = db.Column(db.String)
     reminder_time = db.Column(db.DateTime, nullable=True)
     senior_id = db.Column(
@@ -235,7 +235,7 @@ class Event(db.Model):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     name = db.Column(db.String)
-    date_time = db.Column(db.DateTime)
+    date_time = db.Column(db.DateTime(timezone=True))
     location = db.Column(db.String)
     description = db.Column(db.Text)
     service_provider_id = db.Column(

@@ -5,7 +5,8 @@ from flask_security import roles_accepted
 from models import db, Event, EventAttendance, User
 from marshmallow import Schema, fields
 from tasks import send_event_reminder
-from datetime import timedelta, datetime
+from datetime import datetime
+import pytz
 
 
 class EventSchema(Schema):
@@ -88,7 +89,6 @@ class EventResource(MethodView):
         db.session.commit()
 
 
-# --- The rest of the file (EventJoin, JoinedEvents, etc.) remains unchanged ---
 @events_bp.route("/join")
 class EventJoin(MethodView):
     @jwt_required()
@@ -111,40 +111,56 @@ class EventJoin(MethodView):
         if not event:
             abort(404, message="Event not found")
 
-        # Check if senior is already attending
+        # Check if already attending
         existing_attendance = EventAttendance.query.filter_by(
             senior_id=senior_id, event_id=event_id
         ).first()
         if existing_attendance:
             abort(409, message="You have already joined this event.")
 
-        # Create attendance record
+        # Create attendance
         attendance = EventAttendance(senior_id=senior_id, event_id=event_id)
         db.session.add(attendance)
         db.session.commit()
 
-        # --- CORRECTED REMINDER LOGIC ---
-        now_utc = datetime.utcnow()
-        event_time_utc = event.date_time
+        ist_tz = pytz.timezone("Asia/Kolkata")
+        now_utc = datetime.now(pytz.UTC)
+        now_ist = now_utc.astimezone(ist_tz)
 
-        # Only schedule a reminder if the event itself is in the future
+        # Make sure DB datetime is tz-aware UTC
+        if event.date_time.tzinfo is None:
+            event_time_utc = event.date_time.replace(tzinfo=pytz.UTC)
+        else:
+            event_time_utc = event.date_time.astimezone(pytz.UTC)
+
+        event_time_ist = event_time_utc.astimezone(ist_tz)
+
+        print(f"DEBUG - Current IST: {now_ist}")
+        print(f"DEBUG - Event time IST: {event_time_ist}")
+        print(f"DEBUG - Event time UTC: {event_time_utc}")
+        print(f"DEBUG - Current UTC: {now_utc}")
+
+        # Scheduling
         if event_time_utc > now_utc:
-            # Ideal reminder time is 1 hour before the event
-            ideal_reminder_time = event_time_utc - timedelta(hours=1)
-
+            delay_seconds = (event_time_utc - now_utc).total_seconds()
             task_args = [
                 senior_id,
                 event.name,
                 event.location,
-                event.date_time.isoformat(),
+                event_time_ist.isoformat(),
             ]
-
-            # If the ideal reminder time is still in the future, schedule it for then
-            if ideal_reminder_time > now_utc:
-                send_event_reminder.apply_async(args=task_args, eta=ideal_reminder_time)
-            # Otherwise, the event is soon, so send the reminder immediately
+            if delay_seconds > 0:
+                print(f"DEBUG - Scheduling reminder in {delay_seconds} seconds")
+                result = send_event_reminder.apply_async(
+                    args=task_args, countdown=delay_seconds
+                )
+                print(f"DEBUG - Task scheduled with ID: {result.id}")
             else:
-                send_event_reminder.apply_async(args=task_args)
+                print("DEBUG - Event is imminent, sending reminder immediately")
+                result = send_event_reminder.apply_async(args=task_args)
+                print(f"DEBUG - Immediate task scheduled with ID: {result.id}")
+        else:
+            print("DEBUG - Event is in the past, not scheduling reminder")
 
         return {"message": "Successfully joined event and reminder scheduled"}, 200
 

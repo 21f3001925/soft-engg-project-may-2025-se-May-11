@@ -8,8 +8,9 @@
           <input v-model="form.name" required />
         </label>
         <label class="form-field">
-          Date & Time:
+          Date & Time (IST):
           <input v-model="form.date_time" type="datetime-local" required />
+          <small>Time will be saved in Indian Standard Time (IST)</small>
         </label>
         <label class="form-field">
           Description:
@@ -48,13 +49,55 @@ const form = reactive({
   location: '',
 });
 
+// Function to convert UTC/ISO datetime to local datetime-local format
+function convertToLocalDateTimeString(isoString) {
+  if (!isoString) return '';
+
+  try {
+    const date = new Date(isoString);
+    // Convert to local timezone and format for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error converting datetime:', error);
+    return '';
+  }
+}
+
+// Function to convert local datetime-local to ISO string with proper IST offset
+function convertToISOString(datetimeLocalString) {
+  if (!datetimeLocalString) return '';
+
+  try {
+    // Parse the datetime-local value into a Date object
+    const [datePart, timePart] = datetimeLocalString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
+
+    // Format with fixed IST offset (+05:30)
+    const pad = (n) => String(n).padStart(2, '0');
+    const isoWithOffset = `${year}-${pad(month)}-${pad(day)}T` + `${pad(hour)}:${pad(minute)}:00+05:30`;
+
+    console.log(`Converting: ${datetimeLocalString} (IST) -> ${isoWithOffset}`);
+    return isoWithOffset;
+  } catch (error) {
+    console.error('Error converting to ISO:', error);
+    return '';
+  }
+}
+
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
       form.name = val.name || '';
-      // Convert ISO string to input format for datetime-local
-      form.date_time = val.date_time ? val.date_time.slice(0, 16) : '';
+      // Convert the received datetime to local format for the input
+      form.date_time = convertToLocalDateTimeString(val.date_time);
       form.description = val.description || '';
       form.location = val.location || '';
     }
@@ -64,22 +107,25 @@ watch(
 
 async function handleSubmit() {
   const { event_id, service_provider_id, ...rest } = { ...props.modelValue, ...form };
-  let istDateTimeString;
 
+  let finalDateTime;
   if (form.date_time) {
-    // The datetime-local input gives YYYY-MM-DDTHH:MM
-    // We want to send this directly to the backend as an IST string
-    // No timezone conversion here, as the backend is configured for IST
-    istDateTimeString = form.date_time + ':00'; // Add seconds for full datetime string
+    // Convert the datetime-local value to ISO string
+    finalDateTime = convertToISOString(form.date_time);
   }
 
   const payload = {
     ...rest,
-    date_time: istDateTimeString,
+    date_time: finalDateTime,
   };
+
   // Explicitly delete service_provider_id if it somehow got in
   delete payload.service_provider_id;
+
   console.log('Submitting event payload:', payload);
+  console.log('Original datetime-local value:', form.date_time);
+  console.log('Converted to ISO:', finalDateTime);
+
   emit('submit', payload);
   close();
 }
@@ -129,6 +175,13 @@ function close() {
   border-radius: 4px;
   color: #333;
   background-color: white;
+}
+
+.form-field small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.8rem;
 }
 
 .actions {
