@@ -74,17 +74,16 @@ function convertToISOString(datetimeLocalString) {
   if (!datetimeLocalString) return '';
 
   try {
-    // Parse the datetime-local value into a Date object
-    const [datePart, timePart] = datetimeLocalString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
+    // The datetime-local input is parsed by the browser in the user's local timezone.
+    // Creating a Date object from it preserves this.
+    const date = new Date(datetimeLocalString);
+    
+    // toISOString() automatically converts the date to a UTC timezone string.
+    // e.g., '2025-08-13T16:35:00' (in IST) becomes '2025-08-13T11:05:00.000Z'
+    const isoString = date.toISOString();
 
-    // Format with fixed IST offset (+05:30)
-    const pad = (n) => String(n).padStart(2, '0');
-    const isoWithOffset = `${year}-${pad(month)}-${pad(day)}T` + `${pad(hour)}:${pad(minute)}:00+05:30`;
-
-    console.log(`Converting: ${datetimeLocalString} (IST) -> ${isoWithOffset}`);
-    return isoWithOffset;
+    console.log(`Converting: ${datetimeLocalString} (Local) -> ${isoString} (UTC)`);
+    return isoString;
   } catch (error) {
     console.error('Error converting to ISO:', error);
     return '';
