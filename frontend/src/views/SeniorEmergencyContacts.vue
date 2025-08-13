@@ -1,32 +1,30 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useEmergencyStore } from '../store/emergencyStore';
 import { useCaregiverStore } from '../store/caregiverStore';
+import { useEmergencyStore } from '../store/emergencyStore';
 import EmergencyContactForm from '../components/EmergencyContactForm.vue';
 
-const emergencyStore = useEmergencyStore();
 const caregiverStore = useCaregiverStore();
-const route = useRoute();
+const emergencyStore = useEmergencyStore();
 
-//const seniorId = parseInt(route.params.id);
-const seniorId = 1;
+const assignedSenior = computed(() => caregiverStore.assignedSeniors[0] || null);
+const seniorId = computed(() => assignedSenior.value?.id);
+
 const selectedContact = ref(null);
 const showModal = ref(false);
 const isEdit = ref(false);
 const toastMessage = ref('');
 
 onMounted(async () => {
-  await caregiverStore.fetchSeniors?.();
-  await emergencyStore.fetchContactsForSenior(seniorId);
+  await caregiverStore.fetchAssignedSeniors();
+  // After seniors are fetched, use the computed seniorId to get contacts.
+  if (seniorId.value) {
+    await emergencyStore.fetchContactsForSenior(seniorId.value);
+  }
 });
 
-const contacts = computed(() => emergencyStore.contacts.filter((c) => c.senior_id == seniorId));
-
-const seniorName = computed(() => {
-  const senior = caregiverStore.assignedSeniors?.find((s) => s.id === seniorId);
-  return senior ? senior.name : 'Senior';
-});
+const contacts = computed(() => emergencyStore.contacts);
+const seniorName = computed(() => assignedSenior.value?.name || 'Senior');
 
 function addContact() {
   selectedContact.value = null;
@@ -35,41 +33,50 @@ function addContact() {
 }
 
 function editContact(contact) {
+  // Pass the original contact data to the form
   selectedContact.value = { ...contact };
   isEdit.value = true;
   showModal.value = true;
 }
 
 async function deleteContact(contactId) {
-  await emergencyStore.deleteContact(contactId);
+  // Pass the seniorId from the component's context
+  await emergencyStore.deleteContact(contactId, seniorId.value);
   showToast('Contact deleted');
 }
 
 async function handleSubmit(newContact) {
-  if (isEdit.value) {
-    // Only pass name, relation, phone, and contact_id
-    await emergencyStore.updateContact({
-      contact_id: selectedContact.value.contact_id,
-      name: newContact.name,
-      relation: newContact.relation,
-      phone: newContact.phone,
-    });
-    showToast('Contact updated');
-  } else {
-    // Only pass name, relation, phone, and senior_id for add
-    await emergencyStore.addContact({
-      name: newContact.name,
-      relation: newContact.relation,
-      phone: newContact.phone,
-    });
-    showToast('Contact added');
+  try {
+    if (isEdit.value) {
+      // Pass the full object required by the store's update action, including the senior_id
+      await emergencyStore.updateContact({
+        contact_id: selectedContact.value.contact_id,
+        name: newContact.name,
+        relation: newContact.relation,
+        phone: newContact.phone,
+        senior_id: seniorId.value, // Add the senior_id for the API call
+      });
+      showToast('Contact updated');
+    } else {
+      // For add, create the payload and pass the seniorId separately to the store action
+      const payload = {
+        name: newContact.name,
+        relation: newContact.relation,
+        phone: newContact.phone,
+      };
+      await emergencyStore.addContact(payload, seniorId.value);
+      showToast('Contact added');
+    }
+    showModal.value = false;
+  } catch (error) {
+    console.error('Failed to submit contact:', error);
+    showToast('Operation failed. Check console for details.');
   }
-  showModal.value = false;
 }
 
 function showToast(msg) {
   toastMessage.value = msg;
-  setTimeout(() => (toastMessage.value = ''), 2000);
+  setTimeout(() => (toastMessage.value = ''), 3000);
 }
 </script>
 
@@ -146,6 +153,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  color: white;
 }
 
 button:hover {
@@ -178,7 +186,7 @@ button:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   animation:
     fadein 0.3s ease,
-    fadeout 0.3s ease 1.7s;
+    fadeout 0.3s ease 2.7s;
 }
 
 @keyframes fadein {

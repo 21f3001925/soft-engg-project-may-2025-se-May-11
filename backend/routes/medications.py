@@ -1,9 +1,10 @@
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import Medication, db, User
+from models import Medication, db, User, CaregiverAssignment
 from datetime import datetime
 from tasks import send_medication_reminder
+from flask import request
 
 from schemas.medication import (
     MedicationSchema,
@@ -17,7 +18,7 @@ medications_blp = Blueprint(
     "Medications",
     "Medications",
     url_prefix="/api/v1/medications",
-    description="This route is responsible for managing medication schedules. It allows users to add, update, and delete medication reminders, and to track whether a dose has been taken. This is a critical feature for helping seniors adhere to their medication regimens, which is essential for their health and safety, and provides caregivers with peace of mind.",
+    description="This route is responsible for managing medication schedules...",
 )
 
 
@@ -26,51 +27,57 @@ class MedicationsResource(MethodView):
     @staticmethod
     def get_senior_id_from_user(user_id):
         user = User.query.get(user_id)
-        if user and user.roles:
-            if user.roles[0].name == "senior_citizen":
-                return user.user_id
-            elif user.senior_citizen:
-                return user.senior_citizen.user_id
-        abort(404, message="Senior citizen not found or user role mismatch")
+        user_roles = [role.name for role in user.roles]
+
+        if "senior_citizen" in user_roles:
+            return user.user_id
+
+        elif "caregiver" in user_roles:
+            senior_id = request.args.get("senior_id")
+            if not senior_id:
+                abort(
+                    400,
+                    message="A 'senior_id' query parameter is required for caregivers.",
+                )
+
+            # --- AUTHORIZATION CHECK ---
+            is_authorized = (
+                db.session.query(CaregiverAssignment)
+                .filter_by(caregiver_id=user.user_id, senior_id=senior_id)
+                .first()
+            )
+            if not is_authorized:
+                abort(
+                    403, message="You are not authorized to access this senior's data."
+                )
+
+            return senior_id
+        else:
+            abort(404, message="Senior citizen not found or user role is invalid.")
 
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
     @medications_blp.doc(
-        summary="Get information about all medications, dosage and time to be taken of the logged in senior citizen. It also has details about whether the medication is taken or not."
+        summary="Get all medications for the specified senior citizen."
     )
     @medications_blp.response(200, MedicationResponseSchema(many=True))
     def get(self):
         user_id = get_jwt_identity()
         senior_id = self.get_senior_id_from_user(user_id)
-
         session = db.session
         try:
-            meds = session.query(Medication).filter_by(senior_id=senior_id).all()
-            result = [
-                {
-                    "medication_id": med.medication_id,
-                    "name": med.name,
-                    "dosage": med.dosage,
-                    "time": med.time.isoformat() if med.time else None,
-                    "isTaken": med.isTaken,
-                    "senior_id": med.senior_id,
-                }
-                for med in meds
-            ]
+            return session.query(Medication).filter_by(senior_id=senior_id).all()
         finally:
             session.close()
-        return result
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
     @medications_blp.doc(
-        summary="Caregiver or senior_citizen can add a new medication for the logged in senior citizen. It also has details about dosage and time to be taken."
+        summary="Add a new medication for the specified senior citizen."
     )
     @medications_blp.arguments(MedicationSchema())
     @medications_blp.response(201, MedicationAddResponseSchema())
-    @medications_blp.alt_response(400, schema=MedicationAddResponseSchema())
     def post(self, data):
-
         user_id = get_jwt_identity()
         senior_id = self.get_senior_id_from_user(user_id)
 
@@ -85,15 +92,13 @@ class MedicationsResource(MethodView):
             )
             session.add(medication)
             session.commit()
-            # Schedule medication reminder
             send_medication_reminder.apply_async(
                 args=[str(medication.medication_id)], eta=medication.time
             )
-            resp = {
+            return {
                 "message": "Medication added",
                 "medication_id": medication.medication_id,
             }
-            return resp, 201
         except Exception as e:
             session.rollback()
             abort(400, message=str(e))
@@ -105,38 +110,23 @@ class MedicationsResource(MethodView):
 class MedicationByIdResource(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
-    @medications_blp.doc(
-        summary="The users can get information about a specific medication by ID. This would help them verify the details of medications."
-    )
+    @medications_blp.doc(summary="Get a specific medication by ID.")
     @medications_blp.response(200, MedicationResponseSchema)
     def get(self, medication_id):
         user_id = get_jwt_identity()
         senior_id = MedicationsResource.get_senior_id_from_user(user_id)
-        session = db.session
-        try:
-            med = (
-                session.query(Medication)
-                .filter_by(medication_id=medication_id, senior_id=senior_id)
-                .first()
-            )
-            if not med:
-                abort(404, message="Medication not found")
-            return {
-                "medication_id": med.medication_id,
-                "name": med.name,
-                "dosage": med.dosage,
-                "time": med.time.isoformat() if med.time else None,
-                "isTaken": med.isTaken,
-                "senior_id": med.senior_id,
-            }
-        finally:
-            session.close()
+        med = (
+            db.session.query(Medication)
+            .filter_by(medication_id=medication_id, senior_id=senior_id)
+            .first()
+        )
+        if not med:
+            abort(404, message="Medication not found")
+        return med
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @medications_blp.doc(
-        summary="Often medications change by dosage or time. This route can be used to update the information about medications by ID."
-    )
+    @medications_blp.doc(summary="Update a medication by ID.")
     @medications_blp.arguments(MedicationSchema(partial=True))
     @medications_blp.response(200, MedicationResponseSchema)
     def put(self, data, medication_id):
@@ -151,7 +141,7 @@ class MedicationByIdResource(MethodView):
             )
             if not med:
                 abort(404, message="Medication not found")
-            # Update fields
+
             if "name" in data:
                 med.name = data["name"]
             if "dosage" in data:
@@ -160,15 +150,15 @@ class MedicationByIdResource(MethodView):
                 med.time = datetime.fromisoformat(data["time"])
             if "isTaken" in data:
                 med.isTaken = data["isTaken"]
+
             session.commit()
-            return {
-                "medication_id": med.medication_id,
-                "name": med.name,
-                "dosage": med.dosage,
-                "time": med.time.isoformat() if med.time else None,
-                "isTaken": med.isTaken,
-                "senior_id": med.senior_id,
-            }
+
+            # --- FIX ---
+            # Instead of returning the raw 'med' object which will become detached,
+            # query it again to get a fresh instance that the serializer can use.
+            session.refresh(med)
+            return med
+
         except Exception as e:
             session.rollback()
             abort(400, message=str(e))
@@ -177,9 +167,7 @@ class MedicationByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @medications_blp.doc(
-        summary="Whenever medications are no longer needed, this route can be used to delete the information about medications by ID."
-    )
+    @medications_blp.doc(summary="Delete a medication by ID.")
     @medications_blp.response(200, MedicationAddResponseSchema)
     def delete(self, medication_id):
         user_id = get_jwt_identity()
@@ -193,9 +181,10 @@ class MedicationByIdResource(MethodView):
             )
             if not med:
                 abort(404, message="Medication not found")
+
             session.delete(med)
             session.commit()
-            return {"message": "Medication deleted"}, 200
+            return {"message": "Medication deleted"}
         except Exception as e:
             session.rollback()
             abort(400, message=str(e))

@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-//import mockApiService from '../services/mockApiService';
 import emergencyService from '../services/emergencyService';
 
 export const useEmergencyStore = defineStore('emergency', {
@@ -8,22 +7,21 @@ export const useEmergencyStore = defineStore('emergency', {
   }),
 
   actions: {
-    async fetchContactsForSenior() {
-      const response = await emergencyService.getEmergencyContacts();
-      console.log('Fetched contacts:', response.data); // <-- Add this
-      this.contacts = response.data.map((c) => ({
-        ...c,
-        seniorId: c.seniorId ?? c.senior_id,
-      }));
+    // The seniorId is optional. It will be undefined when a senior calls this.
+    async fetchContactsForSenior(seniorId) {
+      // REMOVED the check that was causing the error.
+      // The service now handles the undefined seniorId case correctly.
+      const response = await emergencyService.getEmergencyContacts(seniorId);
+      this.contacts = response.data;
     },
 
-    async deleteContact(contactId) {
-      await emergencyService.deleteEmergencyContact(contactId);
+    async deleteContact(contactId, seniorId) {
+      await emergencyService.deleteEmergencyContact(contactId, seniorId);
       this.contacts = this.contacts.filter((c) => c.contact_id !== contactId);
     },
 
-    async addContact(contact) {
-      const response = await emergencyService.addEmergencyContact(contact);
+    async addContact(contactPayload, seniorId) {
+      const response = await emergencyService.addEmergencyContact(contactPayload, seniorId);
       const newContact = {
         ...response.data,
         seniorId: response.data.seniorId ?? response.data.senior_id,
@@ -32,9 +30,10 @@ export const useEmergencyStore = defineStore('emergency', {
     },
 
     async updateContact(contact) {
-      const { contact_id, name, relation, phone } = contact;
-      const payload = { name, relation, phone }; // Only these 3 fields!
-      const response = await emergencyService.updateEmergencyContact(contact_id, payload);
+      const { contact_id, name, relation, phone, senior_id } = contact;
+      const payload = { name, relation, phone };
+      // The senior_id can be undefined here for a senior, which is fine.
+      const response = await emergencyService.updateEmergencyContact(contact_id, payload, senior_id);
       const index = this.contacts.findIndex((c) => c.contact_id === contact_id);
       if (index !== -1) {
         this.contacts[index] = response.data;
