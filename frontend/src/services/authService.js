@@ -16,3 +16,8 @@ export default {
     });
   },
 };
+
+class TokenSchema {
+  access_token = fields.Str();
+  roles = fields.List(fields.Str());
+}

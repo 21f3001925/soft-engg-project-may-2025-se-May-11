@@ -1,10 +1,16 @@
 <script setup>
 import { useUserStore } from './store/userStore';
 import TopNavBar from './components/TopNavBar.vue';
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import profileService from './services/profileService';
+import { useRoute } from 'vue-router';
 
 const userStore = useUserStore();
+const route = useRoute();
+
+const isCaregiverOrProviderDashboard = computed(() =>
+  route.name === 'CaregiverDashboard' || route.name === 'ServiceProviderDashboard'
+);
 
 onMounted(async () => {
   const token = localStorage.getItem('token');
@@ -21,7 +27,7 @@ onMounted(async () => {
 
 <template>
   <div
-    :class="[
+    :class=" [
       'app',
       userStore.accessibility.darkMode ? 'dark' : 'light',
       userStore.accessibility.fontSize,
@@ -31,7 +37,8 @@ onMounted(async () => {
       'bg-gray-100',
     ]"
   >
-    <TopNavBar />
+    <!-- Hide TopNavBar only on caregiver/provider dashboards -->
+    <TopNavBar v-if="!isCaregiverOrProviderDashboard" />
     <main class="flex-1">
       <router-view />
     </main>

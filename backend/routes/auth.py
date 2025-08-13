@@ -2,6 +2,7 @@ from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token, jwt_required, get_current_user
 from models import User, Role, db, Caregiver, SeniorCitizen, ServiceProvider
+from marshmallow import Schema, fields
 
 import bcrypt
 from schemas.auth import (
@@ -11,6 +12,12 @@ from schemas.auth import (
     MsgSchema,
     ChangePasswordSchema,
 )
+
+
+class TokenSchema(Schema):
+    access_token = fields.Str()
+    roles = fields.List(fields.Str())
+
 
 auth_blp = Blueprint(
     "Auth",
@@ -110,7 +117,21 @@ class LoginResource(MethodView):
             and bcrypt.checkpw(password.encode(), user.password.encode())
         ):
             access_token = create_access_token(identity=str(user.user_id))
-            return {"access_token": access_token}, 200
+            # Determine role by checking which table contains the user_id
+            role = None
+            if db.session.query(SeniorCitizen).filter_by(user_id=user.user_id).first():
+                role = "senior_citizen"
+            elif db.session.query(Caregiver).filter_by(user_id=user.user_id).first():
+                role = "caregiver"
+            elif (
+                db.session.query(ServiceProvider)
+                .filter_by(user_id=user.user_id)
+                .first()
+            ):
+                role = "service_provider"
+            else:
+                role = "unknown"
+            return {"access_token": access_token, "roles": [role]}, 200
         abort(401, message="Bad email or password")
 
 
