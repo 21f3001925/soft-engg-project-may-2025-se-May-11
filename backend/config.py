@@ -66,20 +66,20 @@ class Config:
             "schedule": crontab(hour=9, minute=0),
         },
     }
-    # MAIL_SERVER = os.environ.get("MAIL_SERVER")
-    # MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
-    # MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() in ["true", "on", "1"]
-    # MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    # MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    # MAIL_DEFAULT_SENDER = os.environ.get(
-    #     "MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME")
-    # )
+    MAIL_SERVER = os.environ.get("MAIL_SERVER")
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() in ["true", "on", "1"]
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.environ.get(
+        "MAIL_DEFAULT_SENDER", os.environ.get("MAIL_USERNAME")
+    )
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "static/uploads")
 
     # Sample ENV configuration for Flask-Mail
-    MAIL_SERVER = "smtp.gmail.com"
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = ""
-    MAIL_PASSWORD = ""
-    MAIL_DEFAULT_SENDER = ""
+    # MAIL_SERVER = "smtp.gmail.com"
+    # MAIL_PORT = 587
+    # MAIL_USE_TLS = True
+    # MAIL_USERNAME = ""
+    # MAIL_PASSWORD = ""
+    # MAIL_DEFAULT_SENDER = ""
