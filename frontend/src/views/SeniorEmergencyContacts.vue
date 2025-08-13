@@ -3,12 +3,18 @@ import { ref, computed, onMounted } from 'vue';
 import { useCaregiverStore } from '../store/caregiverStore';
 import { useEmergencyStore } from '../store/emergencyStore';
 import EmergencyContactForm from '../components/EmergencyContactForm.vue';
+import { useRoute } from 'vue-router';
 
 const caregiverStore = useCaregiverStore();
 const emergencyStore = useEmergencyStore();
+const route = useRoute();
 
-const assignedSenior = computed(() => caregiverStore.assignedSeniors[0] || null);
-const seniorId = computed(() => assignedSenior.value?.id);
+const seniorId = computed(() => route.params.id);
+
+// Find the correct senior object
+const assignedSenior = computed(() =>
+  caregiverStore.assignedSeniors.find(s => String(s.id) === String(seniorId.value))
+);
 
 const selectedContact = ref(null);
 const showModal = ref(false);
