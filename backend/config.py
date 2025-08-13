@@ -80,6 +80,6 @@ class Config:
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = "rishitpant100@gmail.com"
-    MAIL_PASSWORD = "sajw qvaf onsn ekgw"
-    MAIL_DEFAULT_SENDER = "rishitpant100@gmail.com"
+    MAIL_USERNAME = ""
+    MAIL_PASSWORD = ""
+    MAIL_DEFAULT_SENDER = ""
