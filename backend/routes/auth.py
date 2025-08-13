@@ -2,7 +2,6 @@ from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token, jwt_required, get_current_user
 from models import User, Role, db, Caregiver, SeniorCitizen, ServiceProvider
-from marshmallow import Schema, fields
 
 import bcrypt
 from schemas.auth import (
@@ -12,11 +11,6 @@ from schemas.auth import (
     MsgSchema,
     ChangePasswordSchema,
 )
-
-
-class TokenSchema(Schema):
-    access_token = fields.Str()
-    roles = fields.List(fields.Str())
 
 
 auth_blp = Blueprint(

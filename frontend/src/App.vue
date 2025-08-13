@@ -11,14 +11,11 @@ const userStore = useUserStore();
 const route = useRoute();
 
 // Match all caregiver dashboard and subpages
-const isCaregiverDashboard = computed(() =>
-  route.path === '/caregiver-dashboard' ||
-  route.path.startsWith('/caregiver/seniors/')
+const isCaregiverDashboard = computed(
+  () => route.path === '/caregiver-dashboard' || route.path.startsWith('/caregiver/seniors/'),
 );
 
-const isProviderDashboard = computed(() =>
-  route.path === '/service-provider'
-);
+const isProviderDashboard = computed(() => route.path === '/service-provider');
 
 onMounted(async () => {
   const token = localStorage.getItem('token');
@@ -35,7 +32,7 @@ onMounted(async () => {
 
 <template>
   <div
-    :class=" [
+    :class="[
       'app',
       userStore.accessibility.darkMode ? 'dark' : 'light',
       userStore.accessibility.fontSize,

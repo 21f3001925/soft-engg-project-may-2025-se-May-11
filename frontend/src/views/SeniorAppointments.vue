@@ -22,9 +22,7 @@ onMounted(async () => {
 
 const appointments = computed(() =>
   scheduleStore.schedule.items.filter(
-    (item) =>
-      (item.type === 'appointment' || item.type === 'event') &&
-      String(item.senior_id) === String(seniorId)
+    (item) => (item.type === 'appointment' || item.type === 'event') && String(item.senior_id) === String(seniorId),
   ),
 );
 

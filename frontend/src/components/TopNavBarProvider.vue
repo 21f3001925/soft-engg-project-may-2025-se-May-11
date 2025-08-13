@@ -18,7 +18,10 @@ const handleLogout = () => {
         <img :src="logo" alt="Logo" class="h-8 w-8" />
         <span class="font-bold text-lg text-blue-700 hidden sm:inline">SeniorCare</span>
       </router-link>
-      <button class="px-4 py-2 rounded-lg font-medium text-red-600 bg-white border border-gray-300 hover:bg-red-50 transition" @click="handleLogout">
+      <button
+        class="px-4 py-2 rounded-lg font-medium text-red-600 bg-white border border-gray-300 hover:bg-red-50 transition"
+        @click="handleLogout"
+      >
         Logout
       </button>
     </div>
@@ -29,7 +32,7 @@ const handleLogout = () => {
 nav {
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 button {
   cursor: pointer;

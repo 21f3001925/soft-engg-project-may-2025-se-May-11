@@ -46,9 +46,7 @@ async function assignSenior() {
     <div v-if="!loading && caregiverStore.assignedSeniors.length === 0">
       <div class="assign-section">
         <h2>Assign yourself to a Senior Citizen</h2>
-        <div v-if="caregiverStore.availableSeniors.length === 0" class="empty">
-          No unassigned seniors available.
-        </div>
+        <div v-if="caregiverStore.availableSeniors.length === 0" class="empty">No unassigned seniors available.</div>
         <div v-else>
           <select v-model="selectedSenior">
             <option disabled value="">Select a senior</option>
@@ -64,21 +62,14 @@ async function assignSenior() {
 
     <!-- "Assign another senior" button and modal, shown if at least one assigned -->
     <div v-if="caregiverStore.assignedSeniors.length > 0" class="assign-another">
-      <button
-        class="assign-another-btn"
-        @click="openAssignModal"
-      >
-        Assign another senior
-      </button>
+      <button class="assign-another-btn" @click="openAssignModal">Assign another senior</button>
     </div>
 
     <!-- Modal for assignment -->
     <div v-if="showAssignModal" class="modal-overlay">
       <div class="modal-content">
         <h2>Assign yourself to another Senior Citizen</h2>
-        <div v-if="caregiverStore.availableSeniors.length === 0" class="empty">
-          No unassigned seniors available.
-        </div>
+        <div v-if="caregiverStore.availableSeniors.length === 0" class="empty">No unassigned seniors available.</div>
         <div v-else>
           <select v-model="selectedSenior">
             <option disabled value="">Select a senior</option>
@@ -200,8 +191,11 @@ h1 {
 /* Modal styles */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.3);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,7 +206,7 @@ h1 {
   padding: 2rem;
   border-radius: 10px;
   min-width: 320px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   gap: 1rem;

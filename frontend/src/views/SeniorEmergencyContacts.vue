@@ -13,7 +13,7 @@ const seniorId = computed(() => route.params.id);
 
 // Find the correct senior object
 const assignedSenior = computed(() =>
-  caregiverStore.assignedSeniors.find(s => String(s.id) === String(seniorId.value))
+  caregiverStore.assignedSeniors.find((s) => String(s.id) === String(seniorId.value)),
 );
 
 const selectedContact = ref(null);
