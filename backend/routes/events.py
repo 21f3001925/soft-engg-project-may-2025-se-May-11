@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
 from models import db, Event, EventAttendance, User
 from marshmallow import Schema, fields
-from tasks import send_event_reminder
+from tasks import send_event_reminder, celery_app
 from datetime import datetime
 import pytz
 
@@ -166,8 +166,13 @@ class EventJoin(MethodView):
                 args=task_args, countdown=delay_seconds
             )
             print(f"DEBUG - Task scheduled with ID: {result.id}")
+            # --- SAVE THE TASK ID ---
+            attendance.reminder_task_id = result.id
         else:
             print("DEBUG - Event is in the past, not scheduling reminder")
+        # Now add the attendance record (with the task_id if applicable) and commit
+        db.session.add(attendance)
+        db.session.commit()
 
         return {"message": "Successfully joined event and reminder scheduled"}, 200
 
@@ -214,8 +219,21 @@ class EventUnjoin(MethodView):
         if not attendance:
             abort(404, message="You are not attending this event.")
 
+        # --- REVOKE THE CELERY TASK ---
+        if attendance.reminder_task_id:
+            try:
+                celery_app.control.revoke(attendance.reminder_task_id)
+                print(f"DEBUG - Revoked Celery task: {attendance.reminder_task_id}")
+            except Exception as e:
+                # Log the error but don't block the unjoin process
+                print(
+                    f"ERROR - Could not revoke Celery task {attendance.reminder_task_id}: {e}"
+                )
+
+        # Now delete the attendance record from the database
         db.session.delete(attendance)
         db.session.commit()
+
         return {"message": "Successfully cancelled event attendance"}, 200
 
 

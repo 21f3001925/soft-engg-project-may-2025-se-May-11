@@ -42,24 +42,65 @@ def send_reminder_notification(appointment_id, title, location, date_time, user_
 @celery_app.task
 def send_medication_reminder(medication_id):
     """
-    Sends an SMS reminder for a specific medication.
+    Sends a reminder to the senior and a notification to the caregiver
+    when a medication is due.
     """
     app = get_flask_app()
     with app.app_context():
-        from models import User, Medication
+        from models import User, Medication, CaregiverAssignment
 
         med = Medication.query.get(medication_id)
-        if med and not med.isTaken:
-            user = User.query.get(med.senior_id)
-            if user and user.phone_number:
-                send_sms(
-                    user.phone_number, f"Reminder: Take {med.dosage} of {med.name}"
-                )
-                print(f"Sent medication reminder to {user.username}")
-            else:
-                print(f"No user or phone for medication ID {medication_id}")
+        if not med or med.isTaken:
+            print(
+                f"Medication reminder for {medication_id} skipped (not found or already taken)."
+            )
+            return
+
+        senior_user = User.query.get(med.senior_id)
+        if not senior_user:
+            # Added clearer logging
+            print(f"Task failed: User not found for medication ID {medication_id}.")
+            return
+
+        print(f"User '{senior_user.username}' found. Preparing reminders.")
+
+        # --- 1. Reminder for the Senior (Corrected Logic) ---
+        senior_msg = f"Reminder: It's time to take {med.dosage} of {med.name}."
+
+        # Check for phone number and send SMS if it exists
+        if senior_user.phone_number:
+            send_sms(senior_user.phone_number, senior_msg)
+            print(f"Sent SMS reminder to senior {senior_user.username}")
         else:
-            print(f"Medication {medication_id} not found or already taken")
+            print(f"Senior {senior_user.username} has no phone number. Skipping SMS.")
+
+        # Check for email and send if it exists
+        if senior_user.email:
+            send_email(app, senior_user.email, "Medication Reminder", senior_msg)
+            print(f"Sent email reminder to senior {senior_user.username}")
+        else:
+            print(f"Senior {senior_user.username} has no email. Skipping email.")
+
+        # --- 2. Notification for the Caregiver (Logic is good, added logging) ---
+        assignment = CaregiverAssignment.query.filter_by(
+            senior_id=senior_user.user_id
+        ).first()
+        if assignment and (caregiver_user := User.query.get(assignment.caregiver_id)):
+            print(
+                f"Caregiver '{caregiver_user.username}' found. Preparing notification."
+            )
+            caregiver_msg = (
+                f"Medication Due: It's time for {senior_user.name} to take "
+                f"{med.dosage} of {med.name}. Please ensure it is marked as taken."
+            )
+            email_subject = f"Medication Due for {senior_user.name}"
+
+            if caregiver_user.phone_number:
+                send_sms(caregiver_user.phone_number, caregiver_msg)
+                print(f"Sent SMS notification to caregiver {caregiver_user.username}")
+            if caregiver_user.email:
+                send_email(app, caregiver_user.email, email_subject, caregiver_msg)
+                print(f"Sent email notification to caregiver {caregiver_user.username}")
 
 
 @celery_app.task
@@ -228,11 +269,28 @@ def check_missed_medications():
     with app.app_context():
         from models import User, Medication, CaregiverAssignment, db
 
-        now = datetime.utcnow()
+        print("Running 'check_missed_medications' task...")
+
+        # --- THE FIX IS ON THIS LINE ---
+        # Change this:
+        # now = datetime.utcnow()
+        # To this, which creates a timezone-AWARE datetime object:
+        now = datetime.now(pytz.utc)
+
         cutoff = now - timedelta(minutes=10)
+
         missed_meds = Medication.query.filter(
             Medication.isTaken.is_(False), Medication.time <= cutoff
         ).all()
+
+        if not missed_meds:
+            print("No missed medications found.")
+            return
+
+        # --- Added Logging ---
+        print(
+            f"Found {len(missed_meds)} missed medication(s). Processing notifications..."
+        )
 
         for med in missed_meds:
             senior_user = User.query.get(med.senior_id)
@@ -240,10 +298,10 @@ def check_missed_medications():
                 continue
 
             # Increment medications_missed for the senior citizen
-            if senior_user.senior_citizen:  # Check if the user is a senior citizen
+            if senior_user.senior_citizen:
                 senior_user.senior_citizen.medications_missed += 1
-                db.session.add(senior_user.senior_citizen)  # Add to session for update
-                db.session.commit()  # Commit the change
+                db.session.add(senior_user.senior_citizen)
+                db.session.commit()
 
             assignment = CaregiverAssignment.query.filter_by(
                 senior_id=senior_user.user_id
@@ -251,16 +309,30 @@ def check_missed_medications():
             if assignment:
                 caregiver_user = User.query.get(assignment.caregiver_id)
                 if caregiver_user:
+                    print(
+                        f"Found caregiver '{caregiver_user.username}' for senior '{senior_user.username}'."
+                    )
                     msg = (
                         f"ALERT: {senior_user.name} may have missed their dose of "
                         f"{med.dosage} of {med.name}, which was due at "
-                        f"{med.time.strftime('%I:%M %p')}. Medications missed count: {senior_user.senior_citizen.medications_missed if senior_user.senior_citizen else 'N/A'}."
+                        f"{med.time.strftime('%I:%M %p')}. "
+                        f"Total medications missed: {senior_user.senior_citizen.medications_missed if senior_user.senior_citizen else 'N/A'}."
                     )
+
                     if caregiver_user.phone_number:
                         send_sms(caregiver_user.phone_number, msg)
-                    send_email(
-                        app, caregiver_user.email, "Missed Medication Alert", msg
-                    )
+                        print(
+                            f"Sent missed medication SMS to {caregiver_user.username}"
+                        )
+
+                    # --- FIX: Added a check for the email address ---
+                    if caregiver_user.email:
+                        send_email(
+                            app, caregiver_user.email, "Missed Medication Alert", msg
+                        )
+                        print(
+                            f"Sent missed medication email to {caregiver_user.username}"
+                        )
 
 
 @celery_app.task
@@ -292,3 +364,44 @@ def send_emergency_alert(senior_id):
                 send_sms(contact.phone, alert_msg)
             if contact.email:
                 send_email(app, contact.email, "EMERGENCY ALERT!", alert_msg)
+
+
+@celery_app.task
+def notify_caregiver_medication_taken(medication_id):
+    """Notifies the caregiver that a medication has been marked as taken."""
+    app = get_flask_app()
+    with app.app_context():
+        from models import Medication, User, CaregiverAssignment
+
+        med = Medication.query.get(medication_id)
+        if not med:
+            print(f"Medication taken notification: Med ID {medication_id} not found.")
+            return
+
+        senior_user = User.query.get(med.senior_id)
+        if not senior_user:
+            return
+
+        # Find the assigned caregiver
+        assignment = CaregiverAssignment.query.filter_by(
+            senior_id=senior_user.user_id
+        ).first()
+        if assignment and (caregiver := User.query.get(assignment.caregiver_id)):
+
+            # Format time to IST for the message
+            ist_tz = pytz.timezone("Asia/Kolkata")
+            taken_time_ist = datetime.now(ist_tz).strftime("%I:%M %p")
+
+            msg = (
+                f"✅ Confirmation: {senior_user.name} marked their medication "
+                f"'{med.name}' ({med.dosage}) as taken at {taken_time_ist}."
+            )
+
+            if caregiver.phone_number:
+                send_sms(caregiver.phone_number, msg)
+            if caregiver.email:
+                send_email(app, caregiver.email, f"Medication Taken: {med.name}", msg)
+
+            print(
+                f"Sent 'medication taken' notification to caregiver {caregiver.name}."
+            )
