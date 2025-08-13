@@ -123,42 +123,39 @@ class EventJoin(MethodView):
         db.session.add(attendance)
         db.session.commit()
 
-        ist_tz = pytz.timezone("Asia/Kolkata")
+        # --- SIMPLIFIED SCHEDULING ---
         now_utc = datetime.now(pytz.UTC)
-        now_ist = now_utc.astimezone(ist_tz)
 
-        # Make sure DB datetime is tz-aware UTC
+        # The datetime from the DB is now reliably UTC.
+        # Ensure it's timezone-aware for comparison.
         if event.date_time.tzinfo is None:
-            event_time_utc = event.date_time.replace(tzinfo=pytz.UTC)
+            # This handles the case where SQLite might store naive datetimes
+            event_time_utc = pytz.UTC.localize(event.date_time)
         else:
-            event_time_utc = event.date_time.astimezone(pytz.UTC)
+            event_time_utc = event.date_time
 
-        event_time_ist = event_time_utc.astimezone(ist_tz)
-
-        print(f"DEBUG - Current IST: {now_ist}")
-        print(f"DEBUG - Event time IST: {event_time_ist}")
-        print(f"DEBUG - Event time UTC: {event_time_utc}")
         print(f"DEBUG - Current UTC: {now_utc}")
+        print(f"DEBUG - Event time UTC from DB: {event_time_utc}")
 
-        # Scheduling
         if event_time_utc > now_utc:
             delay_seconds = (event_time_utc - now_utc).total_seconds()
+
+            # For the task, we can still format it nicely for the user message.
+            ist_tz = pytz.timezone("Asia/Kolkata")
+            event_time_ist_display = event_time_utc.astimezone(ist_tz)
+
             task_args = [
                 senior_id,
                 event.name,
                 event.location,
-                event_time_ist.isoformat(),
+                event_time_ist_display.isoformat(),  # Pass IST string for display
             ]
-            if delay_seconds > 0:
-                print(f"DEBUG - Scheduling reminder in {delay_seconds} seconds")
-                result = send_event_reminder.apply_async(
-                    args=task_args, countdown=delay_seconds
-                )
-                print(f"DEBUG - Task scheduled with ID: {result.id}")
-            else:
-                print("DEBUG - Event is imminent, sending reminder immediately")
-                result = send_event_reminder.apply_async(args=task_args)
-                print(f"DEBUG - Immediate task scheduled with ID: {result.id}")
+
+            print(f"DEBUG - Scheduling reminder in {delay_seconds:.2f} seconds")
+            result = send_event_reminder.apply_async(
+                args=task_args, countdown=delay_seconds
+            )
+            print(f"DEBUG - Task scheduled with ID: {result.id}")
         else:
             print("DEBUG - Event is in the past, not scheduling reminder")
 
