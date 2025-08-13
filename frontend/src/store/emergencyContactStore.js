@@ -1,19 +1,20 @@
 import { defineStore } from 'pinia';
-import mockApiService from '../services/mockApiService';
+import emergencyService from '../services/emergencyService';
 
 export const useEmergencyContactStore = defineStore('emergencyContact', {
   state: () => ({
-    contact: null,
+    contacts: [],
     loading: false,
     error: null,
   }),
+
   actions: {
     async fetchEmergencyContact() {
       this.loading = true;
       this.error = null;
       try {
-        const response = await mockApiService.getEmergencyContact();
-        this.contact = response.data;
+        const response = await emergencyService.getEmergencyContacts();
+        this.contacts = response.data;
       } catch (e) {
         this.error = 'Failed to load emergency contact.';
       } finally {
