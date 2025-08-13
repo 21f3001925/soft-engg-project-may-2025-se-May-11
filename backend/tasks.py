@@ -63,16 +63,43 @@ def send_medication_reminder(medication_id):
 
 @celery_app.task
 def send_event_reminder(user_id, event_name, event_location, event_time):
+    """
+    Sends an SMS and Email reminder for a specific event.
+    """
     app = get_flask_app()
     with app.app_context():
         from models import User
 
         user = User.query.get(user_id)
-        if user and user.phone_number:
-            send_sms(
-                user.phone_number,
-                f"Reminder: {event_name} at {event_location} on {event_time}",
-            )
+        if not user:
+            print(f"Event Reminder Task: User with ID {user_id} not found.")
+            return
+
+        # --- FIX: Format the date and create a clear message for notifications ---
+        try:
+            # The time is an ISO string from the backend, so parse it
+            event_datetime_obj = datetime.fromisoformat(event_time)
+            # Format to a friendly string like "August 20, 2025 at 02:00 PM"
+            formatted_time = event_datetime_obj.strftime("%B %d, %Y at %I:%M %p")
+        except (ValueError, TypeError):
+            # Fallback if the date format is unexpected
+            formatted_time = event_time
+
+        message = (
+            f"Reminder: Your event '{event_name}' is scheduled at {event_location} "
+            f"on {formatted_time}."
+        )
+        email_subject = f"Event Reminder: {event_name}"
+
+        # Send SMS if a phone number is available
+        if user.phone_number:
+            send_sms(user.phone_number, message)
+            print(f"Sent event SMS reminder to {user.username}")
+
+        # --- FIX: Send an email if an email address is available ---
+        if user.email:
+            send_email(app, user.email, email_subject, message)
+            print(f"Sent event email reminder to {user.username}")
 
 
 @celery_app.task

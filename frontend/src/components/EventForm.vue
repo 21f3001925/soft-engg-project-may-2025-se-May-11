@@ -64,9 +64,18 @@ watch(
 
 async function handleSubmit() {
   const { event_id, service_provider_id, ...rest } = { ...props.modelValue, ...form };
+  let istDateTimeString;
+
+  if (form.date_time) {
+    // The datetime-local input gives YYYY-MM-DDTHH:MM
+    // We want to send this directly to the backend as an IST string
+    // No timezone conversion here, as the backend is configured for IST
+    istDateTimeString = form.date_time + ':00'; // Add seconds for full datetime string
+  }
+
   const payload = {
     ...rest,
-    date_time: form.date_time ? new Date(form.date_time).toISOString() : undefined,
+    date_time: istDateTimeString,
   };
   // Explicitly delete service_provider_id if it somehow got in
   delete payload.service_provider_id;

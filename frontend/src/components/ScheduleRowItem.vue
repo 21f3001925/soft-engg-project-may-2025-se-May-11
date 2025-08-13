@@ -18,11 +18,15 @@ defineProps({
   },
 });
 
-function formatTime(time) {
-  // Format ISO string to readable time, e.g. "07:00 AM"
-  if (!time) return '';
-  const date = new Date(time);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function formatTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const options = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  };
+  return date.toLocaleTimeString('en-US', options);
 }
 </script>
 
@@ -31,8 +35,7 @@ function formatTime(time) {
     <div class="event-name">{{ schedule.name }}</div>
     <div class="event-description">{{ schedule.description }}</div>
     <div class="event-location">{{ schedule.location }}</div>
-    <div class="event-time">{{ formatTime(schedule.time) }}</div>
-    <div class="event-time2">{{ formatTime(schedule.date_time) }}</div>
+    <div class="event-time">{{ formatTime(schedule.date_time) }}</div>
     <slot></slot>
   </div>
 </template>
@@ -45,19 +48,16 @@ function formatTime(time) {
   padding: 1rem;
   border-bottom: 1px solid #eee;
 }
-
 .event-name {
   flex: 1;
   color: #333;
   font-weight: 500;
 }
-
 .event-description {
   flex: 2;
   color: #666;
   font-size: 0.9rem;
 }
-
 .event-time {
   min-width: 80px;
   color: #666;

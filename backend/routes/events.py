@@ -11,7 +11,8 @@ from datetime import timedelta, datetime
 class EventSchema(Schema):
     event_id = fields.Str(dump_only=True)
     name = fields.Str(required=True)
-    date_time = fields.DateTime(required=True)
+    # This MUST have format='iso'
+    date_time = fields.DateTime(format="iso", required=True)
     location = fields.Str(required=True)
     description = fields.Str()
     service_provider_id = fields.Str()
@@ -22,7 +23,7 @@ class EventSchema(Schema):
 
 class EventJoinSchema(Schema):
     event_id = fields.Str(required=True)
-    senior_id = fields.Str(required=False)  # Optional for provider
+    senior_id = fields.Str(required=False)
 
 
 class AttendeeSchema(Schema):
@@ -43,15 +44,11 @@ events_bp = Blueprint(
 class EventList(MethodView):
     @jwt_required()
     @roles_accepted("service_provider", "senior_citizen")
-    @events_bp.doc(
-        summary="All events organised by various service providers are listed when the route is called."
-    )
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
         events = Event.query.all()
         return events
 
-    @events_bp.doc(summary="Service provider can add a new event using this endpoint.")
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
     def post(self, new_data):
@@ -65,30 +62,16 @@ class EventList(MethodView):
 class EventResource(MethodView):
     @jwt_required()
     @roles_accepted("service_provider", "senior_citizen")
-    @events_bp.doc(
-        summary="To get specific event details, service provider can use this route with the event id."
-    )
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
         event = Event.query.get_or_404(event_id)
         return event
 
-    @events_bp.doc(
-        summary="To update event details, service provider can use this route with the event id."
-    )
     @events_bp.arguments(EventSchema(partial=True))
     @events_bp.response(200, EventSchema)
     def put(self, update_data, event_id):
         event = Event.query.get_or_404(event_id)
         for key, value in update_data.items():
-            if key == "date_time":
-                if isinstance(value, str):
-                    try:
-                        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
-                    except Exception:
-                        continue
-                if not isinstance(value, datetime):
-                    continue
             setattr(event, key, value)
         db.session.commit()
         return event
@@ -105,6 +88,7 @@ class EventResource(MethodView):
         db.session.commit()
 
 
+# --- The rest of the file (EventJoin, JoinedEvents, etc.) remains unchanged ---
 @events_bp.route("/join")
 class EventJoin(MethodView):
     @jwt_required()
@@ -139,18 +123,28 @@ class EventJoin(MethodView):
         db.session.add(attendance)
         db.session.commit()
 
-        # Schedule event reminder (e.g., 1 hour before the event)
-        reminder_time = event.date_time - timedelta(hours=1)
-        if reminder_time > datetime.utcnow():  # Only schedule if in the future
-            send_event_reminder.apply_async(
-                args=[
-                    senior_id,
-                    event.name,
-                    event.location,
-                    event.date_time.isoformat(),
-                ],
-                eta=reminder_time,
-            )
+        # --- CORRECTED REMINDER LOGIC ---
+        now_utc = datetime.utcnow()
+        event_time_utc = event.date_time
+
+        # Only schedule a reminder if the event itself is in the future
+        if event_time_utc > now_utc:
+            # Ideal reminder time is 1 hour before the event
+            ideal_reminder_time = event_time_utc - timedelta(hours=1)
+
+            task_args = [
+                senior_id,
+                event.name,
+                event.location,
+                event.date_time.isoformat(),
+            ]
+
+            # If the ideal reminder time is still in the future, schedule it for then
+            if ideal_reminder_time > now_utc:
+                send_event_reminder.apply_async(args=task_args, eta=ideal_reminder_time)
+            # Otherwise, the event is soon, so send the reminder immediately
+            else:
+                send_event_reminder.apply_async(args=task_args)
 
         return {"message": "Successfully joined event and reminder scheduled"}, 200
 
