@@ -4,11 +4,19 @@ from celery.schedules import crontab
 
 load_dotenv()
 
+# Get the base directory of the project
+basedir = os.path.abspath(os.path.dirname(__file__))
+# Define the path for the instance folder
+instance_path = os.path.join(basedir, "instance")
+# Ensure the instance folder exists
+os.makedirs(instance_path, exist_ok=True)
+
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "your-very-secret-key")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", "sqlite:///senior_citizen.db"
+        "SQLALCHEMY_DATABASE_URI",
+        "sqlite:///" + os.path.join(instance_path, "senior_citizen.db"),
     )
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-very-secret-key")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
