@@ -12,6 +12,7 @@ from schemas.auth import (
     ChangePasswordSchema,
 )
 
+
 auth_blp = Blueprint(
     "Auth",
     "Auth",
@@ -110,7 +111,21 @@ class LoginResource(MethodView):
             and bcrypt.checkpw(password.encode(), user.password.encode())
         ):
             access_token = create_access_token(identity=str(user.user_id))
-            return {"access_token": access_token}, 200
+            # Determine role by checking which table contains the user_id
+            role = None
+            if db.session.query(SeniorCitizen).filter_by(user_id=user.user_id).first():
+                role = "senior_citizen"
+            elif db.session.query(Caregiver).filter_by(user_id=user.user_id).first():
+                role = "caregiver"
+            elif (
+                db.session.query(ServiceProvider)
+                .filter_by(user_id=user.user_id)
+                .first()
+            ):
+                role = "service_provider"
+            else:
+                role = "unknown"
+            return {"access_token": access_token, "roles": [role]}, 200
         abort(401, message="Bad email or password")
 
 
