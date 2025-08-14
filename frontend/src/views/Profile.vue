@@ -1,78 +1,91 @@
 <script setup>
 import { useUserStore } from '../store/userStore';
-import { ref, onMounted } from 'vue';
+import { useEmergencyStore } from '../store/emergencyStore';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import profileService from '../services/profileService';
 import emergencyService from '../services/emergencyService';
 import { useAvatar } from '../composables/useAvatar';
 
 const userStore = useUserStore();
-const user = ref(userStore.user);
-const emergencyContacts = ref(userStore.emergencyContacts);
-const stats = userStore.stats;
+const emergencyStore = useEmergencyStore();
+const router = useRouter();
+
+// --- For displaying data (read-only) ---
+const user = computed(() => userStore.user);
+const emergencyContacts = computed(() => emergencyStore.contacts);
 const { avatarUrl: profilePicUrl } = useAvatar();
+
+// --- For editing data in the form (writable) ---
+const isEditing = ref(false);
+const editableUser = ref({}); // This will hold the data for the edit form
 
 onMounted(async () => {
   try {
-    const profileResponse = await profileService.getProfile();
-    userStore.setUser(profileResponse.data);
-    user.value = profileResponse.data;
-
-    if (userStore.user.role === 'senior_citizen' || userStore.user.role === 'caregiver') {
-      const emergencyContactsResponse = await emergencyService.getEmergencyContacts();
-      userStore.setEmergencyContacts(emergencyContactsResponse.data);
-      emergencyContacts.value = emergencyContactsResponse.data;
-    }
+    await profileService.getProfile(); // The store will be updated internally
+    await emergencyStore.fetchContactsForSenior();
   } catch (error) {
-    console.error('Error fetching profile:', error);
-    alert('Failed to load profile data. Please try again later.');
+    console.error('Error fetching initial data:', error);
+    alert('Failed to load profile data.');
   }
 });
 
-const isEditing = ref(false);
-const originalUser = ref({});
-
 const editProfile = () => {
-  originalUser.value = { ...user.value }; // Store a copy of the original user data
+  // Copy the current user data into our editable object
+  editableUser.value = { ...user.value };
   isEditing.value = true;
 };
 
 const cancelEdit = () => {
-  user.value = { ...originalUser.value }; // Revert changes
+  // Just hide the form; no data needs to be reverted
   isEditing.value = false;
 };
 
 const saveProfile = async () => {
   try {
-    const {
-      avatar_url,
-      topics_liked,
-      comments_posted,
-      appointments_missed,
-      medications_missed,
-      total_screentime,
-      ...profileData
-    } = user.value;
-
-    // Remove null and undefined values
-    Object.keys(profileData).forEach((key) => {
-      if (profileData[key] === null || profileData[key] === undefined) {
-        delete profileData[key];
-      }
-    });
-
+    // Use the data from our editable object to send the update
+    const { avatar_url, ...profileData } = editableUser.value;
     const response = await profileService.updateProfile(profileData);
-    userStore.setUser(response.data);
-    user.value = response.data;
+    userStore.setUser(response.data); // Update the store with the new data
     isEditing.value = false;
     alert('Profile updated successfully!');
   } catch (error) {
     console.error('Error updating profile:', error);
-    alert('Failed to update profile. Please try again later.');
+    alert('Failed to update profile.');
   }
 };
 
-const contactEmergency = () => {
-  alert(`Calling emergency number: ${userStore.user.phone_number}`);
+const contactEmergency = async () => {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+
+  // Ask the browser for the user's current position
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      // Success! We have the location.
+      const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+
+      try {
+        await emergencyService.triggerAlert(location);
+        alert('Success! Your location has been sent to your caregiver and emergency contacts.');
+      } catch (error) {
+        console.error('Error triggering emergency alert:', error);
+        alert('Failed to send alert. Please try again.');
+      }
+    },
+    (error) => {
+      // Error! The user may have denied permission or there was another issue.
+      console.error('Error getting location: ', error);
+      alert('Could not get your location. A generic emergency alert will be sent.');
+      // Optional: still send an alert without location
+      // emergencyService.triggerAlert({});
+    },
+  );
 };
 
 const onFileChange = async (event) => {
@@ -82,7 +95,6 @@ const onFileChange = async (event) => {
   try {
     const response = await profileService.uploadAvatar(file);
     userStore.setUser(response.data);
-    user.value = response.data;
     alert('Avatar uploaded successfully!');
   } catch (error) {
     console.error('Error uploading avatar:', error);
@@ -91,7 +103,7 @@ const onFileChange = async (event) => {
 };
 
 function goToEmergencyContacts() {
-  window.location.href = '/emergency-contacts';
+  router.push('/emergency-contacts');
 }
 </script>
 
@@ -115,14 +127,14 @@ function goToEmergencyContacts() {
           <button class="edit-button" @click="editProfile">Edit Profile</button>
         </div>
         <div v-else>
-          <p><strong>Name:</strong> <input type="text" v-model="user.username" /></p>
-          <p><strong>Email:</strong> <input type="email" v-model="user.email" /></p>
-          <p><strong>Age:</strong> <input type="number" v-model="user.age" /></p>
-          <p><strong>City:</strong> <input type="text" v-model="user.city" /></p>
-          <p><strong>Country:</strong> <input type="text" v-model="user.country" /></p>
-          <p><strong>Phone Number:</strong> <input type="text" v-model="user.phone_number" /></p>
-          <p v-if="user.news_categories">
-            <strong>News Categories:</strong> <input type="text" v-model="user.news_categories" />
+          <p><strong>Name:</strong> <input type="text" v-model="editableUser.username" /></p>
+          <p><strong>Email:</strong> <input type="email" v-model="editableUser.email" /></p>
+          <p><strong>Age:</strong> <input type="number" v-model="editableUser.age" /></p>
+          <p><strong>City:</strong> <input type="text" v-model="editableUser.city" /></p>
+          <p><strong>Country:</strong> <input type="text" v-model="editableUser.country" /></p>
+          <p><strong>Phone Number:</strong> <input type="text" v-model="editableUser.phone_number" /></p>
+          <p v-if="editableUser.news_categories">
+            <strong>News Categories:</strong> <input type="text" v-model="editableUser.news_categories" />
           </p>
           <button class="edit-button" @click="saveProfile">Save Profile</button>
           <button class="edit-button" @click="cancelEdit">Cancel</button>
@@ -138,7 +150,6 @@ function goToEmergencyContacts() {
       <div>
         <div v-for="contact in emergencyContacts" :key="contact.contact_id" class="friend-item">{{ contact.name }}</div>
       </div>
-
       <button class="edit-button" @click="goToEmergencyContacts">Edit Contacts</button>
     </div>
 
@@ -147,11 +158,11 @@ function goToEmergencyContacts() {
       <hr />
       <br />
       <ul>
-        <li>Topics Liked: {{ user.topics_liked }}</li>
-        <li>Comments Posted: {{ user.comments_posted }}</li>
-        <li>Appointments Missed: {{ user.appointments_missed }}</li>
-        <li>Medications Missed: {{ user.medications_missed }}</li>
-        <li>Total Screentime (Hrs): {{ user.total_screentime }}</li>
+        <li>Topics Liked: {{ user?.topics_liked }}</li>
+        <li>Comments Posted: {{ user?.comments_posted }}</li>
+        <li>Appointments Missed: {{ user?.appointments_missed }}</li>
+        <li>Medications Missed: {{ user?.medications_missed }}</li>
+        <li>Total Screentime (Hrs): {{ user?.total_screentime }}</li>
       </ul>
     </div>
   </div>
@@ -166,52 +177,12 @@ function goToEmergencyContacts() {
   gap: 20px;
   padding: 20px;
 }
-
 .card {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 16px;
   width: 300px;
 }
-
-.avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  margin-bottom: 12px;
-}
-
-.emergency-button {
-  background-color: red;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 12px;
-}
-
-.friend-list ul,
-.user-stats ul {
-  list-style: none;
-  align-items: center;
-  text-align: center;
-  padding: 0px;
-  margin: 0px;
-}
-
-.friend-list li,
-.user-stats li {
-  margin-bottom: 8px;
-  align-items: center;
-  text-align: center;
-}
-
-.friend-item:hover {
-  color: #4fc3f7;
-  cursor: pointer;
-}
-
 .user-avatar {
   width: 100px;
   height: 100px;
@@ -219,13 +190,11 @@ function goToEmergencyContacts() {
   object-fit: cover;
   margin-bottom: 12px;
 }
-
 .user-profile {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .upload-button {
   background-color: #1976d2;
   color: white;
@@ -235,7 +204,6 @@ function goToEmergencyContacts() {
   cursor: pointer;
   margin-bottom: 10px;
 }
-
 .edit-button {
   margin-top: 12px;
   background-color: #1976d2;
@@ -246,8 +214,26 @@ function goToEmergencyContacts() {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-
 .edit-button:hover {
   background-color: #125aa1;
+}
+.emergency-button {
+  background-color: red;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.friend-item:hover {
+  color: #4fc3f7;
+  cursor: pointer;
+}
+.user-info p {
+  text-align: left;
+}
+.user-info input {
+  width: 100%;
 }
 </style>
