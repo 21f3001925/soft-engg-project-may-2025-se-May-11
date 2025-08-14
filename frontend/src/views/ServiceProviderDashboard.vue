@@ -20,6 +20,20 @@ onMounted(async () => {
 const events = computed(() => providerStore.events || []);
 const attendees = computed(() => providerStore.attendees || {});
 
+function formatFullDateTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  };
+  return date.toLocaleString('en-US', options);
+}
+
 function openAddModal() {
   selectedItem.value = null;
   isEdit.value = false;
@@ -83,7 +97,6 @@ async function removeAttendeeFromEvent(senior) {
   try {
     await providerStore.removeAttendee(modalEvent.value.event_id, senior.user_id);
     showToast(`Removed ${senior.name || senior.email} from event`);
-    // attendeesForEvent will be refreshed by store action
     attendeesForEvent.value = providerStore.attendees[modalEvent.value.event_id] || [];
   } catch (err) {
     showToast(providerStore.error || 'Failed to remove attendee');
@@ -123,13 +136,12 @@ async function removeAttendeeFromEvent(senior) {
 
     <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
-    <!-- Attendees Modal -->
     <div v-if="showAttendeesModal" class="modal-overlay" @click.self="closeAttendeesModal">
       <div class="modal-content">
         <h2><b>Event Information and Attendees</b></h2>
         <div class="event-details">
           <div>Name: {{ modalEvent?.name }}</div>
-          <div>Date: {{ modalEvent?.date_time }}</div>
+          <div>Date: {{ formatFullDateTime(modalEvent?.date_time) }}</div>
           <div>Location: {{ modalEvent?.location }}</div>
           <div>Description: {{ modalEvent?.description }}</div>
         </div>
@@ -229,5 +241,99 @@ h1 {
   padding: 12px 20px;
   border-radius: 5px;
   z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  animation:
+    fadein 0.3s ease,
+    fadeout 0.3s ease 1.7s;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+.attendees-button {
+  background-color: #0984e3;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 10px;
+  min-width: 350px;
+  max-width: 95vw;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  position: relative;
+}
+
+.close-modal {
+  margin-top: 1.5rem;
+  background: #d63031;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.event-details {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.event-details > div {
+  margin-bottom: 0.3rem;
+}
+
+.remove-attendee-btn {
+  background: #d63031;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 6px;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 0.85em;
+  line-height: 1;
+  height: 22px;
+  min-width: 48px;
 }
 </style>

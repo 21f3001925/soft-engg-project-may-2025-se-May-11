@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 import requests
+import pytz
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -41,37 +42,167 @@ def send_reminder_notification(appointment_id, title, location, date_time, user_
 @celery_app.task
 def send_medication_reminder(medication_id):
     """
-    Sends an SMS reminder for a specific medication.
+    Sends a reminder to the senior and a notification to the caregiver
+    when a medication is due.
     """
     app = get_flask_app()
     with app.app_context():
-        from models import User, Medication
+        from models import User, Medication, CaregiverAssignment
 
         med = Medication.query.get(medication_id)
-        if med and not med.isTaken:
-            user = User.query.get(med.senior_id)
-            if user and user.phone_number:
-                send_sms(
-                    user.phone_number, f"Reminder: Take {med.dosage} of {med.name}"
-                )
-                print(f"Sent medication reminder to {user.username}")
-            else:
-                print(f"No user or phone for medication ID {medication_id}")
+        if not med or med.isTaken:
+            print(
+                f"Medication reminder for {medication_id} skipped (not found or already taken)."
+            )
+            return
+
+        senior_user = User.query.get(med.senior_id)
+        if not senior_user:
+            # Added clearer logging
+            print(f"Task failed: User not found for medication ID {medication_id}.")
+            return
+
+        print(f"User '{senior_user.username}' found. Preparing reminders.")
+
+        # --- 1. Reminder for the Senior (Corrected Logic) ---
+        senior_msg = f"Reminder: It's time to take {med.dosage} of {med.name}."
+
+        # Check for phone number and send SMS if it exists
+        if senior_user.phone_number:
+            send_sms(senior_user.phone_number, senior_msg)
+            print(f"Sent SMS reminder to senior {senior_user.username}")
         else:
-            print(f"Medication {medication_id} not found or already taken")
+            print(f"Senior {senior_user.username} has no phone number. Skipping SMS.")
+
+        # Check for email and send if it exists
+        if senior_user.email:
+            send_email(app, senior_user.email, "Medication Reminder", senior_msg)
+            print(f"Sent email reminder to senior {senior_user.username}")
+        else:
+            print(f"Senior {senior_user.username} has no email. Skipping email.")
+
+        # --- 2. Notification for the Caregiver (Logic is good, added logging) ---
+        assignment = CaregiverAssignment.query.filter_by(
+            senior_id=senior_user.user_id
+        ).first()
+        if assignment and (caregiver_user := User.query.get(assignment.caregiver_id)):
+            print(
+                f"Caregiver '{caregiver_user.username}' found. Preparing notification."
+            )
+            caregiver_msg = (
+                f"Medication Due: It's time for {senior_user.name} to take "
+                f"{med.dosage} of {med.name}. Please ensure it is marked as taken."
+            )
+            email_subject = f"Medication Due for {senior_user.name}"
+
+            if caregiver_user.phone_number:
+                send_sms(caregiver_user.phone_number, caregiver_msg)
+                print(f"Sent SMS notification to caregiver {caregiver_user.username}")
+            if caregiver_user.email:
+                send_email(app, caregiver_user.email, email_subject, caregiver_msg)
+                print(f"Sent email notification to caregiver {caregiver_user.username}")
 
 
 @celery_app.task
 def send_event_reminder(user_id, event_name, event_location, event_time):
+    """
+    Sends an SMS and Email reminder for a specific event.
+    """
+    print(f"Event reminder task started for user {user_id}")
     app = get_flask_app()
-    with app.app_context():
-        from models import User
+    if app is None:
+        print(f"Error: Flask app not initialized in Celery task for user {user_id}")
+        return
 
-        user = User.query.get(user_id)
-        if user and user.phone_number:
-            send_sms(
-                user.phone_number,
-                f"Reminder: {event_name} at {event_location} on {event_time}",
+    with app.app_context():
+        try:
+            from models import User
+
+            print(f"Attempting to fetch user {user_id}")
+            user = User.query.get(user_id)
+            if not user:
+                print(f"Event Reminder Task: User with ID {user_id} not found.")
+                return
+
+            print(f"User {user.username} found. Processing event reminder.")
+
+            # --- IMPROVED: Better datetime formatting and timezone handling ---
+            try:
+                # Define IST timezone
+                ist_tz = pytz.timezone("Asia/Kolkata")
+
+                # Parse the event time (should be in IST ISO format)
+                event_datetime_obj = datetime.fromisoformat(event_time)
+
+                # Ensure it's in IST for display
+                if event_datetime_obj.tzinfo:
+                    event_datetime_obj = event_datetime_obj.astimezone(ist_tz)
+                else:
+                    # If for some reason it's naive, assume IST and localize
+                    event_datetime_obj = ist_tz.localize(event_datetime_obj)
+
+                # Format to a friendly string like "August 20, 2025 at 02:00 PM IST"
+                formatted_time = event_datetime_obj.strftime(
+                    "%B %d, %Y at %I:%M %p IST"
+                )
+                print(f"Successfully parsed and formatted event time: {formatted_time}")
+
+            except (ValueError, TypeError) as e:
+                # Fallback if the date format is unexpected
+                print(f"Date parsing error: {e}")
+                formatted_time = str(event_time)
+
+            message = (
+                f"🎉 Event Reminder: Your event '{event_name}' is scheduled at {event_location} "
+                f"on {formatted_time}. Don't forget to attend!"
+            )
+            email_subject = f"Event Reminder: {event_name}"
+
+            # Create HTML email content
+            email_html = f"""
+            <html>
+            <body>
+                <h2>🎉 Event Reminder</h2>
+                <p>This is a friendly reminder about your upcoming event:</p>
+                <ul>
+                    <li><strong>Event:</strong> {event_name}</li>
+                    <li><strong>Location:</strong> {event_location}</li>
+                    <li><strong>Date & Time:</strong> {formatted_time}</li>
+                </ul>
+                <p>We look forward to seeing you there!</p>
+            </body>
+            </html>
+            """
+
+            # Send SMS if a phone number is available
+            if user.phone_number:
+                try:
+                    print(
+                        f"Attempting to send SMS to {user.username} ({user.phone_number})"
+                    )
+                    send_sms(user.phone_number, message)
+                    print(
+                        f"✅ Sent event SMS reminder to {user.username} ({user.phone_number})"
+                    )
+                except Exception as e:
+                    print(f"❌ Failed to send SMS to {user.username}: {e}")
+
+            # Send email if an email address is available
+            if user.email:
+                try:
+                    print(f"Attempting to send email to {user.username} ({user.email})")
+                    send_email(app, user.email, email_subject, email_html)
+                    print(
+                        f"✅ Sent event email reminder to {user.username} ({user.email})"
+                    )
+                except Exception as e:
+                    print(f"❌ Failed to send email to {user.username}: {e}")
+
+            print(f"Event reminder task completed for user {user_id}")
+
+        except Exception as e:
+            print(
+                f"An unhandled error occurred in send_event_reminder for user {user_id}: {e}"
             )
 
 
@@ -138,11 +269,28 @@ def check_missed_medications():
     with app.app_context():
         from models import User, Medication, CaregiverAssignment, db
 
-        now = datetime.utcnow()
+        print("Running 'check_missed_medications' task...")
+
+        # --- THE FIX IS ON THIS LINE ---
+        # Change this:
+        # now = datetime.utcnow()
+        # To this, which creates a timezone-AWARE datetime object:
+        now = datetime.now(pytz.utc)
+
         cutoff = now - timedelta(minutes=10)
+
         missed_meds = Medication.query.filter(
             Medication.isTaken.is_(False), Medication.time <= cutoff
         ).all()
+
+        if not missed_meds:
+            print("No missed medications found.")
+            return
+
+        # --- Added Logging ---
+        print(
+            f"Found {len(missed_meds)} missed medication(s). Processing notifications..."
+        )
 
         for med in missed_meds:
             senior_user = User.query.get(med.senior_id)
@@ -150,10 +298,10 @@ def check_missed_medications():
                 continue
 
             # Increment medications_missed for the senior citizen
-            if senior_user.senior_citizen:  # Check if the user is a senior citizen
+            if senior_user.senior_citizen:
                 senior_user.senior_citizen.medications_missed += 1
-                db.session.add(senior_user.senior_citizen)  # Add to session for update
-                db.session.commit()  # Commit the change
+                db.session.add(senior_user.senior_citizen)
+                db.session.commit()
 
             assignment = CaregiverAssignment.query.filter_by(
                 senior_id=senior_user.user_id
@@ -161,20 +309,35 @@ def check_missed_medications():
             if assignment:
                 caregiver_user = User.query.get(assignment.caregiver_id)
                 if caregiver_user:
+                    print(
+                        f"Found caregiver '{caregiver_user.username}' for senior '{senior_user.username}'."
+                    )
                     msg = (
                         f"ALERT: {senior_user.name} may have missed their dose of "
                         f"{med.dosage} of {med.name}, which was due at "
-                        f"{med.time.strftime('%I:%M %p')}. Medications missed count: {senior_user.senior_citizen.medications_missed if senior_user.senior_citizen else 'N/A'}."
+                        f"{med.time.strftime('%I:%M %p')}. "
+                        f"Total medications missed: {senior_user.senior_citizen.medications_missed if senior_user.senior_citizen else 'N/A'}."
                     )
+
                     if caregiver_user.phone_number:
                         send_sms(caregiver_user.phone_number, msg)
-                    send_email(
-                        app, caregiver_user.email, "Missed Medication Alert", msg
-                    )
+                        print(
+                            f"Sent missed medication SMS to {caregiver_user.username}"
+                        )
+
+                    # --- FIX: Added a check for the email address ---
+                    if caregiver_user.email:
+                        send_email(
+                            app, caregiver_user.email, "Missed Medication Alert", msg
+                        )
+                        print(
+                            f"Sent missed medication email to {caregiver_user.username}"
+                        )
 
 
 @celery_app.task
-def send_emergency_alert(senior_id):
+# --- 1. UPDATE THE FUNCTION SIGNATURE ---
+def send_emergency_alert(senior_id, latitude=None, longitude=None):
     app = get_flask_app()
     with app.app_context():
         from models import User, CaregiverAssignment
@@ -183,107 +346,78 @@ def send_emergency_alert(senior_id):
         if not senior_user:
             return
 
-        alert_msg = f"EMERGENCY ALERT: {senior_user.name} has triggered an emergency alert. Please check on them immediately."
+        # --- 2. CREATE A GOOGLE MAPS LINK ---
+        if latitude and longitude:
+            # This is the correct, standard URL for Google Maps
+            maps_link = f"https://maps.google.com/?q={latitude},{longitude}"
+            alert_msg = (
+                f"EMERGENCY ALERT: {senior_user.username} has triggered an emergency alert. "
+                f"Their current location is: {maps_link}"
+            )
+        else:
+            alert_msg = (
+                f"EMERGENCY ALERT: {senior_user.name} has triggered an emergency alert. "
+                "Their location could not be determined. Please check on them immediately."
+            )
 
+        # Notify the assigned caregiver
         assignment = CaregiverAssignment.query.filter_by(
             senior_id=senior_user.user_id
         ).first()
-        if assignment:
-            caregiver_user = User.query.get(assignment.caregiver_id)
-            if caregiver_user:
-                print(f"Notifying assigned caregiver: {caregiver_user.name}")
-                if caregiver_user.phone_number:
-                    send_sms(caregiver_user.phone_number, alert_msg)
+        if assignment and (caregiver_user := User.query.get(assignment.caregiver_id)):
+            print(f"Notifying assigned caregiver: {caregiver_user.name}")
+            if caregiver_user.phone_number:
+                send_sms(caregiver_user.phone_number, alert_msg)
+            # --- FIX: Check if email exists before sending ---
+            if caregiver_user.email:
                 send_email(app, caregiver_user.email, "EMERGENCY ALERT!", alert_msg)
 
+        # Notify all emergency contacts
         for contact in getattr(senior_user, "emergency_contacts", []):
             print(f"Notifying emergency contact: {contact.name}")
             if contact.phone:
                 send_sms(contact.phone, alert_msg)
-            if contact.email:
+            # --- FIX: Check if email exists before sending ---
+            if hasattr(contact, "email") and contact.email:
                 send_email(app, contact.email, "EMERGENCY ALERT!", alert_msg)
 
 
-# @celery_app.task
-# def send_daily_news_update(user_id):
-#     app = get_flask_app()
-#     with app.app_context():
-#         from models import User
+@celery_app.task
+def notify_caregiver_medication_taken(medication_id):
+    """Notifies the caregiver that a medication has been marked as taken."""
+    app = get_flask_app()
+    with app.app_context():
+        from models import Medication, User, CaregiverAssignment
 
-#         user = User.query.get(user_id)
-#         if not user:
-#             return
+        med = Medication.query.get(medication_id)
+        if not med:
+            print(f"Medication taken notification: Med ID {medication_id} not found.")
+            return
 
-#         api_key = app.config.get("NEWSAPI_KEY")
-#         if not api_key:
-#             print("News API key not set")
-#             return
+        senior_user = User.query.get(med.senior_id)
+        if not senior_user:
+            return
 
-#         try:
-#             category = getattr(user.senior_citizen, "news_categories", None) or "general"
-#             resp = requests.get(
-#                 f"https://newsapi.org/v2/top-headlines?country=us"
-#                 f"&category={category}&apiKey={api_key}"
-#             )
-#             resp.raise_for_status()
-#             articles = resp.json().get("articles", [])[:5]
+        # Find the assigned caregiver
+        assignment = CaregiverAssignment.query.filter_by(
+            senior_id=senior_user.user_id
+        ).first()
+        if assignment and (caregiver := User.query.get(assignment.caregiver_id)):
 
-#             summary = "Your Daily News Update:\n\n" + "".join(
-#                 f"- {a['title']} ({a['source']['name']})\n  Read more: {a['url']}\n\n"
-#                 for a in articles
-#             )
-#             send_email(app, user.email, "Daily News Update", summary)
-#         except Exception as e:
-#             print(f"News fetch error for {user.username}: {e}")
+            # Format time to IST for the message
+            ist_tz = pytz.timezone("Asia/Kolkata")
+            taken_time_ist = datetime.now(ist_tz).strftime("%I:%M %p")
 
+            msg = (
+                f"✅ Confirmation: {senior_user.name} marked their medication "
+                f"'{med.name}' ({med.dosage}) as taken at {taken_time_ist}."
+            )
 
-# @celery_app.task
-# def check_missed_medications():
-#     app = get_flask_app()
-#     with app.app_context():
-#         from models import User, Medication
+            if caregiver.phone_number:
+                send_sms(caregiver.phone_number, msg)
+            if caregiver.email:
+                send_email(app, caregiver.email, f"Medication Taken: {med.name}", msg)
 
-#         now = datetime.utcnow()
-#         cutoff = now - timedelta(hours=1)
-#         missed = Medication.query.filter(
-#             Medication.isTaken.is_(False), Medication.time <= cutoff
-#         ).all()
-
-#         for med in missed:
-#             senior = User.query.get(med.senior_id)
-#             if getattr(senior, "caregiver_id", None):
-#                 caregiver = User.query.get(senior.caregiver_id)
-#                 if caregiver and caregiver.phone_number:
-#                     msg = (
-#                         f"ALERT: {senior.username} missed {med.dosage} of "
-#                         f"{med.name} due at {med.time.strftime('%H:%M')}"
-#                     )
-#                     send_sms(caregiver.phone_number, msg)
-#                     send_email(app, caregiver.email, "Missed Medication Alert", msg)
-
-
-# @celery_app.task
-# def send_emergency_alert(senior_id):
-#     app = get_flask_app()
-#     with app.app_context():
-#         from models import User
-
-#         senior = User.query.get(senior_id)
-#         if not senior:
-#             return
-
-#         alert = f"EMERGENCY ALERT: {senior.username} pressed the emergency button!"
-#         # Caregiver
-#         cid = getattr(senior, "caregiver_id", None)
-#         if cid:
-#             care = User.query.get(cid)
-#             if care:
-#                 if care.phone_number:
-#                     send_sms(care.phone_number, alert)
-#                 send_email(app, care.email, "EMERGENCY ALERT!", alert)
-#         # Contacts
-#         for contact in getattr(senior, "emergency_contacts", []):
-#             if contact.phone:
-#                 send_sms(contact.phone, alert)
-#             if contact.email:
-#                 send_email(app, contact.email, "EMERGENCY ALERT!", alert)
+            print(
+                f"Sent 'medication taken' notification to caregiver {caregiver.name}."
+            )

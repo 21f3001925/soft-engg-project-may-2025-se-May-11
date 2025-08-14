@@ -4,14 +4,16 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
 from models import db, Event, EventAttendance, User
 from marshmallow import Schema, fields
-from tasks import send_event_reminder
-from datetime import timedelta, datetime
+from tasks import send_event_reminder, celery_app
+from datetime import datetime
+import pytz
 
 
 class EventSchema(Schema):
     event_id = fields.Str(dump_only=True)
     name = fields.Str(required=True)
-    date_time = fields.DateTime(required=True)
+    # This MUST have format='iso'
+    date_time = fields.DateTime(format="iso", required=True)
     location = fields.Str(required=True)
     description = fields.Str()
     service_provider_id = fields.Str()
@@ -22,7 +24,7 @@ class EventSchema(Schema):
 
 class EventJoinSchema(Schema):
     event_id = fields.Str(required=True)
-    senior_id = fields.Str(required=False)  # Optional for provider
+    senior_id = fields.Str(required=False)
 
 
 class AttendeeSchema(Schema):
@@ -81,14 +83,6 @@ class EventResource(MethodView):
     def put(self, update_data, event_id):
         event = Event.query.get_or_404(event_id)
         for key, value in update_data.items():
-            if key == "date_time":
-                if isinstance(value, str):
-                    try:
-                        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
-                    except Exception:
-                        continue
-                if not isinstance(value, datetime):
-                    continue
             setattr(event, key, value)
         db.session.commit()
         return event
@@ -127,30 +121,58 @@ class EventJoin(MethodView):
         if not event:
             abort(404, message="Event not found")
 
-        # Check if senior is already attending
+        # Check if already attending
         existing_attendance = EventAttendance.query.filter_by(
             senior_id=senior_id, event_id=event_id
         ).first()
         if existing_attendance:
             abort(409, message="You have already joined this event.")
 
-        # Create attendance record
+        # Create attendance
         attendance = EventAttendance(senior_id=senior_id, event_id=event_id)
         db.session.add(attendance)
         db.session.commit()
 
-        # Schedule event reminder (e.g., 1 hour before the event)
-        reminder_time = event.date_time - timedelta(hours=1)
-        if reminder_time > datetime.utcnow():  # Only schedule if in the future
-            send_event_reminder.apply_async(
-                args=[
-                    senior_id,
-                    event.name,
-                    event.location,
-                    event.date_time.isoformat(),
-                ],
-                eta=reminder_time,
+        # --- SIMPLIFIED SCHEDULING ---
+        now_utc = datetime.now(pytz.UTC)
+
+        # The datetime from the DB is now reliably UTC.
+        # Ensure it's timezone-aware for comparison.
+        if event.date_time.tzinfo is None:
+            # This handles the case where SQLite might store naive datetimes
+            event_time_utc = pytz.UTC.localize(event.date_time)
+        else:
+            event_time_utc = event.date_time
+
+        print(f"DEBUG - Current UTC: {now_utc}")
+        print(f"DEBUG - Event time UTC from DB: {event_time_utc}")
+
+        if event_time_utc > now_utc:
+            delay_seconds = (event_time_utc - now_utc).total_seconds()
+
+            # For the task, we can still format it nicely for the user message.
+            ist_tz = pytz.timezone("Asia/Kolkata")
+            event_time_ist_display = event_time_utc.astimezone(ist_tz)
+
+            task_args = [
+                senior_id,
+                event.name,
+                event.location,
+                event_time_ist_display.isoformat(),  # Pass IST string for display
+            ]
+
+            print(f"DEBUG - Scheduling reminder in {delay_seconds:.2f} seconds")
+            result = send_event_reminder.apply_async(
+                args=task_args, countdown=delay_seconds
             )
+            print(f"DEBUG - Task scheduled with ID: {result.id}")
+            # --- SAVE THE TASK ID ---
+            attendance.reminder_task_id = result.id
+        else:
+            print("DEBUG - Event is in the past, not scheduling reminder")
+        # Now add the attendance record (with the task_id if applicable) and commit
+        db.session.add(attendance)
+        db.session.commit()
 
         return {"message": "Successfully joined event and reminder scheduled"}, 200
 
@@ -197,8 +219,21 @@ class EventUnjoin(MethodView):
         if not attendance:
             abort(404, message="You are not attending this event.")
 
+        # --- REVOKE THE CELERY TASK ---
+        if attendance.reminder_task_id:
+            try:
+                celery_app.control.revoke(attendance.reminder_task_id)
+                print(f"DEBUG - Revoked Celery task: {attendance.reminder_task_id}")
+            except Exception as e:
+                # Log the error but don't block the unjoin process
+                print(
+                    f"ERROR - Could not revoke Celery task {attendance.reminder_task_id}: {e}"
+                )
+
+        # Now delete the attendance record from the database
         db.session.delete(attendance)
         db.session.commit()
+
         return {"message": "Successfully cancelled event attendance"}, 200
 
 

@@ -4,11 +4,19 @@ from celery.schedules import crontab
 
 load_dotenv()
 
+# Get the base directory of the project
+basedir = os.path.abspath(os.path.dirname(__file__))
+# Define the path for the instance folder
+instance_path = os.path.join(basedir, "instance")
+# Ensure the instance folder exists
+os.makedirs(instance_path, exist_ok=True)
+
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "your-very-secret-key")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", "sqlite:///senior_citizen.db"
+        "SQLALCHEMY_DATABASE_URI",
+        "sqlite:///" + os.path.join(instance_path, "senior_citizen.db"),
     )
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-very-secret-key")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -46,8 +54,8 @@ class Config:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
-    CELERY_TIMEZONE = "Asia/Kolkata"
-    CELERY_ENABLE_UTC = False
+    CELERY_TIMEZONE = "UTC"
+    CELERY_ENABLE_UTC = True
     CELERY_BEAT_SCHEDULE = {
         "check-missed-medications-every-30-seconds": {
             "task": "tasks.check_missed_medications",
@@ -72,6 +80,6 @@ class Config:
     # MAIL_SERVER = "smtp.gmail.com"
     # MAIL_PORT = 587
     # MAIL_USE_TLS = True
-    # MAIL_USERNAME = "your-email@gmail.com"
-    # MAIL_PASSWORD = "16 digit app password to be generated from google account"
-    # MAIL_DEFAULT_SENDER = "your-email@gmail.com"
+    # MAIL_USERNAME = ""
+    # MAIL_PASSWORD = ""
+    # MAIL_DEFAULT_SENDER = ""

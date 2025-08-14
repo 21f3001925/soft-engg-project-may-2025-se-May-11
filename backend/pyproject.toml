@@ -35,6 +35,7 @@ flask-socketio = "^5.5.1"
 flask-mail = "^0.10.0"
 flask-principal = { git = "https://github.com/mattupstate/flask-principal" }
 bleach = "^6.1.0"
+pytz = "^2024.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
@@ -43,6 +44,7 @@ ruff = "*"
 mypy = "^1.13.0"
 pytest-mock = "^3.14.1"
 types-bleach = "^6.2.0.20250514"
+types-pytz = "*"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.3"

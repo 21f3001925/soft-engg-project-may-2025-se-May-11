@@ -61,7 +61,7 @@ class TestMedicationModel:
         )
         data = response.get_json()
         assert response.status_code == 201
-        assert data["message"] == "Medication added"
+        assert data["message"] == "Medication added and reminder scheduled"
 
     # Response code 422 for POST
     def test_create_medication_with_extra_field_api(self, client, auth_headers):
@@ -296,14 +296,14 @@ class TestMedicationAPIAuthorization:
             content_type="application/json",
             headers=auth_headers,
         )
-        assert response.status_code == 400
+        assert response.status_code == 404
 
     def test_delete_medication_requires_authorization(self, client, auth_headers):
         medication_id = str(uuid.uuid4())
         response = client.delete(
             f"/api/v1/medications/{medication_id}", headers=auth_headers
         )
-        assert response.status_code == 400
+        assert response.status_code == 404
 
 
 class TestMedicationAPIValidation:
@@ -372,4 +372,4 @@ class TestMedicationAPIValidation:
             headers=auth_headers,
         )
 
-        assert response.status_code == 400
+        assert response.status_code == 422

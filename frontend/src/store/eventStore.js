@@ -86,7 +86,9 @@ export const useEventStore = defineStore('event', {
       this.error = null;
       try {
         await eventService.joinAEvent(event_id);
-        await this.getEvents();
+        // --- FIX: Refresh the list of joined event IDs after joining ---
+        await this.fetchJoinedEventIds();
+        await this.getEvents(); // Also refresh the main event list
       } catch (err) {
         this.error = `Failed to join event: ${err.response?.data?.message || err.message}`;
         throw err;
@@ -99,9 +101,7 @@ export const useEventStore = defineStore('event', {
       this.loading = true;
       this.error = null;
       try {
-        // You need a backend endpoint like: GET /api/v1/events/joined
         const response = await eventService.getJoinedEvents();
-        // Assume response.data is an array of event_ids
         this.joinedEventIds = response.data.event_ids;
       } catch (err) {
         this.error = `Failed to fetch joined events: ${err.response?.data?.message || err.message}`;

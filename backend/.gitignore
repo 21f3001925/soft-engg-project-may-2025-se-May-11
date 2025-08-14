@@ -8,3 +8,4 @@ celerybeat-schedule.db
 static/
 instance/senior_citizen.db
 instance/senior_citizen.db-journal
+instance/

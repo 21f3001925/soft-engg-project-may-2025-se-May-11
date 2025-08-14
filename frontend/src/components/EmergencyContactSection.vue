@@ -1,13 +1,48 @@
 <script setup>
 import { onMounted } from 'vue';
-import { useEmergencyContactStore } from '../store/emergencyContactStore';
+import { useEmergencyStore } from '../store/emergencyStore';
+import emergencyService from '../services/emergencyService';
 import { Phone } from 'lucide-vue-next';
 
-const contactStore = useEmergencyContactStore();
+const emergencyStore = useEmergencyStore();
 
 onMounted(() => {
-  contactStore.fetchEmergencyContact();
+  emergencyStore.fetchContactsForSenior();
 });
+
+// --- THIS FUNCTION IS NOW CORRECTED ---
+// It now asks for the browser's location before sending the alert.
+const handleEmergencyClick = async () => {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      // Success! We have the location.
+      const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+
+      try {
+        await emergencyService.triggerAlert(location);
+        alert('Success! Your location has been sent to your caregiver and emergency contacts.');
+      } catch (error) {
+        console.error('Error triggering emergency alert:', error);
+        alert('Failed to send alert. Please try again.');
+      }
+    },
+    (error) => {
+      // Error! The user may have denied permission.
+      console.error('Error getting location: ', error);
+      alert('Could not get your location. A generic emergency alert will be sent.');
+      // Send a generic alert without location data
+      emergencyService.triggerAlert({});
+    },
+  );
+};
 </script>
 
 <template>
@@ -15,7 +50,6 @@ onMounted(() => {
     class="mb-10 p-8 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative"
     aria-label="Emergency contact widget"
   >
-    <div class="absolute inset-0 bg-gradient-to-r from-red-600/20 to-pink-600/20"></div>
     <div class="relative z-10 text-center">
       <div class="mb-4">
         <div
