@@ -113,7 +113,7 @@ function goToEmergencyContacts() {
       <img class="user-avatar" :src="profilePicUrl" alt="User Avatar" />
       <div class="file-upload-wrapper">
         <button class="upload-button" @click="$refs.fileInput.click()">Change Photo</button>
-        <input type="file" accept="image/*" @change="onFileChange" ref="fileInput" style="display: none" />
+        <input ref="fileInput" type="file" accept="image/*" style="display: none" @change="onFileChange" />
       </div>
       <div class="user-info">
         <div v-if="!isEditing">

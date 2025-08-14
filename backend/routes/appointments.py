@@ -2,6 +2,7 @@ from flask_smorest import Blueprint, abort
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
+from flask import request
 from models import Appointment, db, User, CaregiverAssignment
 
 import uuid
@@ -23,11 +24,28 @@ appointments_blp = Blueprint(
 
 class AppointmentUtils:
     @staticmethod
-    def get_senior_id(user_id):
+    def get_senior_id(user_id, requested_senior_id=None):
         user = User.query.get(user_id)
         if user.roles[0].name == "senior_citizen":
+            # If a specific senior's resource is requested, ensure the
+            # logged-in senior is that same person.
+            if requested_senior_id and str(user.user_id) != str(requested_senior_id):
+                abort(403, message="You are not authorized to access this resource.")
             return user.user_id
+
         elif user.caregiver:
+            # If specific senior_id is requested, validate caregiver has access
+            if requested_senior_id:
+                assignment = CaregiverAssignment.query.filter_by(
+                    caregiver_id=str(user.user_id), senior_id=str(requested_senior_id)
+                ).first()
+
+                if assignment:
+                    return requested_senior_id
+                else:
+                    abort(403, message="You are not assigned to this senior citizen.")
+
+            # If no specific senior requested, return first assigned senior (backward compatibility)
             assignments = CaregiverAssignment.query.filter_by(
                 caregiver_id=user.user_id
             ).all()
@@ -44,12 +62,15 @@ class AppointmentListResource(MethodView):
     @roles_accepted("senior_citizen", "caregiver")
     @appointments_blp.response(200, AppointmentResponseSchema(many=True))
     @appointments_blp.doc(
-        summary="Get information about all the appointments of the logged in senior citizen."
+        summary="Get information about all the appointments of the specified or logged in senior citizen."
     )
     def get(self):
         user_id = get_jwt_identity()
-        senior_id = AppointmentUtils.get_senior_id(user_id)
-        appointments = Appointment.query.filter_by(senior_id=senior_id).all()
+        # Get senior_id from query parameter if provided
+        requested_senior_id = request.args.get("senior_id")
+        senior_id = AppointmentUtils.get_senior_id(user_id, requested_senior_id)
+        # Convert to string for SQLite compatibility
+        appointments = Appointment.query.filter_by(senior_id=str(senior_id)).all()
         return appointments
 
     @jwt_required()
@@ -57,13 +78,16 @@ class AppointmentListResource(MethodView):
     @appointments_blp.arguments(AppointmentSchema)
     @appointments_blp.response(201, AppointmentAddResponseSchema)
     @appointments_blp.doc(
-        summary="Add a new appointment for the logged in senior citizen."
+        summary="Add a new appointment for the specified or logged in senior citizen."
     )
     def post(self, data):
         try:
             user_id = get_jwt_identity()
-            senior_id = AppointmentUtils.get_senior_id(user_id)
-            senior_user = User.query.get(senior_id)
+            # Get senior_id from request data if provided
+            requested_senior_id = data.get("senior_id")
+            senior_id = AppointmentUtils.get_senior_id(user_id, requested_senior_id)
+
+            senior_user = User.query.get(str(senior_id))
 
             appointment = Appointment(
                 appointment_id=str(uuid.uuid4()),
@@ -71,7 +95,8 @@ class AppointmentListResource(MethodView):
                 date_time=data["date_time"],
                 location=data["location"],
                 reminder_time=data.get("reminder_time"),
-                senior_id=senior_id,
+                # --- FINAL FIX: Convert UUID to string before saving ---
+                senior_id=str(senior_id),
             )
 
             if appointment.reminder_time:
@@ -109,13 +134,17 @@ class AppointmentDetailResource(MethodView):
     )
     def get(self, appointment_id):
         user_id = get_jwt_identity()
-        senior_id = AppointmentUtils.get_senior_id(user_id)
 
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
-        if appt.senior_id != senior_id:
+
+        # Validate access to this appointment
+        try:
+            AppointmentUtils.get_senior_id(user_id, appt.senior_id)
+        except PermissionError:
             abort(403, message="You are not authorized to view this appointment.")
+
         return appt
 
     @jwt_required()
@@ -127,12 +156,15 @@ class AppointmentDetailResource(MethodView):
     )
     def put(self, data, appointment_id):
         user_id = get_jwt_identity()
-        senior_id = AppointmentUtils.get_senior_id(user_id)
 
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
-        if appt.senior_id != senior_id:
+
+        # Validate access to this appointment
+        try:
+            AppointmentUtils.get_senior_id(user_id, appt.senior_id)
+        except PermissionError:
             abort(403, message="You are not authorized to modify this appointment.")
 
         for field in ["title", "location"]:
@@ -146,7 +178,8 @@ class AppointmentDetailResource(MethodView):
 
         if "reminder_time" in data:
             appt.reminder_time = data["reminder_time"]
-            senior_user = User.query.get(appt.senior_id)
+
+            senior_user = User.query.get(str(appt.senior_id))
             task = send_reminder_notification.apply_async(
                 args=[
                     str(appt.appointment_id),
@@ -170,12 +203,15 @@ class AppointmentDetailResource(MethodView):
     )
     def delete(self, appointment_id):
         user_id = get_jwt_identity()
-        senior_id = AppointmentUtils.get_senior_id(user_id)
 
         appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
         if not appt:
             abort(404, message="Appointment not found")
-        if appt.senior_id != senior_id:
+
+        # Validate access to this appointment
+        try:
+            AppointmentUtils.get_senior_id(user_id, appt.senior_id)
+        except PermissionError:
             abort(403, message="You are not authorized to delete this appointment.")
 
         if appt.reminder_task_id:

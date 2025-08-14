@@ -39,12 +39,12 @@ const formattedTime = computed(() => {
     :class="[med.taken ? 'bg-green-50 border-green-200' : '', isOverdue ? 'border-l-4 border-red-500' : '']"
   >
     <input
-      type="checkbox"
       :id="'med-' + med.id"
+      type="checkbox"
       :checked="med.taken"
-      @change="() => toggleMedication(med.id)"
       class="w-4 h-4 accent-blue-500 mr-3 mt-1"
       title="Mark as taken"
+      @change="() => toggleMedication(med.id)"
     />
     <div class="flex-1 min-w-0">
       <label

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useProviderStore } from '../store/providerStore';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import ScheduleRowItem from '../components/ScheduleRowItem.vue'; // Uses the corrected component
 import EventForm from '../components/EventForm.vue';
 
 const providerStore = useProviderStore();
@@ -105,23 +105,17 @@ async function removeAttendeeFromEvent(senior) {
 </script>
 
 <template>
-  <div class="appointments">
+  <div class="dashboard-container">
     <h1>Manage Local Events</h1>
 
     <div v-if="providerStore.loading" class="loading">Loading events...</div>
     <div v-else-if="providerStore.error" class="error">
       {{ providerStore.error }}
     </div>
-    <div v-else-if="events.length === 0" class="empty">No events scheduled</div>
+    <div v-else-if="events.length === 0" class="empty">No events scheduled. Add one below!</div>
 
-    <div v-else class="appointment-list">
-      <ScheduleRowItem
-        v-for="item in events"
-        :key="item.event_id || item.id"
-        :schedule="item"
-        :hide-type="true"
-        :compact-layout="true"
-      >
+    <div v-else class="list-container">
+      <ScheduleRowItem v-for="item in events" :key="item.event_id || item.id" :schedule="item">
         <button class="edit-button" @click="openEditModal(item)">Edit</button>
         <button class="cancel-button" @click="deleteEvent(item)">Delete</button>
         <button class="attendees-button" @click="openAttendeesModal(item)">Show Attendees</button>
@@ -170,8 +164,8 @@ async function removeAttendeeFromEvent(senior) {
 </template>
 
 <style scoped>
-/* Your original CSS is unchanged */
-.appointments {
+/* Scoped styles from your original file will work here */
+.dashboard-container {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
@@ -189,14 +183,14 @@ h1 {
 .empty {
   text-align: center;
   padding: 2rem;
-  color: #f3ecec;
+  color: #666;
 }
 
 .error {
   color: #ed240d;
 }
 
-.appointment-list {
+.list-container {
   display: flex;
   flex-direction: column;
   background-color: white;
@@ -209,17 +203,26 @@ h1 {
 
 .edit-button {
   background-color: #6c5ce7;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
 }
 
 .cancel-button {
   background-color: #d63031;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
 }
 
 .add-button {
-  margin-top: 15px;
   background-color: #00cec9;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  border: none;
+  color: white;
 }
 
 .action-bar {

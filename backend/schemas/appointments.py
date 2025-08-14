@@ -24,6 +24,7 @@ class AppointmentSchema(Schema):
     date_time = fields.DateTime(required=True)
     location = fields.String(required=True)
     reminder_time = fields.DateTime(allow_none=True)
+    senior_id = fields.UUID(allow_none=True)  # Added for caregiver use
 
 
 class AppointmentResponseSchema(Schema):

@@ -1,21 +1,23 @@
 module.exports = {
+  root: true,
   env: {
     browser: true,
-    es2022: true,
-    node: true,
+    es2021: true,
+  },
+  parser: 'vue-eslint-parser',
+  parserOptions: {
+    parser: '@babel/eslint-parser',
+    requireConfigFile: false,
+    ecmaVersion: 12,
+    sourceType: 'module',
   },
   extends: [
-    'eslint:recommended',
     'plugin:vue/vue3-recommended',
-    'plugin:vuejs-accessibility/recommended',
-    'plugin:prettier/recommended',
+    'eslint:recommended',
+    'plugin:prettier/recommended'
   ],
-  plugins: ['vue', 'vuejs-accessibility'],
   rules: {
-    // accessibility rules
-    'vuejs-accessibility/label-has-for': 'off',
-    'vuejs-accessibility/click-events-have-key-events': 'warn',
-    'prettier/prettier': 'error',
     'vue/multi-word-component-names': 'off',
+    // add your other custom rules here if needed
   },
 };

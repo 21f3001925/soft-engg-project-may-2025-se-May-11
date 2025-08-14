@@ -56,7 +56,7 @@ const progressPercentage = computed(() => (totalMeds.value === 0 ? 0 : (complete
         v-for="med in scheduleStore.medications"
         :key="med.id"
         :med="med"
-        :toggleMedication="toggleMedication"
+        :toggle-medication="toggleMedication"
       />
     </ul>
     <router-link

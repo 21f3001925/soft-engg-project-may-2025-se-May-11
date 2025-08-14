@@ -4,63 +4,56 @@ defineProps({
     type: Object,
     required: true,
   },
-  customClass: {
-    type: String,
-    default: '',
-  },
-  hideType: {
-    type: Boolean,
-    default: false,
-  },
-  compactLayout: {
-    type: Boolean,
-    default: false,
-  },
 });
 
-function formatTime(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  const options = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  };
-  return date.toLocaleTimeString('en-US', options);
-}
+const formattedTime = (dateStr) => {
+  if (!dateStr) return 'No time specified';
+  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 </script>
 
 <template>
-  <div class="schedule-row">
-    <div class="event-name">{{ schedule.name }}</div>
-    <div class="event-description">{{ schedule.description }}</div>
-    <div class="event-location">{{ schedule.location }}</div>
-    <div class="event-time">{{ formatTime(schedule.date_time) }}</div>
-    <slot></slot>
+  <div class="schedule-item">
+    <div class="item-details">
+      <div class="item-title">{{ schedule.name || schedule.title }}</div>
+      <div class="item-time">Time: {{ formattedTime(schedule.date_time || schedule.time) }}</div>
+      <div v-if="schedule.location" class="item-location">Location: {{ schedule.location }}</div>
+      <div v-if="schedule.dosage" class="item-dosage">Dosage: {{ schedule.dosage }}</div>
+    </div>
+    <div class="item-actions">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.schedule-row {
+.schedule-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
 }
-.event-name {
-  flex: 1;
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.item-title {
+  font-weight: 600;
   color: #333;
-  font-weight: 500;
 }
-.event-description {
-  flex: 2;
-  color: #666;
+.item-time,
+.item-location,
+.item-dosage {
   font-size: 0.9rem;
-}
-.event-time {
-  min-width: 80px;
   color: #666;
-  font-weight: 500;
+}
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 </style>
