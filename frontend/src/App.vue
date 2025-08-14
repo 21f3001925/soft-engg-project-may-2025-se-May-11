@@ -1,10 +1,21 @@
 <script setup>
 import { useUserStore } from './store/userStore';
 import TopNavBar from './components/TopNavBar.vue';
-import { onMounted } from 'vue';
+import TopNavBarProvider from './components/TopNavBarProvider.vue';
+import TopNavBarCaregiver from './components/TopNavBarCaregiver.vue';
+import { onMounted, computed } from 'vue';
 import profileService from './services/profileService';
+import { useRoute } from 'vue-router';
 
 const userStore = useUserStore();
+const route = useRoute();
+
+// Match all caregiver dashboard and subpages
+const isCaregiverDashboard = computed(
+  () => route.path === '/caregiver-dashboard' || route.path.startsWith('/caregiver/seniors/'),
+);
+
+const isProviderDashboard = computed(() => route.path === '/service-provider');
 
 onMounted(async () => {
   const token = localStorage.getItem('token');
@@ -31,7 +42,12 @@ onMounted(async () => {
       'bg-gray-100',
     ]"
   >
-    <TopNavBar />
+    <!-- Show TopNavBarProvider only for provider dashboard -->
+    <TopNavBarProvider v-if="isProviderDashboard" />
+    <!-- Show TopNavBarCaregiver for caregiver dashboard and subpages -->
+    <TopNavBarCaregiver v-else-if="isCaregiverDashboard" />
+    <!-- Show TopNavBar everywhere else -->
+    <TopNavBar v-else />
     <main class="flex-1">
       <router-view />
     </main>
