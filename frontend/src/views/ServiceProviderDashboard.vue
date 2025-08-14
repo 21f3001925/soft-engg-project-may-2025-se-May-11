@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useProviderStore } from '../store/providerStore';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import ScheduleRowItem from '../components/ScheduleRowItem.vue'; // Uses the corrected component
 import EventForm from '../components/EventForm.vue';
 
 const providerStore = useProviderStore();
@@ -92,23 +92,17 @@ async function removeAttendeeFromEvent(senior) {
 </script>
 
 <template>
-  <div class="appointments">
+  <div class="dashboard-container">
     <h1>Manage Local Events</h1>
 
     <div v-if="providerStore.loading" class="loading">Loading events...</div>
     <div v-else-if="providerStore.error" class="error">
       {{ providerStore.error }}
     </div>
-    <div v-else-if="events.length === 0" class="empty">No events scheduled</div>
+    <div v-else-if="events.length === 0" class="empty">No events scheduled. Add one below!</div>
 
-    <div v-else class="appointment-list">
-      <ScheduleRowItem
-        v-for="item in events"
-        :key="item.event_id || item.id"
-        :schedule="item"
-        :hide-type="true"
-        :compact-layout="true"
-      >
+    <div v-else class="list-container">
+      <ScheduleRowItem v-for="item in events" :key="item.event_id || item.id" :schedule="item">
         <button class="edit-button" @click="openEditModal(item)">Edit</button>
         <button class="cancel-button" @click="deleteEvent(item)">Delete</button>
         <button class="attendees-button" @click="openAttendeesModal(item)">Show Attendees</button>
@@ -158,7 +152,8 @@ async function removeAttendeeFromEvent(senior) {
 </template>
 
 <style scoped>
-.appointments {
+/* Scoped styles from your original file will work here */
+.dashboard-container {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
@@ -176,14 +171,14 @@ h1 {
 .empty {
   text-align: center;
   padding: 2rem;
-  color: #f3ecec;
+  color: #666;
 }
 
 .error {
   color: #ed240d;
 }
 
-.appointment-list {
+.list-container {
   display: flex;
   flex-direction: column;
   background-color: white;
@@ -196,17 +191,26 @@ h1 {
 
 .edit-button {
   background-color: #6c5ce7;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
 }
 
 .cancel-button {
   background-color: #d63031;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
 }
 
 .add-button {
-  margin-top: 15px;
   background-color: #00cec9;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  border: none;
+  color: white;
 }
 
 .action-bar {
@@ -225,97 +229,5 @@ h1 {
   padding: 12px 20px;
   border-radius: 5px;
   z-index: 9999;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  animation:
-    fadein 0.3s ease,
-    fadeout 0.3s ease 1.7s;
-}
-
-@keyframes fadein {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes fadeout {
-  from {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-}
-
-.attendees-button {
-  background-color: #0984e3;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 2rem 2.5rem;
-  border-radius: 10px;
-  min-width: 350px;
-  max-width: 95vw;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
-  position: relative;
-}
-
-.close-modal {
-  margin-top: 1.5rem;
-  background: #d63031;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.event-details {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-.event-details > div {
-  margin-bottom: 0.3rem;
-}
-
-.remove-attendee-btn {
-  background: #d63031;
-  color: #fff;
-  border: none;
-  border-radius: 3px;
-  padding: 2px 6px;
-  margin-left: 8px;
-  cursor: pointer;
-  font-size: 0.85em;
-  line-height: 1;
-  height: 22px;
-  min-width: 48px;
 }
 </style>
