@@ -20,6 +20,20 @@ onMounted(async () => {
 const events = computed(() => providerStore.events || []);
 const attendees = computed(() => providerStore.attendees || {});
 
+function formatFullDateTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  };
+  return date.toLocaleString('en-US', options);
+}
+
 function openAddModal() {
   selectedItem.value = null;
   isEdit.value = false;
@@ -83,7 +97,6 @@ async function removeAttendeeFromEvent(senior) {
   try {
     await providerStore.removeAttendee(modalEvent.value.event_id, senior.user_id);
     showToast(`Removed ${senior.name || senior.email} from event`);
-    // attendeesForEvent will be refreshed by store action
     attendeesForEvent.value = providerStore.attendees[modalEvent.value.event_id] || [];
   } catch (err) {
     showToast(providerStore.error || 'Failed to remove attendee');
@@ -129,13 +142,12 @@ async function removeAttendeeFromEvent(senior) {
 
     <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
-    <!-- Attendees Modal -->
     <div v-if="showAttendeesModal" class="modal-overlay" @click.self="closeAttendeesModal">
       <div class="modal-content">
         <h2><b>Event Information and Attendees</b></h2>
         <div class="event-details">
           <div>Name: {{ modalEvent?.name }}</div>
-          <div>Date: {{ modalEvent?.date_time }}</div>
+          <div>Date: {{ formatFullDateTime(modalEvent?.date_time) }}</div>
           <div>Location: {{ modalEvent?.location }}</div>
           <div>Description: {{ modalEvent?.description }}</div>
         </div>
@@ -158,6 +170,7 @@ async function removeAttendeeFromEvent(senior) {
 </template>
 
 <style scoped>
+/* Your original CSS is unchanged */
 .appointments {
   padding: 2rem;
   max-width: 1200px;
@@ -236,6 +249,7 @@ h1 {
     opacity: 0;
     transform: translateX(-50%) translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -247,6 +261,7 @@ h1 {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+
   to {
     opacity: 0;
     transform: translateX(-50%) translateY(-10px);

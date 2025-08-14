@@ -153,7 +153,7 @@ class Appointment(db.Model):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     title = db.Column(db.String)
-    date_time = db.Column(db.DateTime)
+    date_time = db.Column(db.DateTime(timezone=True))
     location = db.Column(db.String)
     reminder_time = db.Column(db.DateTime, nullable=True)
     senior_id = db.Column(
@@ -176,6 +176,8 @@ class Medication(db.Model):
     senior_id = db.Column(
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
+
+    reminder_task_id = db.Column(db.String(36), nullable=True)
 
     senior = relationship("SeniorCitizen", back_populates="medications")
 
@@ -235,7 +237,7 @@ class Event(db.Model):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     name = db.Column(db.String)
-    date_time = db.Column(db.DateTime)
+    date_time = db.Column(db.DateTime(timezone=True))
     location = db.Column(db.String)
     description = db.Column(db.Text)
     service_provider_id = db.Column(
@@ -261,6 +263,10 @@ class EventAttendance(db.Model):
         db.ForeignKey("event.event_id", ondelete="CASCADE"),
         primary_key=True,
     )
+    # --- ADD THIS LINE ---
+    reminder_task_id = db.Column(
+        db.String(36), nullable=True
+    )  # To store the Celery task ID
 
     senior = relationship("SeniorCitizen", back_populates="event_attendance")
     event = relationship("Event", back_populates="attendance")

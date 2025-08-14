@@ -4,7 +4,7 @@ from marshmallow import Schema, fields
 class MedicationSchema(Schema):
     name = fields.Str(required=True)
     dosage = fields.Str(required=True)
-    time = fields.Str(required=True)
+    time = fields.DateTime(required=True)
     isTaken = fields.Boolean(missing=False)
 
 
