@@ -1,9 +1,12 @@
 import apiClient from './apiClient';
 
 export default {
+  // This new function will trigger the alert
+  triggerAlert(location) {
+    return apiClient.post('/emergency/trigger', location);
+  },
+
   getEmergencyContacts(seniorId) {
-    // If seniorId is provided (for a caregiver), add it as a query param.
-    // Otherwise (for a senior), call the base endpoint.
     const url = seniorId ? `/emergency-contacts?senior_id=${seniorId}` : '/emergency-contacts';
     return apiClient.get(url);
   },
