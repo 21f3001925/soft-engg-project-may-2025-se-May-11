@@ -1,69 +1,107 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { useScheduleStore } from '../store/scheduleStore';
-import { useCaregiverStore } from '../store/caregiverStore';
+import appointmentService from '../services/appointmentService.js';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
-import EventForm from '../components/EventForm.vue';
 
-const scheduleStore = useScheduleStore();
-const caregiverStore = useCaregiverStore();
 const route = useRoute();
-
 const seniorId = parseInt(route.params.id);
+
 const toastMessage = ref('');
-const selectedAppointment = ref(null);
-const isEdit = ref(false);
-const showModal = ref(false);
-
-onMounted(async () => {
-  await scheduleStore.fetchSchedules();
+const appointments = ref([]);
+const loading = ref(false);
+const error = ref(null);
+const showForm = ref(false);
+const editingId = ref(null);
+const formData = ref({
+  title: '',
+  date_time: '',
+  location: '',
 });
 
-const appointments = computed(() =>
-  scheduleStore.schedule.items.filter(
-    (item) => (item.type === 'appointment' || item.type === 'event') && item.id === seniorId,
-  ),
-);
-
-const seniorName = computed(() => {
-  const senior = caregiverStore.assignedSeniors.find((s) => s.id === seniorId);
-  return senior ? senior.name : 'Senior';
-});
-
-function editAppointment(item) {
-  selectedAppointment.value = { ...item };
-  isEdit.value = true;
-  showModal.value = true;
-}
-
-function cancelAppointment(item) {
-  scheduleStore.schedule.items = scheduleStore.schedule.items.filter((i) => i !== item);
-  showToast(`Cancelled: "${item.name}"`);
-}
-
-function addAppointment() {
-  selectedAppointment.value = null;
-  isEdit.value = false;
-  showModal.value = true;
-}
-
-function handleFormSubmit(appointment) {
-  if (isEdit.value) {
-    const index = scheduleStore.schedule.items.findIndex((i) => i.id === appointment.id);
-    if (index !== -1) {
-      scheduleStore.schedule.items[index] = { ...appointment };
-      showToast(`Updated: "${appointment.name}"`);
-    }
-  } else {
-    scheduleStore.schedule.items.push({
-      ...appointment,
-      id: Date.now(), // mock ID
-      type: 'appointment',
-    });
-    showToast(`Added: "${appointment.name}"`);
+// Fetch appointments for this senior
+async function getAppointments() {
+  loading.value = true;
+  error.value = null;
+  try {
+    const res = await appointmentService.getAppointments({ params: { senior_id: seniorId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    appointments.value = data.map((appt) => ({
+      id: appt.appointment_id,
+      title: appt.title,
+      date_time: appt.date_time,
+      location: appt.location,
+      senior_id: appt.senior_id,
+      type: appt.type || 'appointment',
+    }));
+  } catch (err) {
+    error.value = err?.response?.data?.message || err?.message || 'Failed to load appointments';
+  } finally {
+    loading.value = false;
   }
-  showModal.value = false;
+}
+
+onMounted(getAppointments);
+
+// Open add form
+function openAddForm() {
+  editingId.value = null;
+  formData.value = { title: '', date_time: '', location: '' };
+  showForm.value = true;
+}
+
+// Open edit form
+function editAppointment(item) {
+  editingId.value = item.id;
+  formData.value = {
+    title: item.title,
+    date_time: toInputDatetime(item.date_time),
+    location: item.location || '',
+  };
+  showForm.value = true;
+}
+
+// Delete appointment
+async function cancelAppointment(item) {
+  try {
+    await appointmentService.deleteAppointment(item.id);
+    appointments.value = appointments.value.filter((i) => i.id !== item.id);
+    showToast(`Cancelled: "${item.title}"`);
+  } catch {
+    showToast('Failed to cancel appointment');
+  }
+}
+
+// Add or update appointment
+async function submitAppointment() {
+  try {
+    // Only send the fields backend expects
+    const payload = { ...formData.value };
+    delete payload.reminder_time; // remove any extra field if present
+
+    if (editingId.value) {
+      // Update appointment
+      await appointmentService.updateAppointment(editingId.value, payload);
+      showToast('Appointment updated');
+    } else {
+      // Add appointment
+      await appointmentService.addAppointment(payload);
+      showToast('Appointment added');
+    }
+
+    showForm.value = false;
+    resetForm();
+    await getAppointments(); // refresh list
+  } catch (err) {
+    console.error('Save failed:', err.response?.data || err.message);
+    showToast('Failed to save appointment');
+  }
+}
+
+// Reset form after submit
+function resetForm() {
+  editingId.value = null;
+  formData.value = { title: '', date_time: '', location: '' };
 }
 
 function showToast(message) {
@@ -72,20 +110,24 @@ function showToast(message) {
     toastMessage.value = '';
   }, 2000);
 }
+
+// Helper: convert API datetime to input type datetime-local format
+function toInputDatetime(dateTimeStr) {
+  const d = new Date(dateTimeStr);
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  return new Date(d - tzOffset).toISOString().slice(0, 16);
+}
 </script>
 
 <template>
   <div class="appointments">
-    <h1>{{ seniorName }} Appointments</h1>
+    <h1>Appointments</h1>
 
-    <div v-if="scheduleStore.schedule.loading" class="loading">Loading appointments...</div>
-
-    <div v-else-if="scheduleStore.schedule.error" class="error">
-      {{ scheduleStore.schedule.error }}
-    </div>
-
+    <div v-if="loading" class="loading">Loading appointments...</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
 
+    <!-- Appointment list -->
     <div v-else class="appointment-list">
       <ScheduleRowItem
         v-for="item in appointments"
@@ -94,23 +136,70 @@ function showToast(message) {
         :hide-type="true"
         :compact-layout="true"
       >
-        <button class="edit-button" @click="editAppointment(item)">Edit</button>
-        <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
+        <div class="flex flex-col gap-1 w-full">
+          <div class="font-semibold">{{ item.title }}</div>
+          <div class="text-sm text-gray-600">
+            <strong>Date:</strong>
+            {{ new Date(item.date_time).toLocaleDateString() }}
+          </div>
+          <div class="text-sm text-gray-600" v-if="item.location"><strong>Location:</strong> {{ item.location }}</div>
+
+          <div class="flex gap-2 mt-2">
+            <button class="cancel-button" @click="cancelAppointment(item)">Delete</button>
+            <button class="edit-button" @click="editAppointment(item)">Edit</button>
+          </div>
+        </div>
       </ScheduleRowItem>
     </div>
 
+    <!-- Action buttons -->
     <div class="action-bar">
-      <button class="add-button" @click="addAppointment">Add Appointment</button>
+      <button class="add-button" @click="openAddForm">Add Appointment</button>
     </div>
 
-    <EventForm
-      v-if="showModal"
-      :model-value="selectedAppointment"
-      :is-edit="isEdit"
-      @submit="handleFormSubmit"
-      @close="showModal = false"
-    />
+    <!-- Add / Update form -->
+    <div v-if="showForm" class="form-popup p-6 bg-white rounded-xl shadow-md max-w-md mx-auto">
+      <h3 class="text-xl font-semibold mb-4">
+        {{ editingId ? 'Edit Appointment' : 'Add Appointment' }}
+      </h3>
+      <form @submit.prevent="submitAppointment" class="space-y-4">
+        <input
+          v-model="formData.title"
+          placeholder="Title"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
+        />
+        <input
+          v-model="formData.date_time"
+          type="datetime-local"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
+        />
+        <input
+          v-model="formData.location"
+          placeholder="Location (optional)"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
+        />
 
+        <div class="form-actions flex justify-end space-x-3 mt-4">
+          <button
+            type="submit"
+            class="px-5 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700 transition"
+          >
+            {{ editingId ? 'Update' : 'Save' }}
+          </button>
+          <button
+            type="button"
+            @click="showForm = false"
+            class="px-5 py-2 rounded-md bg-red-500 text-white hover:bg-red-700 transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Toast -->
     <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>
 </template>

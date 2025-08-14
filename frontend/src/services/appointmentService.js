@@ -2,23 +2,16 @@
 import apiClient from './apiClient';
 
 export default {
-  // Fetch all appointments
-  getAppointments() {
-    return apiClient.get('/appointments');
+  getAppointments(params) {
+    return apiClient.get('/appointments', { params }); // Make sure params includes senior_id
   },
-
-  // Add new appointment
-  addAppointment(appointmentData) {
-    return apiClient.post('/appointments', appointmentData);
+  addAppointment(payload) {
+    return apiClient.post('/appointments', payload); // Must include senior_id
   },
-
-  // Update existing appointment
-  updateAppointment(appointmentId, appointmentData) {
-    return apiClient.put(`/appointments/${appointmentId}`, appointmentData);
+  updateAppointment(id, payload) {
+    return apiClient.put(`/appointments/${id}`, payload);
   },
-
-  // Delete appointment
-  deleteAppointment(appointmentId) {
-    return apiClient.delete(`/appointments/${appointmentId}`);
+  deleteAppointment(id) {
+    return apiClient.delete(`/appointments/${id}`);
   },
 };
