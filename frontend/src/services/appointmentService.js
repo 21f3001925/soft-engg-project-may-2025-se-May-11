@@ -1,12 +1,11 @@
-// src/services/appointmentService.js
 import apiClient from './apiClient';
 
 export default {
-  getAppointments(params) {
-    return apiClient.get('/appointments', { params }); // Make sure params includes senior_id
+  getAppointments(params = {}) {
+    return apiClient.get('/appointments', { params });
   },
   addAppointment(payload) {
-    return apiClient.post('/appointments', payload); // Must include senior_id
+    return apiClient.post('/appointments', payload);
   },
   updateAppointment(id, payload) {
     return apiClient.put(`/appointments/${id}`, payload);
