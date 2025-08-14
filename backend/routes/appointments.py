@@ -27,7 +27,12 @@ class AppointmentUtils:
     def get_senior_id(user_id, requested_senior_id=None):
         user = User.query.get(user_id)
         if user.roles[0].name == "senior_citizen":
+            # If a specific senior's resource is requested, ensure the
+            # logged-in senior is that same person.
+            if requested_senior_id and str(user.user_id) != str(requested_senior_id):
+                abort(403, message="You are not authorized to access this resource.")
             return user.user_id
+
         elif user.caregiver:
             # If specific senior_id is requested, validate caregiver has access
             if requested_senior_id:
