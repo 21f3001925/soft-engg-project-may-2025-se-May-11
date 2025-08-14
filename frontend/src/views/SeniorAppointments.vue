@@ -2,10 +2,9 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import appointmentService from '../services/appointmentService.js';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
 
 const route = useRoute();
-const seniorId = parseInt(route.params.id);
+const seniorId = route.params.id; // Keep as string, don't parse to int
 
 const toastMessage = ref('');
 const appointments = ref([]);
@@ -19,12 +18,19 @@ const formData = ref({
   location: '',
 });
 
-// Fetch appointments for this senior
+// Debug: log the seniorId
+console.log('Senior ID from route:', seniorId);
+
+// Fetch appointments for this specific senior
 async function getAppointments() {
   loading.value = true;
   error.value = null;
   try {
-    const res = await appointmentService.getAppointments({ params: { senior_id: seniorId } });
+    console.log('Fetching appointments for senior:', seniorId);
+    // Pass senior_id as query parameter
+    const res = await appointmentService.getAppointments({ senior_id: seniorId });
+    console.log('API Response:', res.data);
+
     const data = Array.isArray(res.data) ? res.data : [];
     appointments.value = data.map((appt) => ({
       id: appt.appointment_id,
@@ -34,7 +40,10 @@ async function getAppointments() {
       senior_id: appt.senior_id,
       type: appt.type || 'appointment',
     }));
+
+    console.log('Processed appointments:', appointments.value);
   } catch (err) {
+    console.error('Error fetching appointments:', err);
     error.value = err?.response?.data?.message || err?.message || 'Failed to load appointments';
   } finally {
     loading.value = false;
@@ -67,7 +76,8 @@ async function cancelAppointment(item) {
     await appointmentService.deleteAppointment(item.id);
     appointments.value = appointments.value.filter((i) => i.id !== item.id);
     showToast(`Cancelled: "${item.title}"`);
-  } catch {
+  } catch (err) {
+    console.error('Delete error:', err);
     showToast('Failed to cancel appointment');
   }
 }
@@ -75,16 +85,16 @@ async function cancelAppointment(item) {
 // Add or update appointment
 async function submitAppointment() {
   try {
-    // Only send the fields backend expects
     const payload = { ...formData.value };
-    delete payload.reminder_time; // remove any extra field if present
 
     if (editingId.value) {
       // Update appointment
       await appointmentService.updateAppointment(editingId.value, payload);
       showToast('Appointment updated');
     } else {
-      // Add appointment
+      // Add appointment - include senior_id for caregivers
+      payload.senior_id = seniorId;
+      console.log('Creating appointment with payload:', payload);
       await appointmentService.addAppointment(payload);
       showToast('Appointment added');
     }
@@ -127,29 +137,37 @@ function toInputDatetime(dateTimeStr) {
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
 
-    <!-- Appointment list -->
+    <!-- Simple appointment list without ScheduleRowItem -->
     <div v-else class="appointment-list">
-      <ScheduleRowItem
+      <div
         v-for="item in appointments"
         :key="item.id"
-        :schedule="item"
-        :hide-type="true"
-        :compact-layout="true"
+        class="appointment-item p-4 mb-3 bg-white border rounded-lg shadow"
       >
-        <div class="flex flex-col gap-1 w-full">
-          <div class="font-semibold">{{ item.title }}</div>
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold text-lg">{{ item.title }}</h3>
           <div class="text-sm text-gray-600">
             <strong>Date:</strong>
-            {{ new Date(item.date_time).toLocaleDateString() }}
+            {{ new Date(item.date_time).toLocaleDateString() }} at {{ new Date(item.date_time).toLocaleTimeString() }}
           </div>
           <div class="text-sm text-gray-600" v-if="item.location"><strong>Location:</strong> {{ item.location }}</div>
 
           <div class="flex gap-2 mt-2">
-            <button class="cancel-button" @click="cancelAppointment(item)">Delete</button>
-            <button class="edit-button" @click="editAppointment(item)">Edit</button>
+            <button
+              class="cancel-button px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+              @click="cancelAppointment(item)"
+            >
+              Delete
+            </button>
+            <button
+              class="edit-button px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              @click="editAppointment(item)"
+            >
+              Edit
+            </button>
           </div>
         </div>
-      </ScheduleRowItem>
+      </div>
     </div>
 
     <!-- Action buttons -->
@@ -223,7 +241,7 @@ h1 {
 .empty {
   text-align: center;
   padding: 2rem;
-  color: #f3ecec;
+  color: #333;
 }
 
 .error {
@@ -231,22 +249,16 @@ h1 {
 }
 
 .appointment-list {
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
   margin: 0 auto;
 }
 
-.edit-button {
-  background-color: #6c5ce7;
+.appointment-item {
+  transition: transform 0.2s ease;
 }
 
-.cancel-button {
-  background-color: #d63031;
+.appointment-item:hover {
+  transform: translateY(-2px);
 }
 
 .add-button {
@@ -254,12 +266,29 @@ h1 {
   background-color: #00cec9;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.add-button:hover {
+  background-color: #00b3ae;
 }
 
 .action-bar {
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;
+}
+
+.form-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .toast {
@@ -273,30 +302,5 @@ h1 {
   border-radius: 5px;
   z-index: 9999;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  animation:
-    fadein 0.3s ease,
-    fadeout 0.3s ease 1.7s;
-}
-
-@keyframes fadein {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes fadeout {
-  from {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
 }
 </style>
