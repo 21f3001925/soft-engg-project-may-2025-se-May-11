@@ -6,3 +6,4 @@ venv
 instance/
 instance
 .venv/
+node_modules/
