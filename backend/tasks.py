@@ -336,7 +336,8 @@ def check_missed_medications():
 
 
 @celery_app.task
-def send_emergency_alert(senior_id):
+# --- 1. UPDATE THE FUNCTION SIGNATURE ---
+def send_emergency_alert(senior_id, latitude=None, longitude=None):
     app = get_flask_app()
     with app.app_context():
         from models import User, CaregiverAssignment
@@ -345,24 +346,39 @@ def send_emergency_alert(senior_id):
         if not senior_user:
             return
 
-        alert_msg = f"EMERGENCY ALERT: {senior_user.name} has triggered an emergency alert. Please check on them immediately."
+        # --- 2. CREATE A GOOGLE MAPS LINK ---
+        if latitude and longitude:
+            # This is the correct, standard URL for Google Maps
+            maps_link = f"https://maps.google.com/?q={latitude},{longitude}"
+            alert_msg = (
+                f"EMERGENCY ALERT: {senior_user.username} has triggered an emergency alert. "
+                f"Their current location is: {maps_link}"
+            )
+        else:
+            alert_msg = (
+                f"EMERGENCY ALERT: {senior_user.name} has triggered an emergency alert. "
+                "Their location could not be determined. Please check on them immediately."
+            )
 
+        # Notify the assigned caregiver
         assignment = CaregiverAssignment.query.filter_by(
             senior_id=senior_user.user_id
         ).first()
-        if assignment:
-            caregiver_user = User.query.get(assignment.caregiver_id)
-            if caregiver_user:
-                print(f"Notifying assigned caregiver: {caregiver_user.name}")
-                if caregiver_user.phone_number:
-                    send_sms(caregiver_user.phone_number, alert_msg)
+        if assignment and (caregiver_user := User.query.get(assignment.caregiver_id)):
+            print(f"Notifying assigned caregiver: {caregiver_user.name}")
+            if caregiver_user.phone_number:
+                send_sms(caregiver_user.phone_number, alert_msg)
+            # --- FIX: Check if email exists before sending ---
+            if caregiver_user.email:
                 send_email(app, caregiver_user.email, "EMERGENCY ALERT!", alert_msg)
 
+        # Notify all emergency contacts
         for contact in getattr(senior_user, "emergency_contacts", []):
             print(f"Notifying emergency contact: {contact.name}")
             if contact.phone:
                 send_sms(contact.phone, alert_msg)
-            if contact.email:
+            # --- FIX: Check if email exists before sending ---
+            if hasattr(contact, "email") and contact.email:
                 send_email(app, contact.email, "EMERGENCY ALERT!", alert_msg)
 
 
