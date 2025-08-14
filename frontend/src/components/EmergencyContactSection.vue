@@ -55,7 +55,7 @@ const handleEmergencyClick = async () => {
         <div
           :class="[
             'w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3',
-            contactStore.loading ? 'animate-pulse' : '',
+            emergencyStore.loading ? 'animate-pulse' : '',
           ]"
         >
           <Phone class="h-8 w-8 text-white" />
@@ -63,18 +63,18 @@ const handleEmergencyClick = async () => {
         <h3 class="text-xl font-bold mb-2">Emergency</h3>
         <p class="text-red-100 text-sm mb-4">
           {{
-            contactStore.loading
+            emergencyStore.loading
               ? 'Loading...'
-              : contactStore.contacts && contactStore.contacts.length > 0
-                ? contactStore.contacts[0].subtitle || '24/7 support'
+              : emergencyStore.contacts && emergencyStore.contacts.length > 0
+                ? emergencyStore.contacts[0].subtitle || '24/7 support'
                 : '24/7 support'
           }}
         </p>
       </div>
 
       <a
-        v-if="contactStore.contacts && contactStore.contacts.length > 0 && contactStore.contacts[0].phone"
-        :href="`tel:${contactStore.contacts[0].phone}`"
+        v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0 && emergencyStore.contacts[0].phone"
+        :href="`tel:${emergencyStore.contacts[0].phone}`"
         class="w-full h-25 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
         aria-label="Call emergency contact"
       >
@@ -99,8 +99,11 @@ const handleEmergencyClick = async () => {
         Manage Emergency Contacts
       </router-link>
 
-      <p v-if="contactStore.contacts && contactStore.contacts.length > 0" class="text-xs text-red-100 mt-3 opacity-80">
-        {{ contactStore.contacts[0].name }} • {{ contactStore.contacts[0].phone }}
+      <p
+        v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0"
+        class="text-xs text-red-100 mt-3 opacity-80"
+      >
+        {{ emergencyStore.contacts[0].name }} • {{ emergencyStore.contacts[0].phone }}
       </p>
     </div>
   </section>
