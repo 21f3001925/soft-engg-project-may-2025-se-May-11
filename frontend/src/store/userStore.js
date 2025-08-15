@@ -3,52 +3,63 @@ import accessibilityService from '../services/accessibilityService';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    user: {
-      id: 1,
-      username: 'Old Cat',
-      age: 75,
-      city: 'Noida',
-      country: 'India',
-      phone_number: 1234567890,
-    },
-    emergencyContacts: [],
-    stats: {
-      topicsLiked: 200,
-      commentsPosted: 50,
-      appointmentsMissed: 2,
-      medicationsMissed: 6,
-      totalScreentime: 200,
-    },
+    user: null,
+    selectedSeniorId: null,
     accessibility: {
-      fontSize: 'small',
+      fontSize: 'medium',
       darkMode: false,
     },
   }),
 
-  actions: {
-    setEmergencyContacts(contacts) {
-      this.emergencyContacts = contacts;
+  getters: {
+    displayName: (state) => state.user?.username || 'Guest User',
+    userLocation: (state) => {
+      if (!state.user?.city && !state.user?.country) return 'Location not set';
+      return [state.user?.city, state.user?.country].filter(Boolean).join(', ');
     },
+  },
+
+  actions: {
     async setUser(userData) {
-      this.user = { ...this.user, ...userData };
-      if (userData.avatar_url) {
-        this.user.profilePic = userData.avatar_url;
+      try {
+        this.user = { ...this.user, ...userData };
+        await this.fetchAccessibilitySettings();
+      } catch (error) {
+        console.error('Error setting user data:', error);
       }
-      await this.fetchAccessibilitySettings();
+    },
+
+    setSelectedSeniorId(seniorId) {
+      this.selectedSeniorId = seniorId;
+    },
+
+    logout() {
+      this.user = null;
+      this.selectedSeniorId = null;
+      this.accessibility = {
+        fontSize: 'medium',
+        darkMode: false,
+      };
+      localStorage.removeItem('token');
     },
     async fetchAccessibilitySettings() {
       try {
         const settings = await accessibilityService.getAccessibilitySettings();
-        this.accessibility.fontSize = settings.font_size || 'small';
+        this.accessibility.fontSize = settings.font_size || 'medium';
         this.accessibility.darkMode = settings.theme === 'dark';
       } catch (error) {
         console.error('Failed to fetch accessibility settings:', error);
       }
     },
+
     async initialize() {
-      const token = localStorage.getItem('token');
-      if (token) {
-        await this.fetchAccessibilitySettings();
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await this.fetchAccessibilitySettings();
+        }
+      } catch (error) {
+        console.error('Initialization error:', error);
       }
     },
     async updateFontSize(newSize) {
