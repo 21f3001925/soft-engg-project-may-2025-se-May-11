@@ -3,12 +3,12 @@ import { useUserStore } from '../store/userStore';
 
 const userStore = useUserStore();
 
-const setFontSize = (size) => {
-  userStore.accessibility.fontSize = size;
+const setFontSize = async (event) => {
+  await userStore.updateFontSize(event.target.value);
 };
 
-const toggleDarkMode = () => {
-  userStore.accessibility.darkMode = !userStore.accessibility.darkMode;
+const toggleDarkMode = async () => {
+  await userStore.updateDarkMode(!userStore.accessibility.darkMode);
 };
 </script>
 
@@ -18,7 +18,7 @@ const toggleDarkMode = () => {
 
     <div class="setting">
       <label>Font Size:</label>
-      <select v-model="userStore.accessibility.fontSize">
+      <select :value="userStore.accessibility.fontSize" @change="setFontSize">
         <option value="small">Small</option>
         <option value="medium">Medium</option>
         <option value="large">Large</option>

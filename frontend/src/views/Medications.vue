@@ -1,20 +1,18 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
 import { useMedicationStore } from '../store/medicationStore';
-import { useUserStore } from '../store/userStore'; // Import user store
-import MedScheduleRowItem from '../components/MedScheduleRowItem.vue'; // Use our new component
+import { useUserStore } from '../store/userStore';
+import MedScheduleRowItem from '../components/MedScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
 const medicationStore = useMedicationStore();
-const userStore = useUserStore(); // Initialize user store
+const userStore = useUserStore();
 
 const toastMessage = ref('');
 
-// Check if the current user is a caregiver
 const isCaregiverView = computed(() => userStore.user?.roles?.includes('caregiver'));
 
 onMounted(async () => {
-  // Pass seniorId if caregiver is viewing
   const seniorId = isCaregiverView.value ? userStore.selectedSeniorId : null;
   await medicationStore.fetchMedications(seniorId);
 });

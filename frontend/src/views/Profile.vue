@@ -11,18 +11,16 @@ const userStore = useUserStore();
 const emergencyStore = useEmergencyStore();
 const router = useRouter();
 
-// --- For displaying data (read-only) ---
 const user = computed(() => userStore.user);
 const emergencyContacts = computed(() => emergencyStore.contacts);
 const { avatarUrl: profilePicUrl } = useAvatar();
 
-// --- For editing data in the form (writable) ---
 const isEditing = ref(false);
-const editableUser = ref({}); // This will hold the data for the edit form
+const editableUser = ref({});
 
 onMounted(async () => {
   try {
-    await profileService.getProfile(); // The store will be updated internally
+    await profileService.getProfile();
     await emergencyStore.fetchContactsForSenior();
   } catch (error) {
     console.error('Error fetching initial data:', error);
@@ -31,22 +29,19 @@ onMounted(async () => {
 });
 
 const editProfile = () => {
-  // Copy the current user data into our editable object
   editableUser.value = { ...user.value };
   isEditing.value = true;
 };
 
 const cancelEdit = () => {
-  // Just hide the form; no data needs to be reverted
   isEditing.value = false;
 };
 
 const saveProfile = async () => {
   try {
-    // Use the data from our editable object to send the update
     const { avatar_url, ...profileData } = editableUser.value;
     const response = await profileService.updateProfile(profileData);
-    userStore.setUser(response.data); // Update the store with the new data
+    userStore.setUser(response.data);
     isEditing.value = false;
     alert('Profile updated successfully!');
   } catch (error) {

@@ -13,10 +13,6 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     displayName: (state) => state.user?.username || 'Guest User',
-    userLocation: (state) => {
-      if (!state.user?.city && !state.user?.country) return 'Location not set';
-      return [state.user?.city, state.user?.country].filter(Boolean).join(', ');
-    },
   },
 
   actions: {
@@ -63,7 +59,6 @@ export const useUserStore = defineStore('user', {
       }
     },
     async updateFontSize(newSize) {
-      console.log('userStore.js: updateFontSize action called with', newSize);
       this.accessibility.fontSize = newSize;
       try {
         await accessibilityService.updateAccessibilitySettings({ font_size: newSize });
@@ -72,7 +67,6 @@ export const useUserStore = defineStore('user', {
       }
     },
     async updateDarkMode(newMode) {
-      console.log('userStore.js: updateDarkMode action called with', newMode);
       this.accessibility.darkMode = newMode;
       try {
         await accessibilityService.updateAccessibilitySettings({ theme: newMode ? 'dark' : 'light' });
