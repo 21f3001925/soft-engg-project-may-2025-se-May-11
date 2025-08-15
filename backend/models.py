@@ -174,6 +174,7 @@ class Medication(db.Model):
     dosage = db.Column(db.String)
     time = db.Column(db.DateTime)
     isTaken = db.Column(db.Boolean, default=False)
+    missed_counted = db.Column(db.Boolean, default=False)
     senior_id = db.Column(
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )

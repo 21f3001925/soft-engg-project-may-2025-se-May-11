@@ -309,7 +309,11 @@ def check_missed_medications():
         cutoff = now - timedelta(minutes=10)
 
         missed_meds = Medication.query.filter(
-            Medication.isTaken.is_(False), Medication.time <= cutoff
+            Medication.isTaken.is_(False),
+            Medication.time <= cutoff,
+            Medication.missed_counted.is_(
+                False
+            ),  # Only count medications not already counted
         ).all()
 
         if not missed_meds:
@@ -325,12 +329,18 @@ def check_missed_medications():
             if not senior_user:
                 continue
 
-            # Increment medications_missed for the senior citizen
             if senior_user.senior_citizen:
                 senior_user.senior_citizen.medications_missed = (
                     senior_user.senior_citizen.medications_missed or 0
                 ) + 1
                 db.session.add(senior_user.senior_citizen)
+                print(
+                    f"Incremented missed counter for {senior_user.username} - medication: {med.name}"
+                )
+
+                med.missed_counted = True
+                db.session.add(med)
+                print(f"Marked {med.name} as counted to prevent double-counting")
 
             # --- NEW: Notify the Senior Citizen Directly ---
             senior_msg = (
