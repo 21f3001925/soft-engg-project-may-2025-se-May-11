@@ -56,11 +56,42 @@ export const useScheduleStore = defineStore('schedule', {
       this.allMedications.error = null;
       try {
         const response = await medicationService.getMedications();
-        this.allMedications.items = response.data;
+
+        this.allMedications.items = response.data.map((med) => ({
+          id: med.medication_id,
+          name: med.name,
+          dosage: med.dosage,
+          time: med.time,
+          taken: med.isTaken,
+          senior_id: med.senior_id,
+        }));
       } catch (error) {
         this.allMedications.error = error;
       } finally {
         this.allMedications.loading = false;
+      }
+    },
+
+    async toggleMedication(medicationId) {
+      try {
+        const medication = this.allMedications.items.find((med) => med.id === medicationId);
+        if (!medication) return;
+
+        const newTakenStatus = !medication.taken;
+
+        medication.taken = newTakenStatus;
+
+        await medicationService.updateMedication(medicationId, {
+          isTaken: newTakenStatus,
+        });
+
+        await this.fetchAllMedications();
+      } catch (error) {
+        console.error('Error toggling medication:', error);
+        const medication = this.allMedications.items.find((med) => med.id === medicationId);
+        if (medication) {
+          medication.taken = !medication.taken;
+        }
       }
     },
   },

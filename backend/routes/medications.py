@@ -119,15 +119,7 @@ class MedicationsResource(MethodView):
         user_id = get_jwt_identity()
         senior_id = self.get_senior_id_from_user(user_id)
 
-        # 1. Use the datetime object directly from the schema.
-        # The schema has already validated and converted the string.
-        # This fixes the 'Invalid isoformat string' crash.
         medication_time = data["time"]
-
-        # 2. This check handles both naive and aware datetimes.
-        # This fixes the 'Not naive datetime' error.
-        if medication_time.tzinfo is None:
-            medication_time = IST.localize(medication_time)
 
         medication = Medication(
             name=data["name"],

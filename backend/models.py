@@ -153,7 +153,7 @@ class Appointment(db.Model):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     title = db.Column(db.String)
-    date_time = db.Column(db.DateTime(timezone=True))
+    date_time = db.Column(db.DateTime)
     location = db.Column(db.String)
     reminder_time = db.Column(db.DateTime, nullable=True)
     senior_id = db.Column(
@@ -174,6 +174,7 @@ class Medication(db.Model):
     dosage = db.Column(db.String)
     time = db.Column(db.DateTime)
     isTaken = db.Column(db.Boolean, default=False)
+    missed_counted = db.Column(db.Boolean, default=False)
     senior_id = db.Column(
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )

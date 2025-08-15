@@ -28,8 +28,6 @@ def create_celery():
         task_acks_late=True,
     )
 
-    celery.autodiscover_tasks(["tasks"])
-
     return celery
 
 

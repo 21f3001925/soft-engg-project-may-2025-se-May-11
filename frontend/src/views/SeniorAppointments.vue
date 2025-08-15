@@ -121,11 +121,10 @@ function showToast(message) {
   }, 2000);
 }
 
-// Helper: convert API datetime to input type datetime-local format
+// Helper: format datetime for input type datetime-local format
 function toInputDatetime(dateTimeStr) {
-  const d = new Date(dateTimeStr);
-  const tzOffset = d.getTimezoneOffset() * 60000;
-  return new Date(d - tzOffset).toISOString().slice(0, 16);
+  if (!dateTimeStr) return '';
+  return dateTimeStr.slice(0, 16);
 }
 </script>
 

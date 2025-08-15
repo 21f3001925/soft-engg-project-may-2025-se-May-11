@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 from celery.schedules import crontab
 
@@ -19,6 +20,7 @@ class Config:
         "sqlite:///" + os.path.join(instance_path, "senior_citizen.db"),
     )
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-very-secret-key")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)  # 24 hours
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     API_TITLE = "Senior Citizen API"
     API_VERSION = "v1"

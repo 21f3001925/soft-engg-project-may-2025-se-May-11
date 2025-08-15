@@ -6,23 +6,34 @@ import { useRouter } from 'vue-router';
 import profileService from '../services/profileService';
 import emergencyService from '../services/emergencyService';
 import { useAvatar } from '../composables/useAvatar';
+import {
+  User,
+  Camera,
+  Mail,
+  MapPin,
+  Phone,
+  Flame,
+  Users,
+  BarChart3,
+  CheckCircle,
+  Pill,
+  AlertTriangle,
+} from 'lucide-vue-next';
 
 const userStore = useUserStore();
 const emergencyStore = useEmergencyStore();
 const router = useRouter();
 
-// --- For displaying data (read-only) ---
 const user = computed(() => userStore.user);
 const emergencyContacts = computed(() => emergencyStore.contacts);
-const { avatarUrl: profilePicUrl } = useAvatar();
+const { avatarUrl: profilePicUrl, hasAvatar } = useAvatar();
 
-// --- For editing data in the form (writable) ---
 const isEditing = ref(false);
-const editableUser = ref({}); // This will hold the data for the edit form
+const editableUser = ref({});
 
 onMounted(async () => {
   try {
-    await profileService.getProfile(); // The store will be updated internally
+    await profileService.getProfile();
     await emergencyStore.fetchContactsForSenior();
   } catch (error) {
     console.error('Error fetching initial data:', error);
@@ -31,34 +42,27 @@ onMounted(async () => {
 });
 
 const editProfile = () => {
-  // Copy the current user data into our editable object
   editableUser.value = { ...user.value };
   isEditing.value = true;
 };
 
 const cancelEdit = () => {
-  // Just hide the form; no data needs to be reverted
   isEditing.value = false;
 };
 
 const saveProfile = async () => {
   try {
-    // Destructure to get ONLY the fields the backend schema allows for an update.
-    // This prevents sending read-only or server-calculated fields.
-    const { username, email, name, age, city, country, phone_number } = editableUser.value;
-
     const profileData = {
-      username,
-      email,
-      name,
-      age,
-      city,
-      country,
-      phone_number,
+      username: editableUser.value.username,
+      email: editableUser.value.email,
+      age: editableUser.value.age ? parseInt(editableUser.value.age) : null,
+      city: editableUser.value.city || null,
+      country: editableUser.value.country || null,
+      phone_number: editableUser.value.phone_number || null,
     };
 
     const response = await profileService.updateProfile(profileData);
-    userStore.setUser(response.data); // Update the store with the new data
+    userStore.setUser(response.data);
     isEditing.value = false;
     alert('Profile updated successfully!');
   } catch (error) {
@@ -95,7 +99,7 @@ const contactEmergency = async () => {
       console.error('Error getting location: ', error);
       alert('Could not get your location. A generic emergency alert will be sent.');
       // Optional: still send an alert without location
-      // emergencyService.triggerAlert({});
+      emergencyService.triggerAlert({});
     },
   );
 };
@@ -120,129 +124,270 @@ function goToEmergencyContacts() {
 </script>
 
 <template>
-  <div class="profile-page">
-    <div class="card user-profile">
-      <img class="user-avatar" :src="profilePicUrl" alt="User Avatar" />
-      <div class="file-upload-wrapper">
-        <button class="upload-button" @click="$refs.fileInput.click()">Change Photo</button>
-        <input ref="fileInput" type="file" accept="image/*" style="display: none" @change="onFileChange" />
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Profile</h1>
+        <p class="text-gray-600">Manage your personal information and preferences</p>
       </div>
-      <div class="user-info">
-        <div v-if="!isEditing">
-          <p><strong>Name:</strong> {{ user.username }}</p>
-          <p><strong>Email:</strong> {{ user.email }}</p>
-          <p><strong>Age:</strong> {{ user.age }}</p>
-          <p><strong>City:</strong> {{ user.city }}</p>
-          <p><strong>Country:</strong> {{ user.country }}</p>
-          <p><strong>Phone Number:</strong> {{ user.phone_number }}</p>
-          <p v-if="user.news_categories"><strong>News Categories:</strong> {{ user.news_categories }}</p>
-          <button class="edit-button" @click="editProfile">Edit Profile</button>
-        </div>
-        <div v-else>
-          <p><strong>Name:</strong> <input type="text" v-model="editableUser.username" /></p>
-          <p><strong>Email:</strong> <input type="email" v-model="editableUser.email" /></p>
-          <p><strong>Age:</strong> <input type="number" v-model="editableUser.age" /></p>
-          <p><strong>City:</strong> <input type="text" v-model="editableUser.city" /></p>
-          <p><strong>Country:</strong> <input type="text" v-model="editableUser.country" /></p>
-          <p><strong>Phone Number:</strong> <input type="text" v-model="editableUser.phone_number" /></p>
-          <p v-if="editableUser.news_categories">
-            <strong>News Categories:</strong> <input type="text" v-model="editableUser.news_categories" />
-          </p>
-          <button class="edit-button" @click="saveProfile">Save Profile</button>
-          <button class="edit-button" @click="cancelEdit">Cancel</button>
-        </div>
-      </div>
-      <button class="emergency-button" @click="contactEmergency">Notify Emergency Contacts</button>
-    </div>
 
-    <div class="card friends-list">
-      <h3 style="margin-top: 1px"><b>Your Emergency Contacts</b></h3>
-      <hr />
-      <br />
-      <div>
-        <div v-for="contact in emergencyContacts" :key="contact.contact_id" class="friend-item">{{ contact.name }}</div>
-      </div>
-      <button class="edit-button" @click="goToEmergencyContacts">Edit Contacts</button>
-    </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div class="text-center mb-6">
+            <div class="relative inline-block">
+              <img
+                v-if="hasAvatar"
+                class="w-32 h-32 rounded-full object-cover border-4 border-blue-100 shadow-lg"
+                :src="profilePicUrl"
+                alt="User Avatar"
+              />
+              <div
+                v-else
+                class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-4 border-blue-200 shadow-lg"
+              >
+                <User :size="48" class="text-blue-600" />
+              </div>
+              <div class="absolute -bottom-2 -right-2">
+                <button
+                  class="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                  @click="$refs.fileInput.click()"
+                  title="Change Photo"
+                >
+                  <Camera class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
+          </div>
 
-    <div class="card user-stats">
-      <h3 style="margin-top: 1px"><b>Your stats</b></h3>
-      <hr />
-      <br />
-      <ul>
-        <li>Appointments Missed: {{ user?.appointments_missed }}</li>
-        <li>Medications Missed: {{ user?.medications_missed }}</li>
-      </ul>
+          <div class="space-y-4">
+            <div v-if="!isEditing">
+              <div class="space-y-3">
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <User class="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm text-gray-500">Name</p>
+                    <p class="font-semibold text-gray-900">{{ user.username || 'Not set' }}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <Mail class="w-4 h-4 text-green-600" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm text-gray-500">Email</p>
+                    <p class="font-semibold text-gray-900">{{ user.email || 'Not set' }}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                    <User class="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm text-gray-500">Age</p>
+                    <p class="font-semibold text-gray-900">{{ user.age || 'Not set' }}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                    <MapPin class="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm text-gray-500">Location</p>
+                    <p class="font-semibold text-gray-900">
+                      {{ user.city && user.country ? `${user.city}, ${user.country}` : 'Not set' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                    <Phone class="w-4 h-4 text-red-600" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm text-gray-500">Phone</p>
+                    <p class="font-semibold text-gray-900">{{ user.phone_number || 'Not set' }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                @click="editProfile"
+              >
+                Edit Profile
+              </button>
+            </div>
+
+            <div v-else class="space-y-4">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                  <input
+                    type="text"
+                    v-model="editableUser.username"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-gray-300"
+                    placeholder="Enter your name"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    v-model="editableUser.email"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-gray-300"
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Age</label>
+                  <input
+                    type="number"
+                    v-model="editableUser.age"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-gray-300"
+                    placeholder="Enter your age"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                  <input
+                    type="text"
+                    v-model="editableUser.city"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-gray-300"
+                    placeholder="Enter your city"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Country</label>
+                  <input
+                    type="text"
+                    v-model="editableUser.country"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-gray-300"
+                    placeholder="Enter your country"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                  <input
+                    type="text"
+                    v-model="editableUser.phone_number"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-gray-300"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-6">
+                <button
+                  class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  @click="saveProfile"
+                >
+                  Save Changes
+                </button>
+                <button
+                  class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  @click="cancelEdit"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button
+            class="w-full mt-6 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            @click="contactEmergency"
+          >
+            <AlertTriangle class="w-5 h-5" />
+            Emergency Alert
+          </button>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div class="flex items-center mb-6">
+            <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center mr-3">
+              <Flame class="w-5 h-5 text-red-600" />
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Emergency Contacts</h3>
+          </div>
+
+          <div class="space-y-4">
+            <div v-if="emergencyContacts && emergencyContacts.length > 0">
+              <div
+                v-for="contact in emergencyContacts"
+                :key="contact.contact_id"
+                class="flex items-center p-3 mb-3 bg-red-50 rounded-xl border border-red-100"
+              >
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                  <User class="w-5 h-5 text-red-600" />
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-gray-900">{{ contact.name }}</p>
+                  <p class="text-sm text-gray-500">{{ contact.relationship || 'Emergency Contact' }}</p>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center py-8">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users class="w-8 h-8 text-gray-400" />
+              </div>
+              <p class="text-gray-500 text-sm">No emergency contacts added</p>
+            </div>
+          </div>
+
+          <button
+            class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            @click="goToEmergencyContacts"
+          >
+            Manage Contacts
+          </button>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div class="flex items-center mb-6">
+            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
+              <BarChart3 class="w-5 h-5 text-purple-600" />
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Your Statistics</h3>
+          </div>
+
+          <div class="space-y-4">
+            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <CheckCircle class="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">Appointments</p>
+                    <p class="font-bold text-gray-900">Missed: {{ user?.appointments_missed || 0 }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                    <Pill class="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">Medications</p>
+                    <p class="font-bold text-gray-900">Missed: {{ user?.medications_missed || 0 }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.profile-page {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  text-align: center;
-  gap: 20px;
-  padding: 20px;
-}
-.card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 16px;
-  width: 300px;
-}
-.user-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 12px;
-}
-.user-profile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.upload-button {
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-.edit-button {
-  margin-top: 12px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.edit-button:hover {
-  background-color: #125aa1;
-}
-.emergency-button {
-  background-color: red;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 12px;
-}
-.friend-item:hover {
-  color: #4fc3f7;
-  cursor: pointer;
-}
-.user-info p {
-  text-align: left;
-}
-.user-info input {
-  width: 100%;
-}
-</style>

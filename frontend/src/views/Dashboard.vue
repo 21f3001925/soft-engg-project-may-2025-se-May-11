@@ -54,13 +54,7 @@ onUnmounted(() => {
             <h2
               class="dashboard-title text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-1"
             >
-              {{ greeting }},
-              {{
-                userStore.user?.username && userStore.user.username.trim() !== ''
-                  ? userStore.user.username
-                  : 'getting your name...'
-              }}
-              !
+              {{ greeting }}, {{ userStore.displayName }}!
             </h2>
             <p class="text-xs text-gray-500 hidden md:block">Welcome to your health dashboard</p>
           </div>
