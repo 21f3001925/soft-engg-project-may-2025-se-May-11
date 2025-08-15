@@ -2,9 +2,12 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import authService from '../services/authService';
+import profileService from '../services/profileService';
+import { useUserStore } from '../store/userStore';
 import { Mail, Phone } from 'lucide-vue-next';
 
 const router = useRouter();
+const userStore = useUserStore();
 const loginMethod = ref('email');
 const email = ref('');
 const phone = ref('');
@@ -34,6 +37,14 @@ const handleLogin = async () => {
     const roles = response.data.roles || [];
     localStorage.setItem('token', token);
     localStorage.setItem('roles', JSON.stringify(roles));
+
+    try {
+      const profileResponse = await profileService.getProfile();
+      userStore.setUser(profileResponse.data);
+    } catch (profileError) {
+      console.error('Error loading user profile after login:', profileError);
+    }
+
     // Redirect based on role
     if (roles.includes('caregiver')) {
       router.push('/caregiver-dashboard');

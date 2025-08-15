@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', {
     async initialize() {
       try {
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && !this.user) {
           await this.fetchAccessibilitySettings();
         }
       } catch (error) {
