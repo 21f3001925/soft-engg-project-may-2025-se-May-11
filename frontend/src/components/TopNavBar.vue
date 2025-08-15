@@ -4,11 +4,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { Menu, Bell, ChevronDown, X } from 'lucide-vue-next';
 import logo from '../assets/vue.svg';
 import { useNotificationStore } from '../store/notificationStore';
+import { useUserStore } from '../store/userStore';
 import { useAvatar } from '../composables/useAvatar';
 
 const router = useRouter();
 const route = useRoute();
 const notificationStore = useNotificationStore();
+const userStore = useUserStore();
 const roleDropdownOpen = ref(false);
 
 const showNav = computed(() => {
@@ -23,8 +25,7 @@ const notifications = computed(() => notificationStore.notifications);
 const { avatarUrl: userAvatar } = useAvatar();
 
 const handleLogout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  userStore.logout();
   router.push('/login');
 };
 
