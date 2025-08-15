@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useScheduleStore } from '../store/scheduleStore';
 import { useUserStore } from '../store/userStore';
 import MedicationItem from './MedicationItem.vue';
@@ -10,16 +10,17 @@ const userStore = useUserStore();
 
 const seniorId = computed(() => userStore.user.id);
 
-function toggleMedication(id) {
-  const med = scheduleStore.medications.find((m) => m.id === id);
-  if (med) {
-    med.taken = !med.taken;
-  }
+async function toggleMedication(id) {
+  await scheduleStore.toggleMedication(id);
 }
 
 const completedMeds = computed(() => scheduleStore.medications.filter((med) => med.taken).length);
 const totalMeds = computed(() => scheduleStore.medications.length);
 const progressPercentage = computed(() => (totalMeds.value === 0 ? 0 : (completedMeds.value / totalMeds.value) * 100));
+
+onMounted(() => {
+  scheduleStore.fetchAllMedications();
+});
 </script>
 
 <template>
