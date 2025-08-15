@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router';
 import profileService from '../services/profileService';
 import emergencyService from '../services/emergencyService';
 import { useAvatar } from '../composables/useAvatar';
+import { User } from 'lucide-vue-next';
 
 const userStore = useUserStore();
 const emergencyStore = useEmergencyStore();
@@ -13,7 +14,7 @@ const router = useRouter();
 
 const user = computed(() => userStore.user);
 const emergencyContacts = computed(() => emergencyStore.contacts);
-const { avatarUrl: profilePicUrl } = useAvatar();
+const { avatarUrl: profilePicUrl, hasAvatar } = useAvatar();
 
 const isEditing = ref(false);
 const editableUser = ref({});
@@ -105,7 +106,12 @@ function goToEmergencyContacts() {
 <template>
   <div class="profile-page">
     <div class="card user-profile">
-      <img class="user-avatar" :src="profilePicUrl" alt="User Avatar" />
+      <div class="avatar-container">
+        <img v-if="hasAvatar" class="user-avatar" :src="profilePicUrl" alt="User Avatar" />
+        <div v-else class="user-avatar-placeholder">
+          <User :size="40" class="text-gray-400" />
+        </div>
+      </div>
       <div class="file-upload-wrapper">
         <button class="upload-button" @click="$refs.fileInput.click()">Change Photo</button>
         <input ref="fileInput" type="file" accept="image/*" style="display: none" @change="onFileChange" />
@@ -181,6 +187,17 @@ function goToEmergencyContacts() {
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 12px;
+}
+.user-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  border: 2px solid #e5e7eb;
 }
 .user-profile {
   display: flex;

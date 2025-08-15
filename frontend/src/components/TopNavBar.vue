@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Menu, Bell, ChevronDown, X } from 'lucide-vue-next';
+import { Menu, Bell, ChevronDown, X, User } from 'lucide-vue-next';
 import logo from '../assets/vue.svg';
 import { useNotificationStore } from '../store/notificationStore';
 import { useUserStore } from '../store/userStore';
@@ -22,7 +22,7 @@ const userDropdownOpen = ref(false);
 const notificationDropdownOpen = ref(false);
 
 const notifications = computed(() => notificationStore.notifications);
-const { avatarUrl: userAvatar } = useAvatar();
+const { avatarUrl: userAvatar, hasAvatar } = useAvatar();
 
 const handleLogout = () => {
   userStore.logout();
@@ -139,7 +139,10 @@ onBeforeUnmount(() => {
                 class="flex items-center gap-2 p-1 rounded-full hover:bg-blue-50 transition"
                 @click.stop="userDropdownOpen = !userDropdownOpen"
               >
-                <img :src="userAvatar" alt="Avatar" class="h-8 w-8 rounded-full border border-gray-200" />
+                <div class="h-8 w-8 rounded-full border border-gray-200 flex items-center justify-center bg-gray-100">
+                  <img v-if="hasAvatar" :src="userAvatar" alt="Avatar" class="h-8 w-8 rounded-full object-cover" />
+                  <User v-else :size="16" class="text-gray-500" />
+                </div>
                 <ChevronDown class="w-4 h-4 text-gray-500" />
               </button>
               <div
