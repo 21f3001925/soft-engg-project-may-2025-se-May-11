@@ -10,8 +10,6 @@ onMounted(() => {
   emergencyStore.fetchContactsForSenior();
 });
 
-// --- THIS FUNCTION IS NOW CORRECTED ---
-// It now asks for the browser's location before sending the alert.
 const handleEmergencyClick = async () => {
   if (!navigator.geolocation) {
     alert('Geolocation is not supported by your browser.');
@@ -20,7 +18,6 @@ const handleEmergencyClick = async () => {
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
-      // Success! We have the location.
       const location = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -75,36 +72,56 @@ const handleEmergencyClick = async () => {
       <a
         v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0 && emergencyStore.contacts[0].phone"
         :href="`tel:${emergencyStore.contacts[0].phone}`"
-        class="w-full h-25 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
+        class="w-full h-20 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
         aria-label="Call emergency contact"
       >
         <Phone class="h-6 w-6" />
-        <div>
-          <div>CALL NOW</div>
-          <div class="text-sm opacity-90">Emergency Contact</div>
+        <div class="text-center">
+          <div class="font-bold">{{ emergencyStore.contacts[0].name }}</div>
+          <div class="text-sm opacity-90">
+            {{ emergencyStore.contacts[0].relationship || emergencyStore.contacts[0].phone }}
+          </div>
         </div>
       </a>
 
-      <div
-        v-else
-        class="w-full h-25 bg-gray-300 text-gray-600 border-2 border-gray-400 text-lg font-semibold rounded-xl mb-2 flex items-center justify-center space-x-3"
-      >
-        <Phone class="h-6 w-6" />
-        <div>
-          <div>Please add a number</div>
+      <div v-else class="space-y-2">
+        <a
+          href="tel:911"
+          class="w-full h-20 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl"
+          aria-label="Call emergency services"
+        >
+          <Phone class="h-6 w-6" />
+          <div>
+            <div>CALL 108</div>
+            <div class="text-sm opacity-90">Emergency Services</div>
+          </div>
+        </a>
+
+        <div
+          class="w-full bg-white/10 text-white border border-white/30 text-sm font-medium rounded-xl p-3 text-center"
+        >
+          <div class="text-yellow-200 font-semibold mb-1">⚠️ Add Your Emergency Contacts</div>
+          <div class="text-xs opacity-90">Set up personal emergency contacts for faster response</div>
         </div>
       </div>
 
-      <router-link to="/profile" class="block mt-2 text-xs text-red-100 underline hover:text-white transition-colors">
+      <router-link
+        to="/emergency-contacts"
+        class="block mt-2 text-xs text-red-100 underline hover:text-white transition-colors"
+      >
         Manage Emergency Contacts
       </router-link>
 
-      <p
-        v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0"
-        class="text-xs text-red-100 mt-3 opacity-80"
-      >
-        {{ emergencyStore.contacts[0].name }} • {{ emergencyStore.contacts[0].phone }}
-      </p>
+      <div v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0" class="mt-3">
+        <p class="text-xs text-red-100 opacity-80">Primary: {{ emergencyStore.contacts[0].name }}</p>
+        <p v-if="emergencyStore.contacts.length > 1" class="text-xs text-red-100 opacity-70">
+          +{{ emergencyStore.contacts.length - 1 }} more contact{{ emergencyStore.contacts.length > 2 ? 's' : '' }}
+        </p>
+      </div>
+
+      <div v-else class="mt-3">
+        <p class="text-xs text-red-100 opacity-80">No emergency contacts set up yet</p>
+      </div>
     </div>
   </section>
 </template>
