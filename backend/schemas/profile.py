@@ -4,7 +4,7 @@ from marshmallow import Schema, fields
 class ProfileSchema(Schema):
     username = fields.Str()
     email = fields.Email()
-    name = fields.Str()
+    name = fields.Str(allow_none=True)
     age = fields.Int(allow_none=True)
     city = fields.Str(allow_none=True)
     country = fields.Str(allow_none=True)
