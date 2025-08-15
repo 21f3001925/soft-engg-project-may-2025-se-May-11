@@ -5,7 +5,12 @@ from flask_security import roles_accepted
 from marshmallow import Schema, fields
 from models import db, CaregiverAssignment, Caregiver, SeniorCitizen, User
 
-assignment_bp = Blueprint("Assignment", "Assignment", url_prefix="/api/v1/assignment")
+assignment_bp = Blueprint(
+    "Assignment",
+    "Assignment",
+    url_prefix="/api/v1/assignment",
+    description="This blueprint handles the assignment of caregivers to senior citizens. It provides endpoints for caregivers to view available seniors, assign themselves to a senior, and view the seniors they are assigned to. This functionality is crucial for ensuring that all seniors have a designated caregiver to assist them.",
+)
 
 
 class SeniorSchema(Schema):
@@ -26,7 +31,7 @@ class AvailableSeniorsAPI(MethodView):
     @roles_accepted("caregiver")
     @assignment_bp.doc(
         summary="Get all unassigned senior citizens",
-        description="Returns a list of senior citizens who do not have a caregiver assigned.",
+        description="This endpoint returns a list of all senior citizens who are not currently assigned to a caregiver. This allows caregivers to see which seniors are in need of assistance and choose one to assign themselves to.",
     )
     @assignment_bp.response(200, SeniorSchema(many=True))
     def get(self):
@@ -46,7 +51,7 @@ class AssignCaregiverAPI(MethodView):
     @roles_accepted("caregiver")
     @assignment_bp.doc(
         summary="Assign yourself (caregiver) to a senior citizen",
-        description="Assigns the currently logged-in caregiver to the specified senior citizen. Only works if the senior is not already assigned.",
+        description="This endpoint allows a logged-in caregiver to assign themselves to a specific senior citizen. The caregiver must provide the senior's ID. The endpoint ensures that a senior can only have one caregiver assigned at a time.",
     )
     @assignment_bp.arguments(AssignSchema)
     @assignment_bp.response(201)
@@ -77,7 +82,7 @@ class MySeniorsAPI(MethodView):
     @roles_accepted("caregiver")
     @assignment_bp.doc(
         summary="Get all seniors assigned to the current caregiver",
-        description="Returns a list of senior citizens assigned to the currently logged-in caregiver.",
+        description="This endpoint returns a list of all senior citizens who are currently assigned to the logged-in caregiver. This allows caregivers to easily view the seniors they are responsible for.",
     )
     @assignment_bp.response(200, SeniorSchema(many=True))
     def get(self):

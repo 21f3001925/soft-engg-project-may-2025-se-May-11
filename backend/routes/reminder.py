@@ -19,7 +19,8 @@ reminder_blp = Blueprint(
 class ReminderResource(MethodView):
     @jwt_required()
     @reminder_blp.doc(
-        summary="This route is used to schedule reminders for appointments."
+        summary="Schedule reminders for an appointment.",
+        description="This endpoint schedules a series of reminders for an appointment. Reminders are sent at various intervals before the appointment time (e.g., 24 hours, 1 hour, 30 minutes, and 10 minutes before). This helps to ensure that the user does not forget their appointment.",
     )
     @reminder_blp.arguments(ReminderSchema())
     @reminder_blp.response(200, MsgSchema())

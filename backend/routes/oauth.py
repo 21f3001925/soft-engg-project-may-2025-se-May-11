@@ -18,7 +18,8 @@ oauth_blp = Blueprint(
 @oauth_blp.route("/google/login")
 class GoogleOAuthLoginResource(MethodView):
     @oauth_blp.doc(
-        summary="To login with Google id. New users will be registered automatically."
+        summary="Log in with a Google account.",
+        description="This endpoint initiates the Google OAuth login process. It redirects the user to Google's authentication page, where they can grant permission for the application to access their basic profile information. If the user is new, a new account will be created for them automatically.",
     )
     @oauth_blp.response(302)
     def get(self):
@@ -28,7 +29,10 @@ class GoogleOAuthLoginResource(MethodView):
 
 @oauth_blp.route("/google/callback")
 class GoogleOAuthCallbackResource(MethodView):
-    @oauth_blp.doc(summary="Callback from Google OAuth")
+    @oauth_blp.doc(
+        summary="Callback from Google OAuth",
+        description="This endpoint is the callback URL that Google redirects to after the user has authenticated. It handles the token exchange with Google and creates a new user account if one does not already exist. Upon successful authentication, it returns an access token that can be used to access protected routes.",
+    )
     @oauth_blp.response(200, TokenSchema())
     @oauth_blp.alt_response(401, schema=MsgSchema())
     @oauth_blp.alt_response(400, schema=MsgSchema())

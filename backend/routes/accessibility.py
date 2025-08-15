@@ -8,14 +8,17 @@ accessibility_bp = Blueprint(
     "Accessibility",
     "Accessibility",
     url_prefix="/api/v1/accessibility",
-    description="Operations for managing user accessibility settings (font size, theme).",
+    description="This blueprint provides endpoints for managing user accessibility settings, such as font size and theme. These settings are designed to make the application more user-friendly for senior citizens, allowing them to customize the interface to their specific needs.",
 )
 
 
 @accessibility_bp.route("")
 class AccessibilitySettingsResource(MethodView):
     @jwt_required()
-    @accessibility_bp.doc(summary="Get the current user's accessibility settings")
+    @accessibility_bp.doc(
+        summary="Get the current user's accessibility settings",
+        description="This endpoint retrieves the current accessibility settings for the logged-in user. This includes the user's preferred font size and theme. These settings can be used to customize the user interface.",
+    )
     @accessibility_bp.response(200, AccessibilitySettingsSchema)
     def get(self):
         user = get_current_user()
@@ -27,7 +30,10 @@ class AccessibilitySettingsResource(MethodView):
         }
 
     @jwt_required()
-    @accessibility_bp.doc(summary="Update the current user's accessibility settings")
+    @accessibility_bp.doc(
+        summary="Update the current user's accessibility settings",
+        description="This endpoint allows the logged-in user to update their accessibility settings. The user can provide a new font size and/or theme. These settings will be saved and applied to the user interface.",
+    )
     @accessibility_bp.arguments(AccessibilitySettingsSchema)
     @accessibility_bp.response(200, AccessibilitySettingsSchema)
     def put(self, update_data):

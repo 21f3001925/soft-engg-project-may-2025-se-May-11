@@ -75,7 +75,8 @@ class NewsResource(MethodView):
     @news_bp.arguments(NewsQuerySchema, location="query")
     @news_bp.response(200, NewsResponseSchema)
     @news_bp.doc(
-        summary="On the specific topics selected, get top headlines from NewsAPI.org."
+        summary="Get top news headlines.",
+        description="This endpoint fetches top news headlines from NewsAPI.org. Users can filter the news by providing a search query or by selecting a category. This allows seniors to stay up-to-date with the latest news on topics that interest them.",
     )
     def get(self, args):
         """Get top headlines from NewsAPI.org."""

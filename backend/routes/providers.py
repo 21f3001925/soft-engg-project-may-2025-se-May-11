@@ -25,11 +25,11 @@ providers_bp = Blueprint(
 
 @providers_bp.route("")
 class ServiceProviderList(MethodView):
-
     @jwt_required()
     @roles_accepted("service_provider", "senior_citizen")
     @providers_bp.doc(
-        summary="This route will list all the service providers and basic information about them"
+        summary="Get a list of all service providers.",
+        description="This endpoint returns a list of all service providers, along with basic information about them. This allows users to see who is providing services in their community.",
     )
     @providers_bp.response(200, ServiceProviderSchema(many=True))
     def get(self):
@@ -38,7 +38,8 @@ class ServiceProviderList(MethodView):
     @jwt_required()
     @roles_accepted("service_provider", "senior_citizen")
     @providers_bp.doc(
-        summary="To create a new service provider, this route can be used."
+        summary="Create a new service provider profile.",
+        description="This endpoint allows a new service provider to create a profile. The service provider must provide their name, contact information, and a description of the services they offer. This helps to build a network of trusted providers for seniors.",
     )
     @providers_bp.arguments(ServiceProviderSchema)
     @providers_bp.response(201, ServiceProviderSchema)
@@ -52,11 +53,11 @@ class ServiceProviderList(MethodView):
 
 @providers_bp.route("/<string:user_id>")
 class ServiceProviderResource(MethodView):
-
     @jwt_required()
     @roles_accepted("service_provider")
     @providers_bp.doc(
-        summary="To get information about a specific service provider, this route can be used with their ID"
+        summary="Get information about a specific service provider.",
+        description="This endpoint returns detailed information about a specific service provider, including their name, contact information, and the services they offer. This is useful for learning more about a provider before engaging with them.",
     )
     @providers_bp.response(200, ServiceProviderSchema)
     def get(self, user_id):
@@ -64,7 +65,10 @@ class ServiceProviderResource(MethodView):
 
     @jwt_required()
     @roles_accepted("service_provider")
-    @providers_bp.doc(summary="Service provider can update their information by ID")
+    @providers_bp.doc(
+        summary="Update a service provider's information.",
+        description="This endpoint allows a service provider to update their profile information. This is useful for keeping their contact information and service offerings up-to-date.",
+    )
     @providers_bp.arguments(ServiceProviderSchema)
     @providers_bp.response(200, ServiceProviderSchema)
     def put(self, update_data, user_id):
@@ -77,7 +81,8 @@ class ServiceProviderResource(MethodView):
     @jwt_required()
     @roles_accepted("service_provider")
     @providers_bp.doc(
-        summary="Specific service provider can delete their information by ID"
+        summary="Delete a service provider's profile.",
+        description="This endpoint allows a service provider to delete their profile. This is a permanent action and cannot be undone. This is useful for removing providers who are no longer active.",
     )
     @providers_bp.response(204)
     def delete(self, user_id):
@@ -88,11 +93,11 @@ class ServiceProviderResource(MethodView):
 
 @providers_bp.route("/<string:user_id>/events")
 class ProviderEvents(MethodView):
-
     @jwt_required()
     @roles_accepted("service_provider")
     @providers_bp.doc(
-        summary="To get all events for a specific service provider, user can use this route along with service provider's ID"
+        summary="Get all events for a specific service provider.",
+        description="This endpoint returns a list of all events that have been created by a specific service provider. This is useful for seeing what activities a provider has organized in the past or has planned for the future.",
     )
     @providers_bp.response(200, EventSchema(many=True))
     def get(self, user_id):

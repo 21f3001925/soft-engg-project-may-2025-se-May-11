@@ -25,7 +25,7 @@ medications_blp = Blueprint(
     "Medications",
     "Medications",
     url_prefix="/api/v1/medications",
-    description="This route is responsible for managing medication schedules...",
+    description="This route is responsible for managing medication schedules for senior citizens. It allows caregivers and seniors to add, view, update, and delete medication reminders. This feature is essential for ensuring that seniors take their medications on time, which is crucial for their health and well-being.",
 )
 
 
@@ -65,7 +65,8 @@ class MedicationsResource(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
     @medications_blp.doc(
-        summary="Get all medications for the specified senior citizen."
+        summary="Get all medications for the specified senior citizen.",
+        description="This endpoint returns a list of all medications for a specific senior citizen. A caregiver can access this information by providing the senior's ID as a query parameter. This helps caregivers and seniors to keep track of all the medications that need to be taken.",
     )
     @medications_blp.response(200, MedicationResponseSchema(many=True))
     def get(self):
@@ -80,7 +81,8 @@ class MedicationsResource(MethodView):
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
     @medications_blp.doc(
-        summary="Add a new medication for the specified senior citizen."
+        summary="Add a new medication for the specified senior citizen.",
+        description="This endpoint allows a caregiver or a senior citizen to add a new medication to the schedule. The user must provide the medication's name, dosage, and the time it should be taken. A reminder is automatically scheduled to notify the senior citizen when it's time to take the medication.",
     )
     @medications_blp.arguments(MedicationSchema())
     @medications_blp.response(201, MedicationAddResponseSchema())
@@ -153,7 +155,10 @@ class MedicationsResource(MethodView):
 class MedicationByIdResource(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen", "caregiver")
-    @medications_blp.doc(summary="Get a specific medication by ID.")
+    @medications_blp.doc(
+        summary="Get a specific medication by ID.",
+        description="This endpoint returns the details of a specific medication, including its name, dosage, and the time it should be taken. This is useful for viewing the details of a single medication.",
+    )
     @medications_blp.response(200, MedicationResponseSchema)
     def get(self, medication_id):
         user_id = get_jwt_identity()
@@ -235,7 +240,10 @@ class MedicationByIdResource(MethodView):
     #     return med
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @medications_blp.doc(summary="Update a medication by ID.")
+    @medications_blp.doc(
+        summary="Update a medication by ID.",
+        description="This endpoint allows a caregiver or a senior citizen to update the details of a medication. This is useful for making changes to the medication's name, dosage, or the time it should be taken. When the time is updated, the reminder is automatically rescheduled.",
+    )
     @medications_blp.arguments(MedicationSchema(partial=True))
     @medications_blp.response(200, MedicationResponseSchema)
     def put(self, data, medication_id):
@@ -299,7 +307,10 @@ class MedicationByIdResource(MethodView):
 
     @jwt_required()
     @roles_accepted("caregiver", "senior_citizen")
-    @medications_blp.doc(summary="Delete a medication by ID.")
+    @medications_blp.doc(
+        summary="Delete a medication by ID.",
+        description="This endpoint allows a caregiver or a senior citizen to delete a medication from the schedule. This is useful for removing medications that are no longer needed. When a medication is deleted, the reminder is also canceled.",
+    )
     @medications_blp.response(200, MedicationAddResponseSchema)
     def delete(self, medication_id):
         user_id = get_jwt_identity()

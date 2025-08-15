@@ -24,7 +24,8 @@ class EmergencyTriggerSchema(Schema):
 class EmergencyTrigger(MethodView):
     @jwt_required()
     @emergency_blp.doc(
-        summary="When the senior citizen presses the emergency button, the system will trigger alert to the caregivers which will help them attend to the needs of senior citizen."
+        summary="Trigger an emergency alert.",
+        description="This endpoint allows a senior citizen to trigger an emergency alert. When this endpoint is called, it sends a notification to the senior's registered caregivers and emergency contacts. The alert can optionally include the senior's current location (latitude and longitude) to help caregivers respond more quickly.",
     )
     @emergency_blp.response(200, description="Emergency alert triggered successfully")
     def post(self):

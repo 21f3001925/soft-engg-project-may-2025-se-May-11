@@ -46,14 +46,18 @@ class EventList(MethodView):
     @jwt_required()
     @roles_accepted("service_provider", "senior_citizen")
     @events_bp.doc(
-        summary="All events organised by various service providers are listed when the route is called."
+        summary="Get a list of all events.",
+        description="This endpoint returns a list of all events that have been created by service providers. This allows senior citizens to browse and discover new activities to participate in.",
     )
     @events_bp.response(200, EventSchema(many=True))
     def get(self):
         events = Event.query.all()
         return events
 
-    @events_bp.doc(summary="Service provider can add a new event using this endpoint.")
+    @events_bp.doc(
+        summary="Create a new event.",
+        description="This endpoint allows a service provider to create a new event. The service provider must provide the event's name, date and time, location, and a description. This helps to keep the community engaged with new and exciting activities.",
+    )
     @events_bp.arguments(EventSchema)
     @events_bp.response(201, EventSchema)
     def post(self, new_data):
@@ -68,7 +72,8 @@ class EventResource(MethodView):
     @jwt_required()
     @roles_accepted("service_provider", "senior_citizen")
     @events_bp.doc(
-        summary="To get specific event details, service provider can use this route with the event id."
+        summary="Get the details of a specific event.",
+        description="This endpoint returns the details of a specific event, including its name, date and time, location, and description. This allows users to view more information about an event before deciding to join.",
     )
     @events_bp.response(200, EventSchema)
     def get(self, event_id):
@@ -76,7 +81,8 @@ class EventResource(MethodView):
         return event
 
     @events_bp.doc(
-        summary="To update event details, service provider can use this route with the event id."
+        summary="Update the details of a specific event.",
+        description="This endpoint allows a service provider to update the details of an event they have created. This is useful for making changes to the event's name, date and time, location, or description.",
     )
     @events_bp.arguments(EventSchema(partial=True))
     @events_bp.response(200, EventSchema)
@@ -90,7 +96,8 @@ class EventResource(MethodView):
     @jwt_required()
     @roles_accepted("service_provider")
     @events_bp.doc(
-        summary="To delete an event, service provider can use this route with the event id."
+        summary="Delete a specific event.",
+        description="This endpoint allows a service provider to delete an event they have created. This is useful for removing events that have been canceled or are no longer relevant.",
     )
     @events_bp.response(204)
     def delete(self, event_id):
@@ -104,7 +111,8 @@ class EventJoin(MethodView):
     @jwt_required()
     @roles_accepted("senior_citizen")
     @events_bp.doc(
-        summary="When senior citizens see the event list, they might want to join an event. They can use this route to join an event."
+        summary="Join an event.",
+        description="This endpoint allows a senior citizen to join an event. When a senior citizen joins an event, a reminder is automatically scheduled to notify them before the event starts. This helps to ensure that they don't miss out on any activities.",
     )
     @events_bp.arguments(EventJoinSchema)
     @events_bp.response(
@@ -187,7 +195,7 @@ class JoinedEvents(MethodView):
     @roles_accepted("senior_citizen")
     @events_bp.doc(
         summary="Get all event IDs the current senior citizen has joined.",
-        description="Returns a list of event IDs that the currently authenticated senior citizen has joined. Useful for displaying which events the user is attending.",
+        description="This endpoint returns a list of event IDs that the currently authenticated senior citizen has joined. This is useful for displaying which events the user is attending and for managing their schedule.",
     )
     @events_bp.response(200, JoinedEventsSchema)
     def get(self):
@@ -203,7 +211,7 @@ class EventUnjoin(MethodView):
     @roles_accepted("senior_citizen", "service_provider")
     @events_bp.doc(
         summary="Cancel event attendance for a senior citizen.",
-        description="Allows a senior citizen to cancel their attendance for an event, or a service provider to remove a senior from an event by specifying both event_id and senior_id.",
+        description="This endpoint allows a senior citizen to cancel their attendance for an event. A service provider can also use this endpoint to remove a senior from an event by specifying both the event ID and the senior's ID. This helps to keep the event's attendee list up-to-date.",
     )
     @events_bp.arguments(EventJoinSchema)
     @events_bp.response(200, description="Successfully cancelled event attendance")
@@ -242,8 +250,8 @@ class EventAttendees(MethodView):
     @jwt_required()
     @roles_accepted("service_provider")
     @events_bp.doc(
-        summary="Get list of attendees for a specific event.",
-        description="Returns a list of users (with name and email) who have joined the specified event. Only accessible by service providers.",
+        summary="Get the list of attendees for a specific event.",
+        description="This endpoint returns a list of users (with their name and email) who have joined a specific event. This is only accessible to service providers and helps them to manage their events and communicate with the attendees.",
     )
     @events_bp.response(200, AttendeeSchema(many=True))
     def get(self, event_id):

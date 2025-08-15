@@ -24,7 +24,8 @@ auth_blp = Blueprint(
 @auth_blp.route("/signup")
 class SignupResource(MethodView):
     @auth_blp.doc(
-        summary="This route creates a new user. A user can be a caregiver, senior citizen or service provider. They can sign up using this route.",
+        summary="Create a new user account.",
+        description="This endpoint allows a new user to create an account. The user can be a caregiver, a senior citizen, or a service provider. The user must provide an email or phone number, a password, and their role. Upon successful registration, the user is automatically logged in and an access token is returned.",
     )
     @auth_blp.arguments(SignupSchema())
     @auth_blp.response(201, TokenSchema())
@@ -87,7 +88,8 @@ class SignupResource(MethodView):
 @auth_blp.route("/login")
 class LoginResource(MethodView):
     @auth_blp.doc(
-        summary="This route allows a user to log in using their username and password. They will get an access token in return."
+        summary="Log in an existing user.",
+        description="This endpoint allows an existing user to log in using their email or phone number and password. Upon successful authentication, an access token is returned, which can be used to access protected routes.",
     )
     @auth_blp.arguments(LoginSchema())
     @auth_blp.response(200, TokenSchema())
@@ -131,7 +133,10 @@ class LoginResource(MethodView):
 
 @auth_blp.route("/change-password")
 class ChangePasswordResource(MethodView):
-    @auth_blp.doc(summary="Change user's password")
+    @auth_blp.doc(
+        summary="Change the current user's password.",
+        description="This endpoint allows a logged-in user to change their password. The user must provide their current password and a new password. This helps to keep the user's account secure.",
+    )
     @auth_blp.arguments(ChangePasswordSchema())
     @auth_blp.response(200, MsgSchema())
     @auth_blp.alt_response(400, schema=MsgSchema())
