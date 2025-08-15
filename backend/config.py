@@ -65,6 +65,10 @@ class Config:
             "task": "tasks.send_daily_news_update",
             "schedule": crontab(hour=9, minute=0),
         },
+        "check-missed-appointments-every-hour": {
+            "task": "tasks.check_missed_appointments",
+            "schedule": 30.0,
+        },
     }
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
