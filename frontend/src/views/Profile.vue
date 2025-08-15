@@ -158,11 +158,8 @@ function goToEmergencyContacts() {
       <hr />
       <br />
       <ul>
-        <li>Topics Liked: {{ user?.topics_liked }}</li>
-        <li>Comments Posted: {{ user?.comments_posted }}</li>
         <li>Appointments Missed: {{ user?.appointments_missed }}</li>
         <li>Medications Missed: {{ user?.medications_missed }}</li>
-        <li>Total Screentime (Hrs): {{ user?.total_screentime }}</li>
       </ul>
     </div>
   </div>
