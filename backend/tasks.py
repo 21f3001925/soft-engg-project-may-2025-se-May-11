@@ -25,8 +25,43 @@ def get_flask_app():
 
 @celery_app.task
 def send_reminder_notification(appointment_id, title, location, date_time, user_email):
+    """
+    Sends a reminder via Socket.IO, Email, and SMS for a specific appointment.
+    """
     app = get_flask_app()
     with app.app_context():
+        from models import User
+
+        # --- 1. Find the User ---
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            print(f"Appointment Reminder Task: User with email {user_email} not found.")
+            return
+
+        # --- 2. Create the Reminder Message ---
+        try:
+            # Format the date and time for the message
+            event_datetime_obj = datetime.fromisoformat(date_time)
+            formatted_time = event_datetime_obj.strftime("%B %d, %Y at %I:%M %p")
+        except ValueError:
+            formatted_time = date_time  # Fallback to the raw string
+
+        message = (
+            f"Appointment Reminder: Your appointment '{title}' at {location} "
+            f"is scheduled for {formatted_time}."
+        )
+        email_subject = f"Reminder: {title}"
+
+        # --- 3. Send Email and SMS ---
+        if user.phone_number:
+            send_sms(user.phone_number, message)
+            print(f"✅ Sent appointment SMS reminder to {user.username}")
+
+        if user.email:
+            send_email(app, user.email, email_subject, message)
+            print(f"✅ Sent appointment email reminder to {user.username}")
+
+        # --- 4. Keep the original real-time notification ---
         socketio.emit(
             "reminder",
             {
@@ -270,13 +305,7 @@ def check_missed_medications():
         from models import User, Medication, CaregiverAssignment, db
 
         print("Running 'check_missed_medications' task...")
-
-        # --- THE FIX IS ON THIS LINE ---
-        # Change this:
-        # now = datetime.utcnow()
-        # To this, which creates a timezone-AWARE datetime object:
         now = datetime.now(pytz.utc)
-
         cutoff = now - timedelta(minutes=10)
 
         missed_meds = Medication.query.filter(
@@ -287,7 +316,6 @@ def check_missed_medications():
             print("No missed medications found.")
             return
 
-        # --- Added Logging ---
         print(
             f"Found {len(missed_meds)} missed medication(s). Processing notifications..."
         )
@@ -299,10 +327,26 @@ def check_missed_medications():
 
             # Increment medications_missed for the senior citizen
             if senior_user.senior_citizen:
-                senior_user.senior_citizen.medications_missed += 1
+                senior_user.senior_citizen.medications_missed = (
+                    senior_user.senior_citizen.medications_missed or 0
+                ) + 1
                 db.session.add(senior_user.senior_citizen)
-                db.session.commit()
 
+            # --- NEW: Notify the Senior Citizen Directly ---
+            senior_msg = (
+                f"ALERT: You may have missed your dose of {med.dosage} of {med.name}, "
+                f"which was due at {med.time.strftime('%I:%M %p')}. Please check your schedule."
+            )
+            if senior_user.phone_number:
+                send_sms(senior_user.phone_number, senior_msg)
+                print(f"Sent missed medication SMS to senior {senior_user.username}")
+            if senior_user.email:
+                send_email(
+                    app, senior_user.email, "Missed Medication Alert", senior_msg
+                )
+                print(f"Sent missed medication email to senior {senior_user.username}")
+
+            # --- EXISTING: Notify the Caregiver (if they exist) ---
             assignment = CaregiverAssignment.query.filter_by(
                 senior_id=senior_user.user_id
             ).first()
@@ -312,27 +356,77 @@ def check_missed_medications():
                     print(
                         f"Found caregiver '{caregiver_user.username}' for senior '{senior_user.username}'."
                     )
-                    msg = (
+                    missed_count = (
+                        senior_user.senior_citizen.medications_missed
+                        if senior_user.senior_citizen
+                        else "N/A"
+                    )
+                    caregiver_msg = (
                         f"ALERT: {senior_user.name} may have missed their dose of "
                         f"{med.dosage} of {med.name}, which was due at "
                         f"{med.time.strftime('%I:%M %p')}. "
-                        f"Total medications missed: {senior_user.senior_citizen.medications_missed if senior_user.senior_citizen else 'N/A'}."
+                        f"Total medications missed: {missed_count}."
                     )
 
                     if caregiver_user.phone_number:
-                        send_sms(caregiver_user.phone_number, msg)
+                        send_sms(caregiver_user.phone_number, caregiver_msg)
                         print(
-                            f"Sent missed medication SMS to {caregiver_user.username}"
+                            f"Sent missed medication SMS to caregiver {caregiver_user.username}"
                         )
-
-                    # --- FIX: Added a check for the email address ---
                     if caregiver_user.email:
                         send_email(
-                            app, caregiver_user.email, "Missed Medication Alert", msg
+                            app,
+                            caregiver_user.email,
+                            "Missed Medication Alert",
+                            caregiver_msg,
                         )
                         print(
-                            f"Sent missed medication email to {caregiver_user.username}"
+                            f"Sent missed medication email to caregiver {caregiver_user.username}"
                         )
+
+        db.session.commit()
+
+
+@celery_app.task
+def check_missed_appointments():
+    """
+    Checks for past appointments that were not marked as 'Completed' or 'Cancelled'
+    and increments the missed appointment counter for the senior.
+    """
+    app = get_flask_app()
+    with app.app_context():
+        from models import User, Appointment, db
+
+        print("Running 'check_missed_appointments' task...")
+        now = datetime.now(pytz.utc)
+
+        # Find all appointments in the past that are still marked as 'Scheduled'
+        missed_appointments = Appointment.query.filter(
+            Appointment.date_time <= now, Appointment.status == "Scheduled"
+        ).all()
+
+        if not missed_appointments:
+            print("No missed appointments found.")
+            return
+
+        print(f"Found {len(missed_appointments)} missed appointment(s). Processing...")
+
+        for appt in missed_appointments:
+            senior_user = User.query.get(appt.senior_id)
+            if senior_user and senior_user.senior_citizen:
+                # Increment the counter
+                senior_user.senior_citizen.appointments_missed = (
+                    senior_user.senior_citizen.appointments_missed or 0
+                ) + 1
+
+                # Update the appointment status to 'Missed'
+                appt.status = "Missed"
+
+                db.session.add(senior_user.senior_citizen)
+                db.session.add(appt)
+
+        db.session.commit()
+        print("Finished processing missed appointments.")
 
 
 @celery_app.task
