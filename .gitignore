@@ -7,3 +7,5 @@ instance/
 instance
 .venv/
 node_modules/
+backend/celerybeat-schedule-shm
+backend/celerybeat-schedule-wal
