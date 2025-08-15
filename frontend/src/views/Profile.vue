@@ -43,8 +43,20 @@ const cancelEdit = () => {
 
 const saveProfile = async () => {
   try {
-    // Use the data from our editable object to send the update
-    const { avatar_url, ...profileData } = editableUser.value;
+    // Destructure to get ONLY the fields the backend schema allows for an update.
+    // This prevents sending read-only or server-calculated fields.
+    const { username, email, name, age, city, country, phone_number } = editableUser.value;
+
+    const profileData = {
+      username,
+      email,
+      name,
+      age,
+      city,
+      country,
+      phone_number,
+    };
+
     const response = await profileService.updateProfile(profileData);
     userStore.setUser(response.data); // Update the store with the new data
     isEditing.value = false;
