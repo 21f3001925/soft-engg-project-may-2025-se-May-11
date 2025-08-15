@@ -18,6 +18,7 @@ cd ..
 echo "Installing frontend dependencies..."
 cd frontend
 npm install
+npm install date-fns-tz
 cd ..
 
 echo "Installation complete!"
