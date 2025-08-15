@@ -16,8 +16,17 @@ const formData = ref({
   title: '',
   date_time: '',
   location: '',
-  reminder_time: '',
+  reminder_time: '', // Field is already here, which is great
 });
+
+// Helper to format ISO date string for datetime-local input
+function toInputDatetime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  // Adjust for local timezone and format
+  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+}
 
 // Fetch from backend
 async function getAppointments() {
@@ -31,6 +40,7 @@ async function getAppointments() {
         name: appt.title,
         date_time: appt.date_time,
         location: appt.location,
+        reminder_time: appt.reminder_time, // Make sure to get reminder_time from API
         type: 'appointment',
       }));
     } else {
@@ -43,23 +53,30 @@ async function getAppointments() {
   }
 }
 
+// *** MODIFIED FUNCTION ***
 // Add or update appointment
 async function submitAppointment() {
   try {
-    // Copy formData without reminder_time
-    const payload = { ...formData.value };
-    delete payload.reminder_time;
+    // Copy all form data into the payload
+    const payload = {
+      title: formData.value.title,
+      date_time: new Date(formData.value.date_time).toISOString(),
+      location: formData.value.location,
+    };
+
+    // **CHANGE**: If reminder_time is set, add it to the payload in ISO format
+    if (formData.value.reminder_time) {
+      payload.reminder_time = new Date(formData.value.reminder_time).toISOString();
+    }
 
     if (editingId.value) {
-      // Pass the ID and filtered data separately
-      await appointmentService.updateAppointment(
-        editingId.value, // just the ID
-        payload, // no reminder_time
-      );
-      showToast('Appointment updated');
+      // **CHANGE**: Send the full payload, including reminder_time if present
+      await appointmentService.updateAppointment(editingId.value, payload);
+      showToast('Appointment and reminder updated');
     } else {
+      // **CHANGE**: Send the full payload for new appointments
       await appointmentService.addAppointment(payload);
-      showToast('Appointment added');
+      showToast('Appointment and reminder added');
     }
 
     showForm.value = false;
@@ -82,14 +99,16 @@ async function cancelAppointment(item) {
   }
 }
 
+// *** MODIFIED FUNCTION ***
 // Edit appointment
 function editAppointment(item) {
   editingId.value = item.id;
   formData.value = {
     title: item.name,
-    date_time: item.date_time,
+    // **CHANGE**: Use helper to format dates for the input fields
+    date_time: toInputDatetime(item.date_time),
     location: item.location,
-    reminder_time: item.reminder_time || null, //
+    reminder_time: toInputDatetime(item.reminder_time),
   };
   showForm.value = true;
 }
@@ -121,7 +140,6 @@ onMounted(getAppointments);
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
 
-    <!-- Appointment list -->
     <div v-else class="appointment-list">
       <ScheduleRowItem
         v-for="item in appointments"
@@ -132,12 +150,9 @@ onMounted(getAppointments);
       >
         <div class="flex flex-col gap-1">
           <div class="font-semibold">{{ item.title }}</div>
-
-          <!-- Show date & time only here, not inside ScheduleRowItem -->
           <div class="text-sm text-gray-600">
             <strong>Date:</strong> {{ new Date(item.date_time).toLocaleDateString() }}
           </div>
-
           <div class="flex gap-2 mt-2">
             <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
             <button class="edit-button" @click="editAppointment(item)">Edit</button>
@@ -146,60 +161,68 @@ onMounted(getAppointments);
       </ScheduleRowItem>
     </div>
 
-    <!-- Action buttons -->
     <div class="action-bar">
       <button class="add-button" @click="showForm = true">Add Appointment</button>
       <button class="add-button" @click="goToeventsPage">Explore Events</button>
     </div>
 
-    <!-- Small add/update form -->
     <div v-if="showForm" class="form-popup p-6 bg-black rounded-xl shadow-md max-w-md mx-auto">
       <h3 class="text-xl font-semibold mb-4 text-white-800">
         {{ editingId ? 'Edit Appointment' : 'Add Appointment' }}
       </h3>
       <form @submit.prevent="submitAppointment" class="space-y-4">
-        <input
-          v-model="formData.title"
-          placeholder="Title"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
-        />
-        <input
-          v-model="formData.date_time"
-          type="datetime-local"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
-        />
-        <input
-          v-model="formData.location"
-          placeholder="Location"
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-black"
-        />
+        <label class="text-white">Title</label>
+        <input v-model="formData.title" placeholder="Title" required class="form-input" />
+
+        <label class="text-white">Date & Time</label>
+        <input v-model="formData.date_time" type="datetime-local" required class="form-input" />
+
+        <label class="text-white">Location</label>
+        <input v-model="formData.location" placeholder="Location" class="form-input" />
+
+        <label class="text-white">Reminder Time (Optional)</label>
+        <input v-model="formData.reminder_time" type="datetime-local" class="form-input" />
 
         <div class="form-actions flex justify-end space-x-3 mt-4">
-          <button
-            type="submit"
-            class="px-5 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700 transition"
-          >
+          <button type="submit" class="submit-button">
             {{ editingId ? 'Update' : 'Save' }}
           </button>
-          <button
-            type="button"
-            @click="showForm = false"
-            class="px-5 py-2 rounded-md bg-red-500 text-white hover:bg-red-700 transition"
-          >
-            Cancel
-          </button>
+          <button type="button" @click="showForm = false" class="cancel-form-button">Cancel</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Toast -->
   <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 </template>
 
 <style scoped>
+/* Your existing styles are fine, just adding a class for the inputs */
+.form-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  color: black;
+}
+.submit-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: #28a745; /* Green */
+  color: white;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.cancel-form-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: #dc3545; /* Red */
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 .appointments {
   padding: 2rem;
   max-width: 1200px;
@@ -235,18 +258,22 @@ h1 {
   color: white;
   padding: 0.3rem 0.6rem;
   border-radius: 4px;
+  border: none;
 }
 .edit-button {
   background-color: #0984e3;
   color: white;
   padding: 0.3rem 0.6rem;
   border-radius: 4px;
+  border: none;
 }
 .add-button {
   margin-top: 15px;
   background-color: #00cec9;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  color: white;
+  border: none;
 }
 .action-bar {
   display: flex;
@@ -259,23 +286,16 @@ h1 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
-  padding: 1rem;
+  background: #333; /* Darker background for the form */
+  padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  width: 8cm;
-  height: auto;
-}
-.form-popup input {
-  width: 100%;
-  padding: 0.4rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  width: 90%;
+  max-width: 450px;
 }
 .form-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 .toast {
   position: fixed;

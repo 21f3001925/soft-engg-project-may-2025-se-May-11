@@ -160,6 +160,7 @@ class Appointment(db.Model):
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
     reminder_task_id = db.Column(db.String(36), nullable=True)
+    status = db.Column(db.String(50), default="Scheduled", nullable=False)
 
     senior = relationship("SeniorCitizen", back_populates="appointments")
 

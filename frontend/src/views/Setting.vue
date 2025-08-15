@@ -41,9 +41,6 @@ const toggleDarkMode = async () => {
       />
     </div>
 
-    <h2>Notification Preferences</h2>
-    <div class="placeholder">[Notification preference will be added here]</div>
-
     <h2>Change Password</h2>
     <ChangePasswordForm />
   </div>
