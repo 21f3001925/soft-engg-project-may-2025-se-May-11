@@ -33,12 +33,15 @@ const progressPercentage = computed(() => (totalMeds.value === 0 ? 0 : (complete
         </span>
         <span>Medications</span>
       </div>
-      <span class="px-4 py-1 rounded-full bg-blue-100 text-blue-700 text-base font-semibold"
+      <span
+        v-if="scheduleStore.medications && scheduleStore.medications.length > 0"
+        class="px-4 py-1 rounded-full bg-blue-100 text-blue-700 text-base font-semibold"
         >{{ completedMeds }}/{{ totalMeds }}</span
       >
     </div>
     <div class="text-gray-500 text-sm mb-6 ml-14">Your daily medication schedule</div>
-    <div class="mb-6 ml-14">
+
+    <div v-if="scheduleStore.medications && scheduleStore.medications.length > 0" class="mb-6 ml-14">
       <div class="flex items-center justify-between mb-1">
         <span class="text-sm text-gray-600">Daily Progress</span>
         <span class="text-xs text-blue-700 font-semibold">{{ Math.round(progressPercentage) }}%</span>
@@ -51,14 +54,32 @@ const progressPercentage = computed(() => (totalMeds.value === 0 ? 0 : (complete
       </div>
     </div>
     <div class="border-t border-gray-200 my-6"></div>
-    <ul>
-      <MedicationItem
-        v-for="med in scheduleStore.medications"
-        :key="med.id"
-        :med="med"
-        :toggle-medication="toggleMedication"
-      />
-    </ul>
+
+    <div v-if="scheduleStore.medications && scheduleStore.medications.length > 0">
+      <ul>
+        <MedicationItem
+          v-for="med in scheduleStore.medications"
+          :key="med.id"
+          :med="med"
+          :toggle-medication="toggleMedication"
+        />
+      </ul>
+    </div>
+
+    <div v-else class="text-center py-8">
+      <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Pill class="w-8 h-8 text-blue-600" />
+      </div>
+      <h3 class="text-lg font-semibold text-gray-700 mb-2">No Medications Scheduled</h3>
+      <p class="text-gray-500 text-sm mb-4">You don't have any medications scheduled for today</p>
+      <router-link
+        to="/medications"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+      >
+        Add Medications
+        <ChevronRight class="w-4 h-4" />
+      </router-link>
+    </div>
     <router-link
       to="/medications"
       class="mt-8 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 hover:from-blue-100 hover:to-purple-100 transition-all duration-300 text-blue-700 font-semibold shadow-sm hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-blue-300"

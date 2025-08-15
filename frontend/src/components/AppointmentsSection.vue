@@ -81,9 +81,11 @@ scheduleStore.getAppointments();
       </div>
     </div>
 
-    <div class="text-purple-500 text-sm mb-6 ml-14">Your schedule looks great!</div>
+    <div class="text-purple-500 text-sm mb-6 ml-14">
+      {{ appointments.length > 0 ? 'Your schedule looks great!' : 'No upcoming appointments' }}
+    </div>
 
-    <div class="space-y-4">
+    <div v-if="appointments && appointments.length > 0" class="space-y-4">
       <div
         v-for="appt in appointments"
         :key="appt.id"
@@ -131,6 +133,21 @@ scheduleStore.getAppointments();
           <span>Reminder: {{ appt.reminderLeft }}</span>
         </div>
       </div>
+    </div>
+
+    <div v-else class="text-center py-8">
+      <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Calendar class="w-8 h-8 text-purple-600" />
+      </div>
+      <h3 class="text-lg font-semibold text-gray-700 mb-2">No Upcoming Appointments</h3>
+      <p class="text-gray-500 text-sm mb-4">You don't have any appointments scheduled</p>
+      <router-link
+        to="/appointments"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium"
+      >
+        Schedule Appointment
+        <ChevronRight class="w-4 h-4" />
+      </router-link>
     </div>
 
     <!-- Form messages -->
