@@ -305,15 +305,13 @@ def check_missed_medications():
         from models import User, Medication, CaregiverAssignment, db
 
         print("Running 'check_missed_medications' task...")
-        now = datetime.now(pytz.utc)
+        now = datetime.now()
         cutoff = now - timedelta(minutes=10)
 
         missed_meds = Medication.query.filter(
             Medication.isTaken.is_(False),
             Medication.time <= cutoff,
-            Medication.missed_counted.is_(
-                False
-            ),  # Only count medications not already counted
+            Medication.missed_counted.is_(False),
         ).all()
 
         if not missed_meds:

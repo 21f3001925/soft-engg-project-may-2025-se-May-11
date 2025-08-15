@@ -44,11 +44,11 @@ const submitForm = async () => {
   // Prepare payload, reminder_time is optional
   const payload = {
     title: title.value,
-    date_time: new Date(dateTime.value).toISOString(),
+    date_time: dateTime.value,
     location: location.value,
   };
   if (reminderTime.value) {
-    payload.reminder_time = new Date(reminderTime.value).toISOString();
+    payload.reminder_time = reminderTime.value;
   }
 
   const result = await scheduleStore.addAppointment(payload);

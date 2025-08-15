@@ -95,7 +95,6 @@ class AppointmentListResource(MethodView):
                 date_time=data["date_time"],
                 location=data["location"],
                 reminder_time=data.get("reminder_time"),
-                # --- FINAL FIX: Convert UUID to string before saving ---
                 senior_id=str(senior_id),
             )
 

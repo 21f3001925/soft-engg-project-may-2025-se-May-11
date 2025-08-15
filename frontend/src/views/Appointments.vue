@@ -19,13 +19,10 @@ const formData = ref({
   reminder_time: '', // Field is already here, which is great
 });
 
-// Helper to format ISO date string for datetime-local input
-function toInputDatetime(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  const tzOffset = date.getTimezoneOffset() * 60000;
-  // Adjust for local timezone and format
-  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+// Helper to format date string for datetime-local input
+function toInputDatetime(dateString) {
+  if (!dateString) return '';
+  return dateString.slice(0, 16);
 }
 
 // Fetch from backend
@@ -60,13 +57,13 @@ async function submitAppointment() {
     // Copy all form data into the payload
     const payload = {
       title: formData.value.title,
-      date_time: new Date(formData.value.date_time).toISOString(),
+      date_time: formData.value.date_time,
       location: formData.value.location,
     };
 
-    // **CHANGE**: If reminder_time is set, add it to the payload in ISO format
+    // If reminder_time is set, add it to the payload
     if (formData.value.reminder_time) {
-      payload.reminder_time = new Date(formData.value.reminder_time).toISOString();
+      payload.reminder_time = formData.value.reminder_time;
     }
 
     if (editingId.value) {
