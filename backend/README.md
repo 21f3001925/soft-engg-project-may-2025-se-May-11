@@ -13,8 +13,16 @@ This is the backend service for the Senior Care web application, providing a RES
 
 ## Tech Stack
 
-- **Framework:** [Flask](https://flask.palletsprojects.com/)
-- **Database:** [SQLAlchemy](https://www.sqlalchemy.org/)
+- **Framework:** [Flask](https://flask.palletsprojects.com/) with Flask-RESTful
+- **Database:** [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) ORM with SQLite
+- **Authentication:** [Flask-JWT-Extended](https://flask-jwt-extended.readthedocs.io/) for JWT tokens
+- **API Documentation:** [Flask-Smorest](https://flask-smorest.readthedocs.io/) for OpenAPI/Swagger docs
+- **OAuth:** [Authlib](https://authlib.org/) with Google OAuth for social login
+- **News API:** [NewsAPI](https://newsapi.org/) for news content
+- **Task Queue:** [Celery](https://docs.celeryproject.org/) with Redis for background tasks
+- **Scheduling:** [APScheduler](https://apscheduler.readthedocs.io/) for task scheduling
+- **Email:** [Flask-Mail](https://pythonhosted.org/Flask-Mail/) for email notifications
+- **SMS:** [Twilio](https://www.twilio.com/) for SMS notifications
 - **Code Quality:**
   - [Black](https://black.readthedocs.io/) for code formatting
   - [Ruff](https://beta.ruff.rs/) for linting
@@ -62,11 +70,45 @@ The server will start at http://127.0.0.1:5000
 
 This project uses pre-commit hooks to automatically lint and format code before commits. If a commit fails, fix the reported issues and try again.
 
+## Testing
+
+### Running Tests
+
+Run the complete test suite:
+
+```bash
+poetry run pytest
+```
+
+Run tests with verbose output:
+
+```bash
+poetry run pytest -v
+```
+
+### Running Specific Tests
+
+Run specific test files:
+
+```bash
+poetry run pytest tests/test_emergency_contacts.py
+poetry run pytest tests/test_news.py
+poetry run pytest tests/test_oauth.py
+poetry run pytest tests/test_providers.py
+```
+
+Run a single test function:
+
+```bash
+poetry run pytest tests/test_auth.py::test_login_success
+```
+
 ## Contributing
 
 1. Create a new branch for your feature
 2. Make your changes
-3. Submit a pull request
+3. Run tests to ensure everything works
+4. Submit a pull request
 
 ---
 
