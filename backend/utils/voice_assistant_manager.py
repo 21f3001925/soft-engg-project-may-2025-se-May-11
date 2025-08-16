@@ -1,7 +1,5 @@
 from datetime import datetime, timezone
 from google.cloud import texttospeech
-from datetime import datetime, timezone
-from google.cloud import texttospeech
 from google.cloud import speech
 
 from utils.ai_manager import get_query_intent
@@ -22,7 +20,7 @@ def process_voice_query(audio_content: bytes, user_id: str) -> bytes:
     """Processes a voice query (audio), gets intent, fetches data, and returns audio."""
 
     if not stt_client:
-        return b''  # STT client not configured
+        return b""  # STT client not configured
 
     # 1. Convert audio to text using Google Cloud STT
     audio = speech.RecognitionAudio(content=audio_content)
@@ -102,7 +100,7 @@ def process_voice_query(audio_content: bytes, user_id: str) -> bytes:
 def _generate_tts_audio(text: str) -> bytes:
     """Helper function to generate TTS audio using Google Cloud TTS."""
     if not tts_client:
-        return b''  # Return empty bytes if TTS client not configured
+        return b""  # Return empty bytes if TTS client not configured
 
     synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
@@ -121,4 +119,4 @@ def _generate_tts_audio(text: str) -> bytes:
         return tts_response.audio_content
     except Exception as e:
         print(f"Error during TTS: {e}")
-        return b''
+        return b""
