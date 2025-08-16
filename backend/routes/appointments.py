@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_security import roles_accepted
 from flask import request
 from models import Appointment, db, User, CaregiverAssignment
+import pytz
 
 import uuid
 from tasks import send_reminder_notification
@@ -84,31 +85,39 @@ class AppointmentListResource(MethodView):
     def post(self, data):
         try:
             user_id = get_jwt_identity()
-            # Get senior_id from request data if provided
             requested_senior_id = data.get("senior_id")
             senior_id = AppointmentUtils.get_senior_id(user_id, requested_senior_id)
 
             senior_user = User.query.get(str(senior_id))
 
+            local_tz = pytz.timezone("Asia/Kolkata")
+
+            # Make the incoming naive datetime aware of its local timezone (IST)
+            aware_date_time = local_tz.localize(data["date_time"])
+
             appointment = Appointment(
                 appointment_id=str(uuid.uuid4()),
                 title=data["title"],
-                date_time=data["date_time"],
+                # Convert the aware local time to UTC before saving to the DB
+                date_time=aware_date_time.astimezone(pytz.utc),
                 location=data["location"],
                 reminder_time=data.get("reminder_time"),
                 senior_id=str(senior_id),
             )
 
             if appointment.reminder_time:
+                # This part for the reminder remains the same
+                aware_reminder_time = local_tz.localize(appointment.reminder_time)
                 task = send_reminder_notification.apply_async(
                     args=[
                         str(appointment.appointment_id),
                         appointment.title,
                         appointment.location,
-                        appointment.date_time.isoformat(),
+                        # Pass the original ISO format for display purposes
+                        aware_date_time.isoformat(),
                         senior_user.email,
                     ],
-                    eta=appointment.reminder_time,
+                    eta=aware_reminder_time,
                 )
                 appointment.reminder_task_id = task.id
 
@@ -161,7 +170,6 @@ class AppointmentDetailResource(MethodView):
         if not appt:
             abort(404, message="Appointment not found")
 
-        # Validate access to this appointment
         try:
             AppointmentUtils.get_senior_id(user_id, appt.senior_id)
         except PermissionError:
@@ -170,16 +178,45 @@ class AppointmentDetailResource(MethodView):
         for field in ["title", "location"]:
             if field in data:
                 setattr(appt, field, data[field])
+
+        time_updated = False
+
         if "date_time" in data:
-            appt.date_time = data["date_time"]
+            time_updated = True
+            local_tz = pytz.timezone("Asia/Kolkata")
+            aware_date_time = local_tz.localize(data["date_time"])
+            appt.date_time = aware_date_time.astimezone(pytz.utc)
+
+        if "reminder_time" in data:
+            time_updated = True
+
+        if time_updated and appt.status == "Missed":
+            print(
+                f"Appointment {appt.appointment_id} was 'Missed'. Reverting to 'Scheduled'."
+            )
+            appt.status = "Scheduled"
+
+            senior_user = User.query.get(str(appt.senior_id))
+            if senior_user and senior_user.senior_citizen:
+                senior_user.senior_citizen.appointments_missed = max(
+                    0, senior_user.senior_citizen.appointments_missed - 1
+                )
+                db.session.add(senior_user.senior_citizen)
+                print(
+                    f"Decremented missed appointment count for senior {senior_user.username}."
+                )
 
         if appt.reminder_task_id:
             celery_app.control.revoke(appt.reminder_task_id)
+            appt.reminder_task_id = None
 
-        if "reminder_time" in data:
+        if "reminder_time" in data and data["reminder_time"] is not None:
             appt.reminder_time = data["reminder_time"]
 
             senior_user = User.query.get(str(appt.senior_id))
+            local_tz = pytz.timezone("Asia/Kolkata")
+            aware_reminder_time = local_tz.localize(appt.reminder_time)
+
             task = send_reminder_notification.apply_async(
                 args=[
                     str(appt.appointment_id),
@@ -188,7 +225,7 @@ class AppointmentDetailResource(MethodView):
                     appt.date_time.isoformat(),
                     senior_user.email,
                 ],
-                eta=appt.reminder_time,
+                eta=aware_reminder_time,
             )
             appt.reminder_task_id = task.id
 
