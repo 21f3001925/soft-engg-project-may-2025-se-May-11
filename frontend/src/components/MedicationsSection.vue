@@ -24,7 +24,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mb-10 p-8 rounded-3xl shadow-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/30 h-full">
+  <div
+    class="medications-section mb-10 p-8 rounded-3xl shadow-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/30 h-full"
+  >
     <div class="flex items-center justify-between mb-2">
       <div class="flex items-center text-2xl font-bold">
         <span

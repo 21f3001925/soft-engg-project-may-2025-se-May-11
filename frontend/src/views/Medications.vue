@@ -47,25 +47,15 @@ async function markAsTaken(item) {
 
 async function handleFormSubmit(formData) {
   try {
-    // For "Edit" mode, the ID MUST come from the 'selectedMedication' ref,
-    // because the form data doesn't contain the ID.
     if (isEdit.value && selectedMedication.value) {
       const medicationIdToUpdate = selectedMedication.value.medication_id;
 
-      // Ensure the ID is valid before proceeding
       if (!medicationIdToUpdate) {
         throw new Error('Medication ID is missing. Cannot update.');
       }
 
-      // The 'formData' is the payload from the form, which includes 'isTaken'
       const payload = { ...formData };
 
-      // The parent component is responsible for converting the time format
-      if (payload.time) {
-        payload.time = new Date(payload.time).toISOString();
-      }
-
-      // 'seniorId' is null here, which is correct for the senior's own view
       await medicationStore.updateMedication(medicationIdToUpdate, payload, null);
       showToast(`Updated: "${payload.name || selectedMedication.value.name}"`);
     } else {
@@ -96,7 +86,7 @@ function showToast(message) {
   <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
   <div class="medications">
-    <h1 style="text-align: center">
+    <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
       {{ isCaregiverView ? "Senior's Medications" : 'Your Medications' }}
     </h1>
   </div>

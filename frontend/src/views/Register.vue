@@ -63,7 +63,7 @@ function handleGoogleSignUp() {
 
 <template>
   <div
-    class="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-2 px-4"
+    class="register-page flex-1 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-2 px-4"
   >
     <div class="w-full max-w-md p-8 rounded-3xl shadow-xl border border-blue-100 bg-white/90">
       <div class="mb-8 text-center">

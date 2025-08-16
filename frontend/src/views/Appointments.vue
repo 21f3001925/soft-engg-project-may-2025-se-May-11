@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import appointmentService from '../services/appointmentService.js';
 import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import { Calendar, Clock, MapPin, XCircle, AlertCircle } from 'lucide-vue-next';
 
 const router = useRouter();
 const toastMessage = ref('');
@@ -25,6 +26,21 @@ function toInputDatetime(dateString) {
   return dateString.slice(0, 16);
 }
 
+function isOverdue(dateString) {
+  if (!dateString) return false;
+  const appointmentDate = new Date(dateString);
+  const now = new Date();
+  return appointmentDate < now;
+}
+
+function shouldShowOverdue(item) {
+  // Don't show overdue for appointments that are already marked as Missed or Completed
+  if (item.status === 'Missed' || item.status === 'Completed') {
+    return false;
+  }
+  return isOverdue(item.date_time);
+}
+
 // Fetch from backend
 async function getAppointments() {
   loading.value = true;
@@ -38,6 +54,7 @@ async function getAppointments() {
         date_time: appt.date_time,
         location: appt.location,
         reminder_time: appt.reminder_time, // Make sure to get reminder_time from API
+        status: appt.status || 'Scheduled',
         type: 'appointment',
       }));
     } else {
@@ -96,6 +113,20 @@ async function cancelAppointment(item) {
   }
 }
 
+async function completeAppointment(item) {
+  try {
+    await appointmentService.completeAppointment(item.id);
+    const appointment = appointments.value.find((a) => a.id === item.id);
+    if (appointment) {
+      appointment.status = 'Completed';
+    }
+    showToast(`Completed: "${item.name}"`);
+  } catch (err) {
+    showToast('Failed to complete appointment');
+    console.error(err);
+  }
+}
+
 // *** MODIFIED FUNCTION ***
 // Edit appointment
 function editAppointment(item) {
@@ -126,183 +157,233 @@ function showToast(message) {
   }, 2000);
 }
 
+function getStatusClass(status) {
+  switch (status) {
+    case 'Completed':
+      return 'text-green-600 font-semibold';
+    case 'Missed':
+      return 'text-red-600 font-semibold';
+    case 'Cancelled':
+      return 'text-gray-500 font-semibold';
+    default:
+      return 'text-blue-600 font-semibold';
+  }
+}
+
 onMounted(getAppointments);
 </script>
 
 <template>
-  <div class="appointments">
-    <h1>Your Appointments</h1>
+  <div class="appointments min-h-screen bg-gradient-to-br from-gray-50 to-purple-50">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <div class="mb-8">
+        <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
+          Your Appointments
+        </h1>
+      </div>
 
-    <div v-if="loading" class="loading">Loading appointments...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <span class="ml-3 text-gray-600">Loading appointments...</span>
+      </div>
 
-    <div v-else class="appointment-list">
-      <ScheduleRowItem
-        v-for="item in appointments"
-        :key="item.id"
-        :schedule="item"
-        :hide-type="true"
-        :compact-layout="true"
-      >
-        <div class="flex flex-col gap-1">
-          <div class="font-semibold">{{ item.title }}</div>
-          <div class="text-sm text-gray-600">
-            <strong>Date:</strong> {{ new Date(item.date_time).toLocaleDateString() }}
-          </div>
-          <div class="flex gap-2 mt-2">
-            <button class="cancel-button" @click="cancelAppointment(item)">Cancel</button>
-            <button class="edit-button" @click="editAppointment(item)">Edit</button>
+      <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <div class="text-red-600 text-lg font-semibold mb-2">Error Loading Appointments</div>
+        <div class="text-red-500">{{ error }}</div>
+      </div>
+
+      <div v-else-if="appointments.length === 0" class="text-center py-16">
+        <div
+          class="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+        >
+          <Calendar class="w-12 h-12 text-purple-600" />
+        </div>
+        <h3 class="text-2xl font-semibold text-gray-700 mb-3">No Appointments Scheduled</h3>
+        <p class="text-gray-500 mb-8 max-w-md mx-auto">
+          You don't have any appointments scheduled yet. Create your first appointment to get started!
+        </p>
+        <button
+          @click="showForm = true"
+          class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+        >
+          <Calendar class="w-5 h-5" />
+          Schedule First Appointment
+        </button>
+      </div>
+
+      <div v-else class="space-y-6">
+        <div class="grid gap-6">
+          <div
+            v-for="item in appointments"
+            :key="item.id"
+            :class="[
+              'bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden',
+              shouldShowOverdue(item) ? 'border-red-200 bg-red-50/30' : '',
+            ]"
+          >
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ item.title }}</h3>
+                    <span :class="getStatusClass(item.status)" class="px-3 py-1 rounded-full text-xs font-semibold">
+                      {{ item.status }}
+                    </span>
+                    <span
+                      v-if="shouldShowOverdue(item)"
+                      class="px-3 py-1 bg-red-100 text-red-700 border border-red-200 rounded-full text-xs font-semibold flex items-center gap-1"
+                    >
+                      <AlertCircle class="w-3 h-3" />
+                      Overdue
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    <div class="flex items-center gap-2">
+                      <Calendar class="w-4 h-4 text-purple-500" />
+                      <span><strong>Date:</strong> {{ new Date(item.date_time).toLocaleDateString() }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Clock class="w-4 h-4 text-purple-500" />
+                      <span
+                        ><strong>Time:</strong>
+                        {{
+                          new Date(item.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        }}</span
+                      >
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <MapPin class="w-4 h-4 text-purple-500" />
+                      <span><strong>Location:</strong> {{ item.location }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-3 mt-6">
+                <button
+                  v-if="item.status !== 'Completed'"
+                  class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                  @click="cancelAppointment(item)"
+                >
+                  Cancel
+                </button>
+                <button
+                  v-if="item.status !== 'Completed'"
+                  class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  @click="editAppointment(item)"
+                >
+                  Edit
+                </button>
+                <button
+                  v-if="item.status !== 'Completed'"
+                  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                  @click="completeAppointment(item)"
+                >
+                  Complete
+                </button>
+                <span v-else class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium"> Completed </span>
+              </div>
+            </div>
           </div>
         </div>
-      </ScheduleRowItem>
+      </div>
+
+      <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          @click="showForm = true"
+          class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+        >
+          Add New Appointment
+        </button>
+        <button
+          @click="goToeventsPage"
+          class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+        >
+          Explore Events
+        </button>
+      </div>
     </div>
 
-    <div class="action-bar">
-      <button class="add-button" @click="showForm = true">Add Appointment</button>
-      <button class="add-button" @click="goToeventsPage">Explore Events</button>
-    </div>
+    <div v-if="showForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">
+              {{ editingId ? 'Edit Appointment' : 'Add Appointment' }}
+            </h3>
+            <button @click="showForm = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <XCircle class="w-6 h-6" />
+            </button>
+          </div>
 
-    <div v-if="showForm" class="form-popup p-6 bg-black rounded-xl shadow-md max-w-md mx-auto">
-      <h3 class="text-xl font-semibold mb-4 text-white-800">
-        {{ editingId ? 'Edit Appointment' : 'Add Appointment' }}
-      </h3>
-      <form @submit.prevent="submitAppointment" class="space-y-4">
-        <label class="text-white">Title</label>
-        <input v-model="formData.title" placeholder="Title" required class="form-input" />
+          <form @submit.prevent="submitAppointment" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+              <input
+                v-model="formData.title"
+                placeholder="Appointment title"
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+              />
+            </div>
 
-        <label class="text-white">Date & Time</label>
-        <input v-model="formData.date_time" type="datetime-local" required class="form-input" />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
+              <input
+                v-model="formData.date_time"
+                type="datetime-local"
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+              />
+            </div>
 
-        <label class="text-white">Location</label>
-        <input v-model="formData.location" placeholder="Location" class="form-input" />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <input
+                v-model="formData.location"
+                placeholder="Appointment location"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+              />
+            </div>
 
-        <label class="text-white">Reminder Time (Optional)</label>
-        <input v-model="formData.reminder_time" type="datetime-local" class="form-input" />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Reminder Time (Optional)</label>
+              <input
+                v-model="formData.reminder_time"
+                type="datetime-local"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+              />
+            </div>
 
-        <div class="form-actions flex justify-end space-x-3 mt-4">
-          <button type="submit" class="submit-button">
-            {{ editingId ? 'Update' : 'Save' }}
-          </button>
-          <button type="button" @click="showForm = false" class="cancel-form-button">Cancel</button>
+            <div class="flex gap-3 pt-4">
+              <button
+                type="submit"
+                class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-semibold"
+              >
+                {{ editingId ? 'Update' : 'Save' }}
+              </button>
+              <button
+                type="button"
+                @click="showForm = false"
+                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
-  <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+  <div v-if="toastMessage" class="fixed top-4 right-4 z-50">
+    <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+      {{ toastMessage }}
+    </div>
+  </div>
 </template>
 
 <style scoped>
-/* Your existing styles are fine, just adding a class for the inputs */
-.form-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
-  color: black;
-}
-.submit-button {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  background-color: #28a745; /* Green */
-  color: white;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-}
-.cancel-form-button {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  background-color: #dc3545; /* Red */
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-.appointments {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-h1 {
-  margin-bottom: 2rem;
-  color: #1480be;
-  font-size: 2rem;
-  text-align: center;
-}
-.loading,
-.error,
-.empty {
-  text-align: center;
-  padding: 2rem;
-}
-.error {
-  color: #ed240d;
-}
-.appointment-list {
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgb(215, 213, 213);
-  max-width: 1000px;
-  margin: 0 auto;
-}
-.cancel-button {
-  background-color: #d63031;
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  border: none;
-}
-.edit-button {
-  background-color: #0984e3;
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  border: none;
-}
-.add-button {
-  margin-top: 15px;
-  background-color: #00cec9;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  color: white;
-  border: none;
-}
-.action-bar {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-.form-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #333; /* Darker background for the form */
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  width: 90%;
-  max-width: 450px;
-}
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-.toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4caf50;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 5px;
-  z-index: 9999;
-}
+/* Custom styles if needed */
 </style>

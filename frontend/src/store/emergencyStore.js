@@ -4,15 +4,22 @@ import emergencyService from '../services/emergencyService';
 export const useEmergencyStore = defineStore('emergency', {
   state: () => ({
     contacts: [],
+    loading: false,
+    error: null,
   }),
 
   actions: {
-    // The seniorId is optional. It will be undefined when a senior calls this.
     async fetchContactsForSenior(seniorId) {
-      // REMOVED the check that was causing the error.
-      // The service now handles the undefined seniorId case correctly.
-      const response = await emergencyService.getEmergencyContacts(seniorId);
-      this.contacts = response.data;
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await emergencyService.getEmergencyContacts(seniorId);
+        this.contacts = response.data;
+      } catch (error) {
+        this.error = 'Failed to load emergency contacts.';
+      } finally {
+        this.loading = false;
+      }
     },
 
     async deleteContact(contactId, seniorId) {

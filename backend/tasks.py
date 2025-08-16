@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from celery_app import celery_app
 from extensions import socketio
 from utils.notification import send_sms, send_email
+from models import User, Appointment, CaregiverAssignment, db
 
 
 _flask_app = None
@@ -398,43 +399,98 @@ def check_missed_medications():
 @celery_app.task
 def check_missed_appointments():
     """
-    Checks for past appointments that were not marked as 'Completed' or 'Cancelled'
-    and increments the missed appointment counter for the senior.
+    Checks for past appointments that were not marked as 'Completed' or 'Cancelled',
+    updates the status to 'Missed', and sends a notification to the senior and caregiver.
     """
     app = get_flask_app()
     with app.app_context():
-        from models import User, Appointment, db
 
-        print("Running 'check_missed_appointments' task...")
         now = datetime.now(pytz.utc)
 
-        # Find all appointments in the past that are still marked as 'Scheduled'
         missed_appointments = Appointment.query.filter(
             Appointment.date_time <= now, Appointment.status == "Scheduled"
         ).all()
 
         if not missed_appointments:
-            print("No missed appointments found.")
             return
 
         print(f"Found {len(missed_appointments)} missed appointment(s). Processing...")
 
         for appt in missed_appointments:
             senior_user = User.query.get(appt.senior_id)
-            if senior_user and senior_user.senior_citizen:
-                # Increment the counter
-                senior_user.senior_citizen.appointments_missed = (
-                    senior_user.senior_citizen.appointments_missed or 0
-                ) + 1
 
-                # Update the appointment status to 'Missed'
-                appt.status = "Missed"
+            if not senior_user or not senior_user.senior_citizen:
+                continue
 
-                db.session.add(senior_user.senior_citizen)
-                db.session.add(appt)
+            # Increment Counter
+            senior_user.senior_citizen.appointments_missed = (
+                senior_user.senior_citizen.appointments_missed or 0
+            ) + 1
+            appt.status = "Missed"
+            print("Successfully incremented missed counter and set status to 'Missed'.")
+
+            # 1. Notify the Senior Citizen
+            formatted_time = appt.date_time.astimezone(
+                pytz.timezone("Asia/Kolkata")
+            ).strftime("%B %d at %I:%M %p")
+            senior_msg = (
+                f"ALERT: It appears you missed your appointment for '{appt.title}' "
+                f"that was scheduled for {formatted_time}. Please reschedule if necessary."
+            )
+
+            if senior_user.phone_number:
+                print("Senior has a phone number. Attempting to send SMS.")
+                send_sms(senior_user.phone_number, senior_msg)
+            else:
+                print("Senior does not have a phone number. Skipping SMS.")
+
+            if senior_user.email:
+                print("Senior has an email. Attempting to send email.")
+                send_email(
+                    app, senior_user.email, "Missed Appointment Alert", senior_msg
+                )
+            else:
+                print("Senior does not have an email. Skipping email.")
+
+            # --- 2. Notify the Caregiver ---
+            assignment = CaregiverAssignment.query.filter_by(
+                senior_id=senior_user.user_id
+            ).first()
+            if assignment and (
+                caregiver_user := User.query.get(assignment.caregiver_id)
+            ):
+                print(
+                    f"Found caregiver: {caregiver_user.username}. Email: '{caregiver_user.email}', Phone: '{caregiver_user.phone_number}'"
+                )
+                caregiver_msg = (
+                    f"ALERT: {senior_user.name}'s appointment for '{appt.title}' "
+                    f"on {formatted_time} was missed. Please follow up with them."
+                )
+
+                if caregiver_user.phone_number:
+                    print("Caregiver has a phone number. Attempting to send SMS.")
+                    send_sms(caregiver_user.phone_number, caregiver_msg)
+                else:
+                    print("Caregiver does not have a phone number. Skipping SMS.")
+
+                if caregiver_user.email:
+                    print("Caregiver has an email. Attempting to send email.")
+                    send_email(
+                        app,
+                        caregiver_user.email,
+                        f"Missed Appointment for {senior_user.username}",
+                        caregiver_msg,
+                    )
+                else:
+                    print("Caregiver does not have an email. Skipping email.")
+            else:
+                print("No assigned caregiver found for this senior.")
+
+            db.session.add(senior_user.senior_citizen)
+            db.session.add(appt)
 
         db.session.commit()
-        print("Finished processing missed appointments.")
+        print("--- Finished processing and committed to DB. ---")
 
 
 @celery_app.task

@@ -13,4 +13,7 @@ export default {
   deleteAppointment(id) {
     return apiClient.delete(`/appointments/${id}`);
   },
+  completeAppointment(id) {
+    return apiClient.patch(`/appointments/${id}`, { status: 'Completed' });
+  },
 };

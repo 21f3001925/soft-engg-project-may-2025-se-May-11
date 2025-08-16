@@ -1,5 +1,5 @@
 /**
- * Returns a string like "1 month 2 weeks left" or "Time passed"
+ * Returns a string like "1 month 2 weeks left" or "Overdue"
  * @param {string|Date} dateTimeStr - Appointment time as ISO string or Date
  * @param {Date} [now=new Date()] - Current time, defaults to now
  * @returns {string}
@@ -9,7 +9,7 @@ export function getReminderTime(dateTimeStr, now = new Date()) {
   const diffMs = appointmentTime - now;
 
   if (diffMs <= 0) {
-    return 'Time passed';
+    return 'Overdue';
   }
 
   const diffMinutes = Math.floor(diffMs / 60000);
