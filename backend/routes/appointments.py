@@ -12,6 +12,7 @@ from schemas.appointments import (
     AppointmentSchema,
     AppointmentResponseSchema,
     AppointmentAddResponseSchema,
+    AppointmentStatusUpdateSchema,
 )
 
 appointments_blp = Blueprint(
@@ -191,6 +192,61 @@ class AppointmentDetailResource(MethodView):
             )
             appt.reminder_task_id = task.id
 
+        db.session.add(appt)
+        db.session.commit()
+        return appt
+
+    @jwt_required()
+    @roles_accepted("caregiver", "senior_citizen")
+    @appointments_blp.arguments(AppointmentStatusUpdateSchema)
+    @appointments_blp.response(200, AppointmentResponseSchema)
+    @appointments_blp.doc(
+        summary="Update appointment status (e.g., mark as completed)."
+    )
+    def patch(self, data, appointment_id):
+        user_id = get_jwt_identity()
+
+        appt = Appointment.query.filter_by(appointment_id=str(appointment_id)).first()
+        if not appt:
+            abort(404, message="Appointment not found")
+
+        # Validate access to this appointment
+        try:
+            AppointmentUtils.get_senior_id(user_id, appt.senior_id)
+        except PermissionError:
+            abort(403, message="You are not authorized to modify this appointment.")
+
+        if "status" in data:
+            new_status = data["status"]
+
+            if new_status == "Completed":
+                if appt.status == "Completed":
+                    abort(400, message="Appointment is already completed.")
+
+                senior_user = User.query.get(str(appt.senior_id))
+                if not senior_user or not senior_user.senior_citizen:
+                    abort(404, message="Senior citizen not found.")
+
+                previous_status = appt.status
+                appt.status = "Completed"
+
+                if (
+                    previous_status == "Missed"
+                    and senior_user.senior_citizen.appointments_missed > 0
+                ):
+                    senior_user.senior_citizen.appointments_missed = max(
+                        0, senior_user.senior_citizen.appointments_missed - 1
+                    )
+
+                if appt.reminder_task_id:
+                    celery_app.control.revoke(appt.reminder_task_id)
+                    appt.reminder_task_id = None
+
+                db.session.add(senior_user.senior_citizen)
+            else:
+                appt.status = new_status
+
+        db.session.add(appt)
         db.session.commit()
         return appt
 
