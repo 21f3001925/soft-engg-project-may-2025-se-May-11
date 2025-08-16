@@ -92,32 +92,49 @@ class ReportUpload(MethodView):
 class ReportDownload(MethodView):
     @jwt_required()
     def get(self, report_id):
-        """Download the summary of a report as a PDF"""
+        """Download the summary of a report as a PDF or plain text"""
         report = Report.query.get_or_404(report_id)
 
         if not report.summary:
             abort(404, message="Summary not available for this report.")
 
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
+        format = request.args.get("format")
 
-        # Add a title
-        pdf.cell(200, 10, txt="AI Report Analysis", ln=True, align="C")
-        pdf.ln(10)
+        if format == "text":
+            summary_text = report.summary
+            if isinstance(report.summary, (bytes, bytearray)):
+                summary_text = report.summary.decode("utf-8", "replace")
 
-        # Add the summary text
-        # The text needs to be encoded properly to handle special characters
-        summary_text = report.summary.encode("latin-1", "replace").decode("latin-1")
-        pdf.multi_cell(0, 10, txt=summary_text)
+            return Response(
+                summary_text,
+                mimetype="text/plain",
+                headers={
+                    "Content-disposition": f"attachment; filename=summary_{report_id}.txt"
+                },
+            )
+        else:
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
 
-        # Create the PDF response
-        pdf_output = pdf.output(dest="S").encode("latin-1")
+            # Add a title
+            pdf.cell(200, 10, txt="AI Report Analysis", ln=True, align="C")
+            pdf.ln(10)
 
-        return Response(
-            pdf_output,
-            mimetype="application/pdf",
-            headers={
-                "Content-disposition": f"attachment; filename=summary_{report_id}.pdf"
-            },
-        )
+            # Add the summary text
+            if isinstance(report.summary, (bytes, bytearray)):
+                summary_text = report.summary.decode("utf-8", "replace")
+            else:
+                summary_text = report.summary
+            pdf.multi_cell(0, 10, txt=summary_text)
+
+            # Create the PDF response
+            pdf_output = pdf.output(dest="S")
+
+            return Response(
+                pdf_output,
+                mimetype="application/pdf",
+                headers={
+                    "Content-disposition": f"attachment; filename=summary_{report_id}.pdf"
+                },
+            )

@@ -84,17 +84,36 @@ const submitReport = async () => {
 
 const downloadSummary = async () => {
   if (!reportId.value) return;
+
   try {
-    const response = await reportService.downloadReport(reportId.value);
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `summary-${reportId.value}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } catch (err) {
-    error.value = 'Could not download the summary.';
+    // Attempt PDF download first
+    const pdfResponse = await reportService.downloadReport(reportId.value, 'pdf');
+    const pdfUrl = window.URL.createObjectURL(new Blob([pdfResponse.data]));
+    const pdfLink = document.createElement('a');
+    pdfLink.href = pdfUrl;
+    pdfLink.setAttribute('download', `summary-${reportId.value}.pdf`);
+    document.body.appendChild(pdfLink);
+    pdfLink.click();
+    document.body.removeChild(pdfLink);
+  } catch (pdfErr) {
+    console.error('PDF download failed, attempting text download:', pdfErr);
+    error.value = 'Could not download PDF summary. Attempting text download...';
+
+    try {
+      // Fallback to text download
+      const textResponse = await reportService.downloadReport(reportId.value, 'text');
+      const textUrl = window.URL.createObjectURL(new Blob([textResponse.data], { type: 'text/plain' }));
+      const textLink = document.createElement('a');
+      textLink.href = textUrl;
+      textLink.setAttribute('download', `summary-${reportId.value}.txt`);
+      document.body.appendChild(textLink);
+      textLink.click();
+      document.body.removeChild(textLink);
+      error.value = ''; // Clear error if text download succeeds
+    } catch (textErr) {
+      console.error('Text download also failed:', textErr);
+      error.value = 'Could not download summary in either PDF or text format.';
+    }
   }
 };
 </script>

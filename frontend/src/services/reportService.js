@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/reports';
+const API_URL = 'http://localhost:5001/api/reports';
 
 const uploadReport = (file) => {
   const formData = new FormData();
@@ -16,13 +16,21 @@ const uploadReport = (file) => {
   });
 };
 
-const downloadReport = (reportId) => {
+const downloadReport = (reportId, format = 'pdf') => {
   const token = localStorage.getItem('token');
-  return axios.get(`${API_URL}/${reportId}/download`, {
+  let url = `${API_URL}/${reportId}/download`;
+  let responseType = 'blob';
+
+  if (format === 'text') {
+    url += '?format=text';
+    responseType = 'text';
+  }
+
+  return axios.get(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    responseType: 'blob', // Important for file downloads
+    responseType: responseType,
   });
 };
 
