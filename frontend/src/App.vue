@@ -18,6 +18,7 @@ const isCaregiverDashboard = computed(
 const isProviderDashboard = computed(() => route.path === '/service-provider');
 
 onMounted(async () => {
+  await userStore.initialize();
   const token = localStorage.getItem('token');
   if (token) {
     try {
@@ -58,36 +59,6 @@ onMounted(async () => {
 .app {
   min-height: 100vh;
   background: #f9fafb;
-}
-
-/* Font Size Classes */
-.small {
-  font-size: 16px;
-}
-.medium {
-  font-size: 19px;
-}
-.large {
-  font-size: 25px;
-}
-
-/* Theme Classes */
-.light {
-  background-color: white;
-  color: black;
-}
-
-.dark {
-  background-color: #121212;
-  color: #f0f0f0;
-}
-
-.dark a {
-  color: #90caf9;
-}
-
-.light a {
-  color: #1976d2;
 }
 
 .nav-content {

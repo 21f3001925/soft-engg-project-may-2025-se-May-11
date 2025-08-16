@@ -93,7 +93,9 @@ function shouldShowOverdue(appt) {
 </script>
 
 <template>
-  <div class="mb-10 p-8 rounded-3xl shadow-xl border border-purple-100 bg-gradient-to-br from-white to-purple-50/30">
+  <div
+    class="appointments-section mb-10 p-8 rounded-3xl shadow-xl border border-purple-100 bg-gradient-to-br from-white to-purple-50/30"
+  >
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center text-2xl font-bold">
         <span
@@ -102,10 +104,6 @@ function shouldShowOverdue(appt) {
           <Calendar class="w-7 h-7 text-white" />
         </span>
         <span class="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"> Appointments </span>
-      </div>
-      <div class="text-right">
-        <div class="text-sm text-gray-500">Upcoming</div>
-        <div class="text-2xl font-bold text-purple-600">{{ appointments.length }}</div>
       </div>
     </div>
 

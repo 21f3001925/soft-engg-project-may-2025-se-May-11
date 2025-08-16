@@ -177,8 +177,9 @@ onMounted(getAppointments);
   <div class="appointments min-h-screen bg-gradient-to-br from-gray-50 to-purple-50">
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">Your Appointments</h1>
-        <p class="text-gray-600">Manage and track all your scheduled appointments</p>
+        <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
+          Your Appointments
+        </h1>
       </div>
 
       <div v-if="loading" class="flex items-center justify-center py-12">

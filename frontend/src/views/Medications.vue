@@ -86,7 +86,7 @@ function showToast(message) {
   <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
   <div class="medications">
-    <h1 style="text-align: center">
+    <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
       {{ isCaregiverView ? "Senior's Medications" : 'Your Medications' }}
     </h1>
   </div>

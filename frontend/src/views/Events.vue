@@ -61,7 +61,9 @@ function showToast(message, type = 'success') {
 
 <template>
   <div class="events-page">
-    <h1>Upcoming Events</h1>
+    <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
+      Upcoming Events
+    </h1>
 
     <div v-if="events.length === 0" class="empty">No upcoming events.</div>
 

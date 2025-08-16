@@ -44,7 +44,7 @@ const handleEmergencyClick = async () => {
 
 <template>
   <section
-    class="mb-10 p-8 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative"
+    class="emergency-section p-6 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative"
     aria-label="Emergency contact widget"
   >
     <div class="relative z-10 text-center">
@@ -57,8 +57,8 @@ const handleEmergencyClick = async () => {
         >
           <Phone class="h-8 w-8 text-white" />
         </div>
-        <h3 class="text-xl font-bold mb-2">Emergency</h3>
-        <p class="text-red-100 text-sm mb-4">
+        <h3 class="text-xl font-bold mb-2" style="font-size: 1.25rem !important">Emergency</h3>
+        <p class="text-red-100 text-sm mb-4" style="font-size: 0.875rem !important">
           {{
             emergencyStore.loading
               ? 'Loading...'
@@ -72,13 +72,14 @@ const handleEmergencyClick = async () => {
       <a
         v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0 && emergencyStore.contacts[0].phone"
         :href="`tel:${emergencyStore.contacts[0].phone}`"
-        class="w-full h-20 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2"
+        class="w-full h-20 bg-white/20 hover:bg-white/40 text-white border-2 border-white/40 hover:border-white/60 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl mb-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+        style="font-size: 1.125rem !important"
         aria-label="Call emergency contact"
       >
         <Phone class="h-6 w-6" />
         <div class="text-center">
-          <div class="font-bold">{{ emergencyStore.contacts[0].name }}</div>
-          <div class="text-sm opacity-90">
+          <div class="font-bold" style="font-size: 1.125rem !important">{{ emergencyStore.contacts[0].name }}</div>
+          <div class="text-sm opacity-90" style="font-size: 0.875rem !important">
             {{ emergencyStore.contacts[0].relationship || emergencyStore.contacts[0].phone }}
           </div>
         </div>
@@ -88,6 +89,7 @@ const handleEmergencyClick = async () => {
         <a
           href="tel:911"
           class="w-full h-20 bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 hover:border-white/50 text-lg font-semibold backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-3 rounded-xl"
+          style="font-size: 1.125rem !important"
           aria-label="Call emergency services"
         >
           <Phone class="h-6 w-6" />
@@ -100,8 +102,12 @@ const handleEmergencyClick = async () => {
         <div
           class="w-full bg-white/10 text-white border border-white/30 text-sm font-medium rounded-xl p-3 text-center"
         >
-          <div class="text-yellow-200 font-semibold mb-1">⚠️ Add Your Emergency Contacts</div>
-          <div class="text-xs opacity-90">Set up personal emergency contacts for faster response</div>
+          <div class="text-yellow-200 font-semibold mb-1" style="font-size: 0.875rem !important">
+            ⚠️ Add Your Emergency Contacts
+          </div>
+          <div class="text-xs opacity-90" style="font-size: 0.75rem !important">
+            Set up personal emergency contacts for faster response
+          </div>
         </div>
       </div>
 
@@ -113,14 +119,22 @@ const handleEmergencyClick = async () => {
       </router-link>
 
       <div v-if="emergencyStore.contacts && emergencyStore.contacts.length > 0" class="mt-3">
-        <p class="text-xs text-red-100 opacity-80">Primary: {{ emergencyStore.contacts[0].name }}</p>
-        <p v-if="emergencyStore.contacts.length > 1" class="text-xs text-red-100 opacity-70">
+        <p class="text-xs text-red-100 opacity-80" style="font-size: 0.75rem !important">
+          Primary: {{ emergencyStore.contacts[0].name }}
+        </p>
+        <p
+          v-if="emergencyStore.contacts.length > 1"
+          class="text-xs text-red-100 opacity-70"
+          style="font-size: 0.75rem !important"
+        >
           +{{ emergencyStore.contacts.length - 1 }} more contact{{ emergencyStore.contacts.length > 2 ? 's' : '' }}
         </p>
       </div>
 
       <div v-else class="mt-3">
-        <p class="text-xs text-red-100 opacity-80">No emergency contacts set up yet</p>
+        <p class="text-xs text-red-100 opacity-80" style="font-size: 0.75rem !important">
+          No emergency contacts set up yet
+        </p>
       </div>
     </div>
   </section>
