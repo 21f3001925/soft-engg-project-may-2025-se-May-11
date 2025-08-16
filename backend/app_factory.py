@@ -24,6 +24,9 @@ from routes.appointments import appointments_blp
 from routes.emergency import emergency_blp
 from routes.caregiver_assignment import assignment_bp
 from routes.accessibility import accessibility_bp
+from routes.reports import reports_blp
+
+from routes.chat import chat_blp
 
 from config import Config
 
@@ -75,6 +78,9 @@ def create_app(config_class=None):
     api.register_blueprint(emergency_blp)
     api.register_blueprint(assignment_bp)
     api.register_blueprint(accessibility_bp)
+    api.register_blueprint(reports_blp)
+
+    api.register_blueprint(chat_blp)
 
     with app.app_context():
         db.create_all()
