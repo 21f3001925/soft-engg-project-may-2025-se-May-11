@@ -22,7 +22,7 @@ function timeAgo(isoTime) {
 
 <template>
   <div
-    class="mb-10 p-8 rounded-3xl shadow-xl border border-green-100 bg-gradient-to-br from-white to-green-50/30 h-full"
+    class="news-feed-section mb-10 p-8 rounded-3xl shadow-xl border border-green-100 bg-gradient-to-br from-white to-green-50/30 h-full"
   >
     <div class="flex items-center text-2xl font-bold mb-2">
       <span

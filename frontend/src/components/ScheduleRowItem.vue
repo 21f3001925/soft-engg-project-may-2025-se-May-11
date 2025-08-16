@@ -10,12 +10,23 @@ const formattedTime = (dateStr) => {
   if (!dateStr) return 'No time specified';
   return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
+
+const formattedDate = (dateStr) => {
+  if (!dateStr) return 'No date specified';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
 </script>
 
 <template>
   <div class="schedule-item">
     <div class="item-details">
       <div class="item-title">{{ schedule.name || schedule.title }}</div>
+      <div class="item-date">Date: {{ formattedDate(schedule.date_time || schedule.time) }}</div>
       <div class="item-time">Time: {{ formattedTime(schedule.date_time || schedule.time) }}</div>
       <div v-if="schedule.location" class="item-location">Location: {{ schedule.location }}</div>
       <div v-if="schedule.dosage" class="item-dosage">Dosage: {{ schedule.dosage }}</div>
@@ -46,6 +57,7 @@ const formattedTime = (dateStr) => {
   font-weight: 600;
   color: #333;
 }
+.item-date,
 .item-time,
 .item-location,
 .item-dosage {

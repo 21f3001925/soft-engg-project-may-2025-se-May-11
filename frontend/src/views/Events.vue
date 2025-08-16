@@ -32,6 +32,27 @@ function formatDisplayDateTime(isoString) {
   return date.toLocaleString(undefined, options);
 }
 
+function formatDate(isoString) {
+  if (!isoString) return 'No date provided';
+  const date = new Date(isoString);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatTime(isoString) {
+  if (!isoString) return 'No time provided';
+  const date = new Date(isoString);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 async function handleJoinEvent(event) {
   try {
     await eventStore.joinEvent(event.event_id);
@@ -61,7 +82,9 @@ function showToast(message, type = 'success') {
 
 <template>
   <div class="events-page">
-    <h1>Upcoming Events</h1>
+    <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
+      Upcoming Events
+    </h1>
 
     <div v-if="events.length === 0" class="empty">No upcoming events.</div>
 
@@ -69,9 +92,10 @@ function showToast(message, type = 'success') {
       <div v-for="event in events" :key="event.event_id" class="event-card">
         <div class="event-info">
           <div class="event-title">{{ event.name }}</div>
-          <div class="event-date">{{ formatDisplayDateTime(event.date_time) }}</div>
+          <div class="event-date">Date: {{ formatDate(event.date_time) }}</div>
+          <div class="event-time">Time: {{ formatTime(event.date_time) }}</div>
+          <div class="event-location">Location: {{ event.location }}</div>
           <div class="event-description">{{ event.description }}</div>
-          <div class="event-location">{{ event.location }}</div>
         </div>
         <div class="event-actions">
           <button
@@ -136,19 +160,25 @@ h1 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 .event-info {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   width: 100%;
+  flex: 1;
 }
-.event-title,
+.event-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #111;
+}
 .event-date,
+.event-time,
 .event-location,
 .event-description {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #111;
+  color: #666;
+  font-size: 0.9rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 .event-actions {
   display: flex;

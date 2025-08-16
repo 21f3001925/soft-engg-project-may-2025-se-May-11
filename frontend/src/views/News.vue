@@ -56,8 +56,9 @@ const formatDate = (dateString) => {
 <template>
   <div class="p-8 max-w-6xl mx-auto bg-gray-50 min-h-screen">
     <div class="text-center mb-8">
-      <h1 class="mb-2 text-blue-600 text-4xl font-bold">Daily Updates / News</h1>
-      <p class="text-gray-600 text-lg mb-4">Stay informed with personalized news based on your interests</p>
+      <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
+        Daily Updates / News
+      </h1>
     </div>
 
     <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8">

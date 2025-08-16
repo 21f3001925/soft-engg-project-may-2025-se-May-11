@@ -160,7 +160,7 @@ function goToEmergencyContacts() {
             <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
           </div>
 
-          <div class="space-y-4">
+          <div v-if="user" class="space-y-4">
             <div v-if="!isEditing">
               <div class="space-y-3">
                 <div class="flex items-center p-3 bg-gray-50 rounded-lg">

@@ -39,6 +39,7 @@ export const useScheduleStore = defineStore('schedule', {
             date_time: appt.date_time,
             location: appt.location,
             reminder_time: appt.reminder_time || null,
+            status: appt.status || 'Scheduled',
             type: appt.type || 'appointment', // so filtering works
           }));
         } else {
@@ -92,6 +93,19 @@ export const useScheduleStore = defineStore('schedule', {
         if (medication) {
           medication.taken = !medication.taken;
         }
+      }
+    },
+
+    async completeAppointment(appointmentId) {
+      try {
+        await appointmentService.completeAppointment(appointmentId);
+        const appointment = this.schedule.items.find((appt) => appt.id === appointmentId);
+        if (appointment) {
+          appointment.status = 'Completed';
+        }
+      } catch (error) {
+        console.error('Error completing appointment:', error);
+        throw error;
       }
     },
   },

@@ -25,6 +25,10 @@ class AppointmentSchema(Schema):
     location = fields.String(required=True)
     reminder_time = fields.DateTime(allow_none=True)
     senior_id = fields.UUID(allow_none=True)  # Added for caregiver use
+    status = fields.String(
+        allow_none=True,
+        validate=validate.OneOf(["Scheduled", "Completed", "Missed", "Cancelled"]),
+    )
 
 
 class AppointmentResponseSchema(Schema):
@@ -37,8 +41,16 @@ class AppointmentResponseSchema(Schema):
     )
     reminder_time = fields.DateTime(allow_none=True)
     senior_id = fields.UUID(required=True)
+    status = fields.String(required=True)
 
 
 class AppointmentAddResponseSchema(Schema):
     message = fields.String(required=True)
     appointment_id = fields.UUID(required=True)
+
+
+class AppointmentStatusUpdateSchema(Schema):
+    status = fields.String(
+        required=True,
+        validate=validate.OneOf(["Scheduled", "Completed", "Missed", "Cancelled"]),
+    )

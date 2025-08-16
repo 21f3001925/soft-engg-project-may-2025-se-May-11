@@ -13,6 +13,7 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     displayName: (state) => state.user?.username || 'Guest User',
+    isAuthenticated: (state) => !!state.user,
   },
 
   actions: {
@@ -37,6 +38,7 @@ export const useUserStore = defineStore('user', {
         darkMode: false,
       };
       localStorage.removeItem('token');
+      localStorage.removeItem('roles');
     },
     async fetchAccessibilitySettings() {
       try {

@@ -1,6 +1,15 @@
 # Senior Care App
 
-This is the central repository for the Senior Care web application, a project for the Software Engineering course. The application is designed to help senior citizens manage their medication and appointment schedules, with a feature for caretakers to monitor their well-being.
+This is the central repository for the Senior Care web application, a project for the Software Engineering course. The application is designed to help senior citizens manage their medication and appointment schedules, with features for caretakers to monitor their well-being and service providers to manage local events.
+
+## 🎯 Project Overview
+
+The Senior Care App is a comprehensive web application that provides:
+
+- **For Senior Citizens**: Medication management, appointment scheduling, emergency contacts, and social event participation
+- **For Caregivers**: Monitoring tools, medication oversight, and appointment management for their seniors
+- **For Service Providers**: Event creation and management for local community activities
+- **Accessibility Features**: Dark mode, font size adjustments, and responsive design for better usability
 
 ## &#x1F680; Tech Stack
 
@@ -17,6 +26,17 @@ The repository is organized into two main directories:
 - `frontend/`: Contains the Vue.js client-side application. This is what users will see and interact with in their web browser. [**&#x2192; Go to Frontend README**](./frontend/README.md)
 
 This separation allows the backend and frontend engineers to work independently.
+
+## 🚀 Key Features
+
+- **Multi-Role Support**: Senior citizens, caregivers, and service providers
+- **Medication Management**: Schedule, track, and manage medications with reminders
+- **Appointment System**: Create and manage appointments
+- **Emergency Contacts**: Quick access to emergency contacts with one-tap calling
+- **Social Hub**: Discover and join local community events
+- **News Feed**: Personalized news and updates
+- **Accessibility**: Dark mode, adjustable font sizes, and responsive design
+- **Real-time Updates**: Live SMS & Email notifications and status tracking
 
 ## &#x1F527; Quick Start
 
@@ -57,6 +77,14 @@ You can now open your browser to the frontend URL to see the application. To sto
 ## Pre-commit Hooks
 
 This project uses pre-commit hooks to automatically lint and format code before commits. If a commit fails, fix the reported issues and try again.
+
+---
+
+## 🧪 Testing
+
+The application includes comprehensive testing:
+
+- **Backend**: Unit tests for API endpoints and business logic
 
 ---
 
