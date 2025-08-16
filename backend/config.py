@@ -1,16 +1,26 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 from celery.schedules import crontab
 
 load_dotenv()
 
+# Get the base directory of the project
+basedir = os.path.abspath(os.path.dirname(__file__))
+# Define the path for the instance folder
+instance_path = os.path.join(basedir, "instance")
+# Ensure the instance folder exists
+os.makedirs(instance_path, exist_ok=True)
+
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "your-very-secret-key")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", "sqlite:///senior_citizen.db"
+        "SQLALCHEMY_DATABASE_URI",
+        "sqlite:///" + os.path.join(instance_path, "senior_citizen.db"),
     )
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-very-secret-key")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)  # 24 hours
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     API_TITLE = "Senior Citizen API"
     API_VERSION = "v1"
@@ -22,9 +32,9 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.environ.get(
         "GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"
     )
-    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
     NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
-    BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
+    BASE_URL = os.environ.get("BASE_URL", "http://localhost:5001")
     API_SPEC_OPTIONS = {
         "servers": [{"url": BASE_URL}],
         "security": [{"jwt": []}],
@@ -46,8 +56,8 @@ class Config:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
-    CELERY_TIMEZONE = "Asia/Kolkata"
-    CELERY_ENABLE_UTC = False
+    CELERY_TIMEZONE = "UTC"
+    CELERY_ENABLE_UTC = True
     CELERY_BEAT_SCHEDULE = {
         "check-missed-medications-every-30-seconds": {
             "task": "tasks.check_missed_medications",
@@ -56,6 +66,10 @@ class Config:
         "send-daily-news-update-every-morning": {
             "task": "tasks.send_daily_news_update",
             "schedule": crontab(hour=9, minute=0),
+        },
+        "check-missed-appointments-every-hour": {
+            "task": "tasks.check_missed_appointments",
+            "schedule": 30.0,
         },
     }
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
@@ -72,6 +86,6 @@ class Config:
     # MAIL_SERVER = "smtp.gmail.com"
     # MAIL_PORT = 587
     # MAIL_USE_TLS = True
-    # MAIL_USERNAME = "your-email@gmail.com"
-    # MAIL_PASSWORD = "16 digit app password to be generated from google account"
-    # MAIL_DEFAULT_SENDER = "your-email@gmail.com"
+    # MAIL_USERNAME = ""
+    # MAIL_PASSWORD = ""
+    # MAIL_DEFAULT_SENDER = ""

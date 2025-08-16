@@ -15,11 +15,18 @@ import SeniorEmergencyContacts from '../views/SeniorEmergencyContacts.vue';
 import AccessibilitySettings from '../views/AccessibilitySettings.vue';
 import ServiceProviderDashboard from '../views/ServiceProviderDashboard.vue';
 import EmergencyContacts from '../views/EmergencyContacts.vue';
+import OAuthCallback from '../views/OAuthCallback.vue';
 
 const routes = [
   {
     path: '/',
     redirect: '/login',
+  },
+  {
+    path: '/oauth/callback',
+    name: 'OAuthCallback',
+    component: OAuthCallback,
+    meta: { requiresAuth: false },
   },
   {
     path: '/login',

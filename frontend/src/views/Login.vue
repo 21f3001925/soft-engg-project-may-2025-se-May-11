@@ -1,10 +1,13 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import mockApiService from '../services/mockApiService';
+import authService from '../services/authService';
+import profileService from '../services/profileService';
+import { useUserStore } from '../store/userStore';
 import { Mail, Phone } from 'lucide-vue-next';
 
 const router = useRouter();
+const userStore = useUserStore();
 const loginMethod = ref('email');
 const email = ref('');
 const phone = ref('');
@@ -13,17 +16,41 @@ const loading = ref(false);
 const error = ref('');
 
 function handleGoogleSignIn() {
-  alert('Google sign-in coming soon!');
+  // Redirect to backend Google OAuth endpoint
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1';
+  window.location.href = `${backendUrl}/oauth/google/login`;
 }
 
 const handleLogin = async () => {
   error.value = '';
   loading.value = true;
   try {
-    const response = await mockApiService.login();
-    if (response.status === 200) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    const payload = { password: password.value };
+    if (loginMethod.value === 'email') {
+      payload.email = email.value;
+    } else if (loginMethod.value === 'phone') {
+      payload.phone_number = phone.value;
+    }
+    const response = await authService.login(payload);
+    console.log('LOGIN RESPONSE:', response.data);
+    const token = response.data.access_token;
+    const roles = response.data.roles || [];
+    localStorage.setItem('token', token);
+    localStorage.setItem('roles', JSON.stringify(roles));
+
+    try {
+      const profileResponse = await profileService.getProfile();
+      userStore.setUser(profileResponse.data);
+    } catch (profileError) {
+      console.error('Error loading user profile after login:', profileError);
+    }
+
+    // Redirect based on role
+    if (roles.includes('caregiver')) {
+      router.push('/caregiver-dashboard');
+    } else if (roles.includes('service_provider')) {
+      router.push('/service-provider');
+    } else {
       router.push('/dashboard');
     }
   } catch (err) {
@@ -36,7 +63,7 @@ const handleLogin = async () => {
 
 <template>
   <div
-    class="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-20 px-4"
+    class="login-page flex-1 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-20 px-4"
   >
     <div class="w-full max-w-md p-8 rounded-3xl shadow-xl border border-blue-100 bg-white/90">
       <div class="mb-8 text-center">
@@ -46,8 +73,8 @@ const handleLogin = async () => {
         <p class="text-sm text-gray-500">Sign in to your SeniorCare dashboard</p>
       </div>
       <button
-        @click="handleGoogleSignIn"
         class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white shadow-md hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 font-bold text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 mb-6"
+        @click="handleGoogleSignIn"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
           <g>
@@ -90,10 +117,10 @@ const handleLogin = async () => {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="loginMethod = 'email'"
           role="tab"
           :aria-selected="loginMethod === 'email'"
           aria-controls="email-panel"
+          @click="loginMethod = 'email'"
         >
           <Mail class="w-5 h-5 mr-1" /> Email
         </button>
@@ -104,16 +131,16 @@ const handleLogin = async () => {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="loginMethod = 'phone'"
           role="tab"
           :aria-selected="loginMethod === 'phone'"
           aria-controls="phone-panel"
+          @click="loginMethod = 'phone'"
         >
           <Phone class="w-5 h-5 mr-1" /> Phone Number
         </button>
       </div>
       <div class="text-xs text-gray-500 mb-4 text-center">Choose how you want to sign in: Email or Phone Number.</div>
-      <form @submit.prevent="handleLogin" class="space-y-5">
+      <form class="space-y-5" @submit.prevent="handleLogin">
         <div v-if="loginMethod === 'email'" id="email-panel" role="tabpanel">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input

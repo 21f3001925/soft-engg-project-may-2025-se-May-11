@@ -22,7 +22,7 @@ function timeAgo(isoTime) {
 
 <template>
   <div
-    class="mb-10 p-8 rounded-3xl shadow-xl border border-green-100 bg-gradient-to-br from-white to-green-50/30 h-full"
+    class="news-feed-section mb-10 p-8 rounded-3xl shadow-xl border border-green-100 bg-gradient-to-br from-white to-green-50/30 h-full"
   >
     <div class="flex items-center text-2xl font-bold mb-2">
       <span
@@ -38,16 +38,21 @@ function timeAgo(isoTime) {
       <div v-else-if="newsFeedStore.error" class="text-red-500 text-center py-4">{{ newsFeedStore.error }}</div>
       <div
         v-else
-        v-for="item in newsFeedStore.news"
+        v-for="item in newsFeedStore.formattedNews"
         :key="item.id"
         class="group p-4 bg-white rounded-xl border border-gray-100 hover:border-green-200 hover:shadow-sm transition-all duration-300"
       >
         <div class="flex items-start space-x-3">
           <img :src="item.thumbnail" alt="thumbnail" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
-          <div>
-            <p class="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors">
+          <div class="flex-1">
+            <a
+              :href="item.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors hover:underline"
+            >
               {{ item.title }}
-            </p>
+            </a>
             <p class="text-xs text-gray-500 mt-1">{{ item.subtitle }} • {{ timeAgo(item.time) }}</p>
           </div>
         </div>

@@ -40,8 +40,11 @@ class User(db.Model, UserMixin):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     username = db.Column(db.String(255), unique=True, nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=True)
     password = db.Column(db.String(255), nullable=False)
+    age = db.Column(db.Integer, nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
     active = db.Column(db.Boolean(), default=True)
     fs_uniquifier = db.Column(
@@ -60,6 +63,12 @@ class User(db.Model, UserMixin):
     )
     caregiver = db.relationship(
         "Caregiver", uselist=False, back_populates="user", cascade="all, delete-orphan"
+    )
+    service_provider = db.relationship(
+        "ServiceProvider",
+        uselist=False,
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
     alerts = db.relationship(
         "Alert", back_populates="recipient", cascade="all, delete-orphan"
@@ -81,9 +90,15 @@ class SeniorCitizen(db.Model):
         db.ForeignKey("user.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    font_size = db.Column(db.String)
-    theme = db.Column(db.String)
+    age = db.Column(db.Integer)
+    font_size = db.Column(db.String, default="small")
+    theme = db.Column(db.String, default="light")
     news_categories = db.Column(db.String)  # Comma-separated news categories
+    topics_liked = db.Column(db.Integer, default=0)
+    comments_posted = db.Column(db.Integer, default=0)
+    appointments_missed = db.Column(db.Integer, default=0)
+    medications_missed = db.Column(db.Integer, default=0)
+    total_screentime = db.Column(db.Integer, default=0)
 
     user = relationship("User", back_populates="senior_citizen")
     appointments = relationship(
@@ -145,6 +160,7 @@ class Appointment(db.Model):
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
     reminder_task_id = db.Column(db.String(36), nullable=True)
+    status = db.Column(db.String(50), default="Scheduled", nullable=False)
 
     senior = relationship("SeniorCitizen", back_populates="appointments")
 
@@ -158,9 +174,12 @@ class Medication(db.Model):
     dosage = db.Column(db.String)
     time = db.Column(db.DateTime)
     isTaken = db.Column(db.Boolean, default=False)
+    missed_counted = db.Column(db.Boolean, default=False)
     senior_id = db.Column(
         db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
     )
+
+    reminder_task_id = db.Column(db.String(36), nullable=True)
 
     senior = relationship("SeniorCitizen", back_populates="medications")
 
@@ -199,13 +218,16 @@ class Feedback(db.Model):
 
 class ServiceProvider(db.Model):
     __tablename__ = "service_provider"
-    service_provider_id = db.Column(
-        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("user.user_id", ondelete="CASCADE"),
+        primary_key=True,
     )
-    name = db.Column(db.String, nullable=False)
-    contact_email = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, nullable=True)
+    contact_email = db.Column(db.String, nullable=True)
     phone_number = db.Column(db.String)
     services_offered = db.Column(db.String)
+    user = relationship("User", back_populates="service_provider")
     events = relationship(
         "Event", back_populates="service_provider", cascade="all, delete-orphan"
     )
@@ -217,12 +239,12 @@ class Event(db.Model):
         db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     name = db.Column(db.String)
-    date_time = db.Column(db.DateTime)
+    date_time = db.Column(db.DateTime(timezone=True))
     location = db.Column(db.String)
     description = db.Column(db.Text)
     service_provider_id = db.Column(
         db.String(36),
-        db.ForeignKey("service_provider.service_provider_id", ondelete="CASCADE"),
+        db.ForeignKey("service_provider.user_id", ondelete="CASCADE"),
     )
 
     service_provider = relationship("ServiceProvider", back_populates="events")
@@ -243,6 +265,10 @@ class EventAttendance(db.Model):
         db.ForeignKey("event.event_id", ondelete="CASCADE"),
         primary_key=True,
     )
+    # --- ADD THIS LINE ---
+    reminder_task_id = db.Column(
+        db.String(36), nullable=True
+    )  # To store the Celery task ID
 
     senior = relationship("SeniorCitizen", back_populates="event_attendance")
     event = relationship("Event", back_populates="attendance")

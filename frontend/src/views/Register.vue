@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Mail, Phone } from 'lucide-vue-next';
+import authService from '../services/authService';
 
 const router = useRouter();
 const registerMethod = ref('email');
@@ -12,7 +13,7 @@ const confirmPassword = ref('');
 const loading = ref(false);
 const error = ref('');
 const success = ref('');
-const role = ref('Care Taker');
+const role = ref('senior_citizen');
 
 const handleRegister = async () => {
   error.value = '';
@@ -30,21 +31,39 @@ const handleRegister = async () => {
     return;
   }
   loading.value = true;
-  setTimeout(() => {
+  try {
+    const payload = {
+      password: password.value,
+      role: role.value,
+    };
+    if (email.value) {
+      payload.email = email.value;
+    }
+    if (registerMethod.value === 'phone') {
+      payload.phone_number = phone.value;
+    }
+    const resp = await authService.signup(payload);
+    if (resp.status === 201) {
+      success.value = 'Registration successful! You can now log in.';
+      setTimeout(() => router.push('/login'), 1200);
+    }
+  } catch (e) {
+    error.value = e?.response?.data?.message || 'Registration failed.';
+  } finally {
     loading.value = false;
-    success.value = 'Registration successful! You can now log in.';
-    setTimeout(() => router.push('/login'), 1200);
-  }, 1000);
+  }
 };
 
 function handleGoogleSignUp() {
-  alert('Google sign-up coming soon!');
+  // Redirect to backend Google OAuth endpoint (same as login)
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1';
+  window.location.href = `${backendUrl}/oauth/google/login`;
 }
 </script>
 
 <template>
   <div
-    class="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-2 px-4"
+    class="register-page flex-1 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-2 px-4"
   >
     <div class="w-full max-w-md p-8 rounded-3xl shadow-xl border border-blue-100 bg-white/90">
       <div class="mb-8 text-center">
@@ -55,8 +74,8 @@ function handleGoogleSignUp() {
       </div>
       <button
         type="button"
-        @click="handleGoogleSignUp"
         class="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-base shadow hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        @click="handleGoogleSignUp"
       >
         <span class="inline-block w-5 h-5">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
@@ -101,10 +120,10 @@ function handleGoogleSignUp() {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="registerMethod = 'email'"
           role="tab"
           :aria-selected="registerMethod === 'email'"
           aria-controls="email-panel"
+          @click="registerMethod = 'email'"
         >
           <Mail class="w-5 h-5 mr-1" /> Email
         </button>
@@ -115,16 +134,16 @@ function handleGoogleSignUp() {
               ? 'bg-blue-600 text-white border-blue-700 scale-105 shadow-lg z-10'
               : 'bg-transparent text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-400 hover:shadow'
           "
-          @click="registerMethod = 'phone'"
           role="tab"
           :aria-selected="registerMethod === 'phone'"
           aria-controls="phone-panel"
+          @click="registerMethod = 'phone'"
         >
           <Phone class="w-5 h-5 mr-1" /> Phone Number
         </button>
       </div>
       <div class="text-xs text-gray-500 mb-4 text-center">Choose how you want to register: Email or Phone Number.</div>
-      <form @submit.prevent="handleRegister" class="space-y-5">
+      <form class="space-y-5" @submit.prevent="handleRegister">
         <div v-if="registerMethod === 'email'" id="email-panel" role="tabpanel">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input
@@ -188,9 +207,9 @@ function handleGoogleSignUp() {
             class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition text-base bg-white"
             required
           >
-            <option>Senior Citizen</option>
-            <option>Care Taker</option>
-            <option>Community Member</option>
+            <option value="senior_citizen">Senior Citizen</option>
+            <option value="caregiver">Caregiver</option>
+            <option value="service_provider">Service Provider</option>
           </select>
         </div>
         <div v-if="error" class="text-red-500 text-sm text-center">{{ error }}</div>

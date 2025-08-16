@@ -1,31 +1,36 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useEmergencyStore } from '../store/emergencyStore';
 import { useCaregiverStore } from '../store/caregiverStore';
+import { useEmergencyStore } from '../store/emergencyStore';
 import EmergencyContactForm from '../components/EmergencyContactForm.vue';
+import { useRoute } from 'vue-router';
 
-const emergencyStore = useEmergencyStore();
 const caregiverStore = useCaregiverStore();
+const emergencyStore = useEmergencyStore();
 const route = useRoute();
 
-const seniorId = parseInt(route.params.id);
+const seniorId = computed(() => route.params.id);
+
+// Find the correct senior object
+const assignedSenior = computed(() =>
+  caregiverStore.assignedSeniors.find((s) => String(s.id) === String(seniorId.value)),
+);
+
 const selectedContact = ref(null);
 const showModal = ref(false);
 const isEdit = ref(false);
 const toastMessage = ref('');
 
 onMounted(async () => {
-  await caregiverStore.fetchSeniors?.();
-  await emergencyStore.fetchContactsForSenior(seniorId);
+  await caregiverStore.fetchAssignedSeniors();
+  // After seniors are fetched, use the computed seniorId to get contacts.
+  if (seniorId.value) {
+    await emergencyStore.fetchContactsForSenior(seniorId.value);
+  }
 });
 
-const contacts = computed(() => emergencyStore.contacts.filter((c) => c.seniorId === seniorId));
-
-const seniorName = computed(() => {
-  const senior = caregiverStore.assignedSeniors?.find((s) => s.id === seniorId);
-  return senior ? senior.name : 'Senior';
-});
+const contacts = computed(() => emergencyStore.contacts);
+const seniorName = computed(() => assignedSenior.value?.name || 'Senior');
 
 function addContact() {
   selectedContact.value = null;
@@ -34,37 +39,50 @@ function addContact() {
 }
 
 function editContact(contact) {
+  // Pass the original contact data to the form
   selectedContact.value = { ...contact };
   isEdit.value = true;
   showModal.value = true;
 }
 
-function deleteContact(contactId) {
-  emergencyStore.contacts = emergencyStore.contacts.filter((c) => c.id !== contactId);
+async function deleteContact(contactId) {
+  // Pass the seniorId from the component's context
+  await emergencyStore.deleteContact(contactId, seniorId.value);
   showToast('Contact deleted');
 }
 
-function handleSubmit(newContact) {
-  if (isEdit.value) {
-    const index = emergencyStore.contacts.findIndex((c) => c.id === newContact.id);
-    if (index !== -1) {
-      emergencyStore.contacts[index] = { ...newContact };
+async function handleSubmit(newContact) {
+  try {
+    if (isEdit.value) {
+      // Pass the full object required by the store's update action, including the senior_id
+      await emergencyStore.updateContact({
+        contact_id: selectedContact.value.contact_id,
+        name: newContact.name,
+        relation: newContact.relation,
+        phone: newContact.phone,
+        senior_id: seniorId.value, // Add the senior_id for the API call
+      });
       showToast('Contact updated');
+    } else {
+      // For add, create the payload and pass the seniorId separately to the store action
+      const payload = {
+        name: newContact.name,
+        relation: newContact.relation,
+        phone: newContact.phone,
+      };
+      await emergencyStore.addContact(payload, seniorId.value);
+      showToast('Contact added');
     }
-  } else {
-    emergencyStore.contacts.push({
-      ...newContact,
-      id: Date.now(),
-      seniorId,
-    });
-    showToast('Contact added');
+    showModal.value = false;
+  } catch (error) {
+    console.error('Failed to submit contact:', error);
+    showToast('Operation failed. Check console for details.');
   }
-  showModal.value = false;
 }
 
 function showToast(msg) {
   toastMessage.value = msg;
-  setTimeout(() => (toastMessage.value = ''), 2000);
+  setTimeout(() => (toastMessage.value = ''), 3000);
 }
 </script>
 
@@ -75,11 +93,11 @@ function showToast(msg) {
     <div v-if="contacts.length === 0" class="empty">No contacts available.</div>
 
     <ul v-else class="contact-list">
-      <li v-for="contact in contacts" :key="contact.id" class="contact-item">
+      <li v-for="contact in contacts" :key="contact.contact_id" class="contact-item">
         <span>{{ contact.name }} - {{ contact.phone }}</span>
         <div class="buttons">
           <button class="edit-btn" @click="editContact(contact)">Edit</button>
-          <button class="delete-btn" @click="deleteContact(contact.id)">Delete</button>
+          <button class="delete-btn" @click="deleteContact(contact.contact_id)">Delete</button>
         </div>
       </li>
     </ul>
@@ -141,6 +159,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  color: white;
 }
 
 button:hover {
@@ -173,7 +192,7 @@ button:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   animation:
     fadein 0.3s ease,
-    fadeout 0.3s ease 1.7s;
+    fadeout 0.3s ease 2.7s;
 }
 
 @keyframes fadein {

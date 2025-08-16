@@ -3,7 +3,9 @@ __pycache__/
 .DS_Store
 .env
 .venv/
-instance/
-instance
 celerybeat-schedule
 celerybeat-schedule.db
+static/
+instance/senior_citizen.db
+instance/senior_citizen.db-journal
+instance/

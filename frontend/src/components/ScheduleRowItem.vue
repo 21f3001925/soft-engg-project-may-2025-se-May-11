@@ -4,38 +4,35 @@ defineProps({
     type: Object,
     required: true,
   },
-  customClass: {
-    type: String,
-    default: '',
-  },
-  hideType: {
-    type: Boolean,
-    default: false,
-  },
-  compactLayout: {
-    type: Boolean,
-    default: false,
-  },
 });
+
+const formattedTime = (dateStr) => {
+  if (!dateStr) return 'No time specified';
+  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const formattedDate = (dateStr) => {
+  if (!dateStr) return 'No date specified';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
 </script>
 
 <template>
   <div class="schedule-item">
-    <div class="schedule-time">{{ schedule.time }}</div>
-
-    <div :class="['schedule-details', { compact: compactLayout }]">
-      <!-- <h4>{{ schedule.name }}</h4> -->
-      <h4 :class="customClass">{{ schedule.name }}</h4>
-
-      <p v-if="schedule.details">{{ schedule.details }}</p>
-
-      <div class="schedule-actions">
-        <slot></slot>
-      </div>
+    <div class="item-details">
+      <div class="item-title">{{ schedule.name || schedule.title }}</div>
+      <div class="item-date">Date: {{ formattedDate(schedule.date_time || schedule.time) }}</div>
+      <div class="item-time">Time: {{ formattedTime(schedule.date_time || schedule.time) }}</div>
+      <div v-if="schedule.location" class="item-location">Location: {{ schedule.location }}</div>
+      <div v-if="schedule.dosage" class="item-dosage">Dosage: {{ schedule.dosage }}</div>
     </div>
-
-    <div v-if="!hideType" class="schedule-type" :class="schedule.type">
-      {{ schedule.type }}
+    <div class="item-actions">
+      <slot></slot>
     </div>
   </div>
 </template>
@@ -43,65 +40,32 @@ defineProps({
 <style scoped>
 .schedule-item {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.schedule-time {
-  min-width: 80px;
-  color: #666;
-  font-weight: 500;
-}
-
-.schedule-type {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-transform: capitalize;
-}
-
-.schedule-type.appointment {
-  background-color: #e3f2fd;
-  color: #1976d2;
-}
-
-.schedule-type.medication {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.schedule-type.event {
-  background-color: #bce8aa;
-  color: #1b4d05;
-}
-
-.schedule-details {
-  flex: 1;
-}
-
-.schedule-details.compact {
-  display: flex; /* New layout only when compactLayout is true */
-  align-items: center;
   justify-content: space-between;
-  width: 100%;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
 }
-
-.schedule-actions {
-  display: flex; /* Make buttons side by side */
-  gap: 0.5rem; /* Space between buttons */
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
-
-.schedule-details h4 {
-  margin: 0;
+.item-title {
+  font-weight: 600;
   color: #333;
 }
-
-.schedule-details p {
-  margin: 0.25rem 0 0;
-  color: #666;
+.item-date,
+.item-time,
+.item-location,
+.item-dosage {
   font-size: 0.9rem;
+  color: #666;
+}
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 </style>

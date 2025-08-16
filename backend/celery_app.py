@@ -8,7 +8,9 @@ def create_celery():
         "senior_app",
         broker=Config.CELERY_BROKER_URL,
         backend=Config.CELERY_RESULT_BACKEND,
-        include=["tasks"],  # Import tasks module
+        include=[
+            "tasks",
+        ],  # Import tasks module
     )
 
     # Update configuration
@@ -19,6 +21,11 @@ def create_celery():
         timezone=Config.CELERY_TIMEZONE,
         enable_utc=Config.CELERY_ENABLE_UTC,
         beat_schedule=Config.CELERY_BEAT_SCHEDULE,
+        task_track_started=True,
+        task_time_limit=30 * 60,  # 30 minutes
+        task_soft_time_limit=60,  # 1 minute
+        worker_prefetch_multiplier=1,
+        task_acks_late=True,
     )
 
     return celery

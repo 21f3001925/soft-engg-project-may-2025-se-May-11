@@ -1,18 +1,23 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue';
-import { useScheduleStore } from '../store/scheduleStore';
-import ScheduleRowItem from '../components/ScheduleRowItem.vue';
+import { useMedicationStore } from '../store/medicationStore';
+import { useUserStore } from '../store/userStore';
+import MedScheduleRowItem from '../components/MedScheduleRowItem.vue';
 import MedicationForm from '../components/MedicationForm.vue';
 
-const scheduleStore = useScheduleStore();
+const medicationStore = useMedicationStore();
+const userStore = useUserStore();
+
 const toastMessage = ref('');
 
+const isCaregiverView = computed(() => userStore.user?.roles?.includes('caregiver'));
+
 onMounted(async () => {
-  await scheduleStore.fetchSchedules();
-  await scheduleStore.fetchAllMedications();
+  const seniorId = isCaregiverView.value ? userStore.selectedSeniorId : null;
+  await medicationStore.fetchMedications(seniorId);
 });
 
-const medications = computed(() => scheduleStore.allMedications.items);
+const medications = computed(() => medicationStore.medications);
 
 const showModal = ref(false);
 const selectedMedication = ref(null);
@@ -30,32 +35,43 @@ function editMedications(item) {
   showModal.value = true;
 }
 
-function deleteMedication(item) {
-  scheduleStore.allMedications.items = scheduleStore.allMedications.items.filter((m) => m.id !== item.id);
+async function deleteMedication(item) {
+  await medicationStore.deleteMedication(item.medication_id);
   showToast(`Deleted "${item.name}"`);
 }
 
-function markAsTaken(item) {
-  item.taken = true;
+async function markAsTaken(item) {
+  await medicationStore.markAsTaken(item);
   showToast(`Marked "${item.name}" as taken`);
 }
 
-function handleFormSubmit(medication) {
-  if (isEdit.value) {
-    const index = scheduleStore.allMedications.items.findIndex((m) => m.id === medication.id);
-    if (index !== -1) {
-      scheduleStore.allMedications.items[index] = { ...medication };
-      showToast(`Updated "${medication.name}"`);
+async function handleFormSubmit(formData) {
+  try {
+    if (isEdit.value && selectedMedication.value) {
+      const medicationIdToUpdate = selectedMedication.value.medication_id;
+
+      if (!medicationIdToUpdate) {
+        throw new Error('Medication ID is missing. Cannot update.');
+      }
+
+      const payload = { ...formData };
+
+      await medicationStore.updateMedication(medicationIdToUpdate, payload, null);
+      showToast(`Updated: "${payload.name || selectedMedication.value.name}"`);
+    } else {
+      // Logic for adding a new medication
+      const payload = { ...formData };
+      if (payload.time) {
+        payload.time = new Date(payload.time).toISOString();
+      }
+      await medicationStore.addMedication(payload, null);
+      showToast(`Added: "${payload.name}"`);
     }
-  } else {
-    scheduleStore.allMedications.items.push({
-      ...medication,
-      id: Date.now(),
-      type: 'medication',
-    });
-    showToast(`Added "${medication.name}"`);
+
+    showModal.value = false;
+  } catch (err) {
+    showToast(`Error saving medication: ${err.message}`, 'error');
   }
-  showModal.value = false;
 }
 
 function showToast(message) {
@@ -70,29 +86,25 @@ function showToast(message) {
   <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
 
   <div class="medications">
-    <h1 style="text-align: center">Your Medications</h1>
+    <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
+      {{ isCaregiverView ? "Senior's Medications" : 'Your Medications' }}
+    </h1>
   </div>
 
-  <div v-if="scheduleStore.schedule.loading" class="loading">Loading medications...</div>
-
-  <div v-else-if="scheduleStore.schedule.error" class="error">
-    {{ scheduleStore.schedule.error }}
-  </div>
-
-  <div v-else-if="medications.length === 0" class="empty">No medications for today</div>
+  <div v-if="medicationStore.loading" class="loading">Loading medications...</div>
+  <div v-else-if="medicationStore.error" class="error">{{ medicationStore.error }}</div>
+  <div v-else-if="medications.length === 0" class="empty">No medications scheduled.</div>
 
   <div v-else class="med-schedule-list">
-    <ScheduleRowItem
+    <MedScheduleRowItem
       v-for="schedule in medications"
-      :key="schedule.id"
+      :key="schedule.medication_id"
       :schedule="schedule"
-      :hide-type="true"
-      :compact-layout="true"
-    >
-      <button class="mark-as-taken-button" @click="markAsTaken(schedule)">Mark as taken</button>
-      <button class="edit-button" @click="editMedications(schedule)">Edit</button>
-      <button class="delete-button" @click="deleteMedication(schedule)">Delete</button>
-    </ScheduleRowItem>
+      :is-caregiver-view="isCaregiverView"
+      @mark-as-taken="markAsTaken"
+      @edit="editMedications"
+      @delete="deleteMedication"
+    />
   </div>
 
   <div>
@@ -109,19 +121,18 @@ function showToast(message) {
 </template>
 
 <style scoped>
+/* Scoped styles from your original file. The button styles are now in MedScheduleRowItem.vue */
 .medications {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
-
 .medications h1 {
   margin-bottom: 2rem;
   color: #1480be;
   font-size: 2rem;
   margin-top: 1px;
 }
-
 .med-schedule-list {
   display: flex;
   flex-direction: column;
@@ -132,37 +143,27 @@ function showToast(message) {
   max-width: 1000px;
   margin: 0 auto;
 }
-
 .loading,
 .error,
 .empty {
   text-align: center;
   padding: 2rem;
-  color: #f5f5f5;
+  font-size: 1.2rem;
+  color: #666;
 }
-
-.error {
-  color: #e74c3c;
-}
-
-.edit-button {
-  background-color: blueviolet;
-}
-
-.mark-as-taken-button {
-  background-color: green;
-}
-
 .add-button {
   margin-top: 15px;
-  margin-left: 680px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
   background-color: rgb(81, 188, 231);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
 }
-
-.delete-button {
-  background-color: red;
-}
-
 .toast {
   position: fixed;
   top: 20px;
@@ -174,30 +175,5 @@ function showToast(message) {
   border-radius: 5px;
   z-index: 9999;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  animation:
-    fadein 0.3s ease,
-    fadeout 0.3s ease 1.7s;
-}
-
-@keyframes fadein {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes fadeout {
-  from {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
 }
 </style>
