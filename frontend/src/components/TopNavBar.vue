@@ -34,7 +34,6 @@ const navLinks = [
   { to: '/profile', label: 'Profile' },
   { to: '/setting', label: 'Settings' },
   { to: '/report-analyzer', label: 'Report Analyzer' },
-
 ];
 
 function closeDropdowns(e) {
