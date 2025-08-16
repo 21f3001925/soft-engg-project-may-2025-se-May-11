@@ -348,7 +348,7 @@ onMounted(getAppointments);
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Reminder Time (Optional)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Reminder Time</label>
               <input
                 v-model="formData.reminder_time"
                 type="datetime-local"
