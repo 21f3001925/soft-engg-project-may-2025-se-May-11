@@ -31,6 +31,9 @@ const navLinks = [
   { to: '/appointments', label: 'Appointments' },
   { to: '/news', label: 'News' },
   { to: '/events', label: 'Events' },
+  { to: '/profile', label: 'Profile' },
+  { to: '/setting', label: 'Settings' },
+  { to: '/report-analyzer', label: 'Report Analyzer' },
 ];
 
 function closeDropdowns(e) {
