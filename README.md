@@ -6,7 +6,7 @@ This is the central repository for the Senior Care web application, a project fo
 
 The Senior Care App is a comprehensive web application that provides:
 
-- **For Senior Citizens**: Medication management, appointment scheduling, emergency contacts, and social event participation
+- **For Senior Citizens**: Medication management, appointment scheduling, emergency contacts, social event participation, and AI-based report analyzer with a conversational chatbot
 - **For Caregivers**: Monitoring tools, medication oversight, and appointment management for their seniors
 - **For Service Providers**: Event creation and management for local community activities
 - **Accessibility Features**: Dark mode, font size adjustments, and responsive design for better usability
@@ -35,6 +35,8 @@ This separation allows the backend and frontend engineers to work independently.
 - **Emergency Contacts**: Quick access to emergency contacts with one-tap calling
 - **Social Hub**: Discover and join local community events
 - **News Feed**: Personalized news and updates
+- **Report analyzer**: AI-integrated tool which gives summary of medical reports
+- **Conversational AI-chatbot**: To get answers to specific questions on medical reports
 - **Accessibility**: Dark mode, adjustable font sizes, and responsive design
 - **Real-time Updates**: Live SMS & Email notifications and status tracking
 
@@ -70,7 +72,7 @@ To start both the Flask backend API and the Vite frontend development server at 
 
 This script will:
 
-Start the Flask API on http://127.0.0.1:5000.
+Start the Flask API on http://127.0.0.1:5001.
 Start the Vite + Vue dev server on http://127.0.0.1:5173 (or the next available port).
 You can now open your browser to the frontend URL to see the application. To stop both servers, press Ctrl+C in your terminal.
 
