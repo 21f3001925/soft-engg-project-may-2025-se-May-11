@@ -366,7 +366,7 @@ onMounted(getAppointments);
               <button
                 type="button"
                 @click="showForm = false"
-                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                class="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
               >
                 Cancel
               </button>

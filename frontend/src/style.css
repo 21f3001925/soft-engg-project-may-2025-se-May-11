@@ -497,3 +497,8 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Simple button text override for white text */
+button.text-white {
+  color: #ffffff !important;
+}
