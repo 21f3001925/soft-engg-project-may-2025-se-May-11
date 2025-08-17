@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/chat';
+const API_URL = 'http://localhost:5001/api/chat';
 
 const sendMessage = (reportId, message) => {
   const token = localStorage.getItem('token');
