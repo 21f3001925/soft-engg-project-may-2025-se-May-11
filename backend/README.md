@@ -6,6 +6,7 @@ This is the backend service for the Senior Care web application, providing a RES
 
 - User authentication and authorization
 - Medication management system
+- AI-powered document analysis using Google Gemini API, with text extraction from PDFs and images (OCR).
 - Caretaker monitoring features
 - RESTful API endpoints
 - Database integration
@@ -17,6 +18,11 @@ This is the backend service for the Senior Care web application, providing a RES
 - **Database:** [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) ORM with SQLite
 - **Authentication:** [Flask-JWT-Extended](https://flask-jwt-extended.readthedocs.io/) for JWT tokens
 - **API Documentation:** [Flask-Smorest](https://flask-smorest.readthedocs.io/) for OpenAPI/Swagger docs
+- **AI & Document Processing:**
+  - [Google Gemini API](https://ai.google.dev/) for summarization and Q&A
+  - [PyPDF2](https://pypdf2.readthedocs.io/) & [Pytesseract](https://github.com/madmaze/pytesseract) for text and OCR extraction
+  - [pdf2image](https://github.com/Belval/pdf2image) & [Pillow](https://python-pillow.org/) for PDF-to-image conversion
+  - [fpdf2](https://github.com/py-pdf/fpdf2) for PDF generation
 - **OAuth:** [Authlib](https://authlib.org/) with Google OAuth for social login
 - **News API:** [NewsAPI](https://newsapi.org/) for news content
 - **Task Queue:** [Celery](https://docs.celeryproject.org/) with Redis for background tasks
@@ -32,6 +38,7 @@ This is the backend service for the Senior Care web application, providing a RES
 
 - Python 3.13 or higher
 - [Poetry](https://python-poetry.org/) for dependency management
+- **[Tesseract OCR Engine](https://github.com/tesseract-ocr/tesseract#installing-tesseract)**: Required for the AI report analysis feature. Please follow the installation instructions for your operating system.
 
 ## Project Setup
 
@@ -49,7 +56,7 @@ Run the development server:
 ./dev.sh
 ```
 
-The server will start at http://127.0.0.1:5000
+The server will start at http://127.0.0.1:5001
 
 ## Linting and Formatting
 

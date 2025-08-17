@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import { formatInTimeZone } from 'date-fns-tz';
 
 const props = defineProps({
   schedule: {
@@ -18,8 +17,8 @@ const emit = defineEmits(['mark-as-taken', 'edit', 'delete']);
 const formattedTime = computed(() => {
   if (!props.schedule.time) return 'No time set';
   try {
-    // This library call reliably formats the UTC time into IST
-    return formatInTimeZone(props.schedule.time, 'Asia/Kolkata', 'hh:mm a');
+    const date = new Date(props.schedule.time + 'Z');
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (e) {
     console.error('Date formatting error:', e);
     return 'Invalid time';

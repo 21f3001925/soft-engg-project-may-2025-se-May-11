@@ -54,7 +54,7 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div class="p-8 max-w-6xl mx-auto bg-gray-50 min-h-screen">
+  <div class="news p-8 max-w-6xl mx-auto bg-gray-50 min-h-screen">
     <div class="text-center mb-8">
       <h1 style="text-align: center; color: #1480be; font-size: 2rem; margin-bottom: 2rem; margin-top: 1px">
         Daily Updates / News
@@ -104,7 +104,7 @@ const formatDate = (dateString) => {
         <button
           v-if="isSearching"
           @click="clearSearch"
-          class="px-6 py-3 border-none rounded-xl text-base font-semibold cursor-pointer transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+          class="px-6 py-3 border-none rounded-xl text-base font-semibold cursor-pointer transition-all bg-gray-800 text-white hover:bg-gray-900"
         >
           Clear
         </button>

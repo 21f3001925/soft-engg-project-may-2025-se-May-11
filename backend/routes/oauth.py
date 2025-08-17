@@ -49,7 +49,7 @@ class GoogleOAuthCallbackResource(MethodView):
         google_name = user_info.get("name")
         user = db.session.query(User).filter_by(email=email).first()
         if not user:
-            role = db.session.query(Role).filter_by(name="caregiver").first()
+            role = db.session.query(Role).filter_by(name="senior_citizen").first()
             if not role:
                 abort(400, message="Default role not found.")
 
