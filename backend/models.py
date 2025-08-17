@@ -290,3 +290,27 @@ class Alert(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     recipient = relationship("User", back_populates="alerts")
+
+
+class Report(db.Model):
+    __tablename__ = "report"
+    report_id = db.Column(
+        db.String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    original_filename = db.Column(db.String, nullable=False)
+    stored_filename = db.Column(db.String, nullable=False, unique=True)
+    extracted_text = db.Column(db.Text, nullable=True)
+    summary = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String, nullable=False, default="processing")
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    senior_id = db.Column(
+        db.String(36), db.ForeignKey("seniorcitizen.user_id", ondelete="CASCADE")
+    )
+
+    senior = relationship("SeniorCitizen", back_populates="reports")
+
+
+# Add the back-populates for reports to the SeniorCitizen model
+SeniorCitizen.reports = relationship(
+    "Report", back_populates="senior", cascade="all, delete-orphan"
+)

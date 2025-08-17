@@ -5,9 +5,11 @@ import MedicationsSection from '../components/MedicationsSection.vue';
 import AppointmentsSection from '../components/AppointmentsSection.vue';
 import NewsFeedSection from '../components/NewsFeedSection.vue';
 import EmergencyContactSection from '../components/EmergencyContactSection.vue';
-import { useEmergencyStore } from '../store/emergencyStore';
 import SocialHubSection from '../components/SocialHubSection.vue';
+import { useEmergencyStore } from '../store/emergencyStore';
 import { useUserStore } from '../store/userStore';
+import { AlertTriangle } from 'lucide-vue-next';
+import emergencyService from '../services/emergencyService';
 
 const scheduleStore = useScheduleStore();
 const emergencyStore = useEmergencyStore();
@@ -22,6 +24,39 @@ const updateGreeting = () => {
   if (hour < 12) greeting.value = 'Good Morning';
   else if (hour < 17) greeting.value = 'Good Afternoon';
   else greeting.value = 'Good Evening';
+};
+
+const contactEmergency = async () => {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+
+  // Ask the browser for the user's current position
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      // Success! We have the location.
+      const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+
+      try {
+        await emergencyService.triggerAlert(location);
+        alert('Success! Your location has been sent to your caregiver and emergency contacts.');
+      } catch (error) {
+        console.error('Error triggering emergency alert:', error);
+        alert('Failed to send alert. Please try again.');
+      }
+    },
+    (error) => {
+      // Error! The user may have denied permission or there was another issue.
+      console.error('Error getting location: ', error);
+      alert('Could not get your location. A generic emergency alert will be sent.');
+      // Optional: still send an alert without location
+      emergencyService.triggerAlert({});
+    },
+  );
 };
 
 onMounted(async () => {
@@ -77,7 +112,16 @@ onUnmounted(() => {
           <AppointmentsSection />
           <div class="col-span-1 flex flex-col">
             <div class="grid grid-cols-2 gap-8">
-              <EmergencyContactSection />
+              <div class="col-span-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div
+                  class="bg-red-600 rounded-2xl shadow-lg p-4 mb-4 border border-red-700 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 transform hover:scale-105 active:scale-100"
+                  @click="contactEmergency"
+                >
+                  <AlertTriangle class="w-12 h-12 text-white animate-pulse" />
+                  <span class="text-white font-black text-xl text-center mt-2">EMERGENCY ALERT</span>
+                </div>
+                <EmergencyContactSection />
+              </div>
               <SocialHubSection />
             </div>
           </div>
@@ -98,5 +142,21 @@ onUnmounted(() => {
   margin-bottom: 2rem;
   color: #2c3e50;
   font-size: 2rem;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite ease-in-out;
 }
 </style>

@@ -117,7 +117,6 @@ def send_medication_reminder(medication_id):
         else:
             print(f"Senior {senior_user.username} has no email. Skipping email.")
 
-        # --- 2. Notification for the Caregiver (Logic is good, added logging) ---
         assignment = CaregiverAssignment.query.filter_by(
             senior_id=senior_user.user_id
         ).first()
@@ -126,10 +125,10 @@ def send_medication_reminder(medication_id):
                 f"Caregiver '{caregiver_user.username}' found. Preparing notification."
             )
             caregiver_msg = (
-                f"Medication Due: It's time for {senior_user.name} to take "
+                f"Medication Due: It's time for {senior_user.username} to take "
                 f"{med.dosage} of {med.name}. Please ensure it is marked as taken."
             )
-            email_subject = f"Medication Due for {senior_user.name}"
+            email_subject = f"Medication Due for {senior_user.username}"
 
             if caregiver_user.phone_number:
                 send_sms(caregiver_user.phone_number, caregiver_msg)
@@ -162,7 +161,6 @@ def send_event_reminder(user_id, event_name, event_location, event_time):
 
             print(f"User {user.username} found. Processing event reminder.")
 
-            # --- IMPROVED: Better datetime formatting and timezone handling ---
             try:
                 # Define IST timezone
                 ist_tz = pytz.timezone("Asia/Kolkata")
@@ -177,7 +175,6 @@ def send_event_reminder(user_id, event_name, event_location, event_time):
                     # If for some reason it's naive, assume IST and localize
                     event_datetime_obj = ist_tz.localize(event_datetime_obj)
 
-                # Format to a friendly string like "August 20, 2025 at 02:00 PM IST"
                 formatted_time = event_datetime_obj.strftime(
                     "%B %d, %Y at %I:%M %p IST"
                 )
@@ -195,20 +192,11 @@ def send_event_reminder(user_id, event_name, event_location, event_time):
             email_subject = f"Event Reminder: {event_name}"
 
             # Create HTML email content
-            email_html = f"""
-            <html>
-            <body>
-                <h2>🎉 Event Reminder</h2>
-                <p>This is a friendly reminder about your upcoming event:</p>
-                <ul>
-                    <li><strong>Event:</strong> {event_name}</li>
-                    <li><strong>Location:</strong> {event_location}</li>
-                    <li><strong>Date & Time:</strong> {formatted_time}</li>
-                </ul>
-                <p>We look forward to seeing you there!</p>
-            </body>
-            </html>
-            """
+            email_body = (
+                f"This is a friendly reminder for your event, '{event_name}'. "
+                f"It is scheduled to take place at {event_location} "
+                f"on {formatted_time}. We look forward to seeing you there!"
+            )
 
             # Send SMS if a phone number is available
             if user.phone_number:
@@ -218,21 +206,21 @@ def send_event_reminder(user_id, event_name, event_location, event_time):
                     )
                     send_sms(user.phone_number, message)
                     print(
-                        f"✅ Sent event SMS reminder to {user.username} ({user.phone_number})"
+                        f"Sent event SMS reminder to {user.username} ({user.phone_number})"
                     )
                 except Exception as e:
-                    print(f"❌ Failed to send SMS to {user.username}: {e}")
+                    print(f"Failed to send SMS to {user.username}: {e}")
 
             # Send email if an email address is available
             if user.email:
                 try:
                     print(f"Attempting to send email to {user.username} ({user.email})")
-                    send_email(app, user.email, email_subject, email_html)
+                    send_email(app, user.email, email_subject, email_body)
                     print(
-                        f"✅ Sent event email reminder to {user.username} ({user.email})"
+                        f"Sent event email reminder to {user.username} ({user.email})"
                     )
                 except Exception as e:
-                    print(f"❌ Failed to send email to {user.username}: {e}")
+                    print(f"Failed to send email to {user.username}: {e}")
 
             print(f"Event reminder task completed for user {user_id}")
 
@@ -371,7 +359,7 @@ def check_missed_medications():
                         else "N/A"
                     )
                     caregiver_msg = (
-                        f"ALERT: {senior_user.name} may have missed their dose of "
+                        f"ALERT: {senior_user.username} may have missed their dose of "
                         f"{med.dosage} of {med.name}, which was due at "
                         f"{med.time.strftime('%I:%M %p')}. "
                         f"Total medications missed: {missed_count}."
@@ -463,7 +451,7 @@ def check_missed_appointments():
                     f"Found caregiver: {caregiver_user.username}. Email: '{caregiver_user.email}', Phone: '{caregiver_user.phone_number}'"
                 )
                 caregiver_msg = (
-                    f"ALERT: {senior_user.name}'s appointment for '{appt.title}' "
+                    f"ALERT: {senior_user.username}'s appointment for '{appt.title}' "
                     f"on {formatted_time} was missed. Please follow up with them."
                 )
 
@@ -514,7 +502,7 @@ def send_emergency_alert(senior_id, latitude=None, longitude=None):
             )
         else:
             alert_msg = (
-                f"EMERGENCY ALERT: {senior_user.name} has triggered an emergency alert. "
+                f"EMERGENCY ALERT: {senior_user.username} has triggered an emergency alert. "
                 "Their location could not be determined. Please check on them immediately."
             )
 
@@ -523,7 +511,7 @@ def send_emergency_alert(senior_id, latitude=None, longitude=None):
             senior_id=senior_user.user_id
         ).first()
         if assignment and (caregiver_user := User.query.get(assignment.caregiver_id)):
-            print(f"Notifying assigned caregiver: {caregiver_user.name}")
+            print(f"Notifying assigned caregiver: {caregiver_user.username}")
             if caregiver_user.phone_number:
                 send_sms(caregiver_user.phone_number, alert_msg)
             # --- FIX: Check if email exists before sending ---
@@ -567,7 +555,7 @@ def notify_caregiver_medication_taken(medication_id):
             taken_time_ist = datetime.now(ist_tz).strftime("%I:%M %p")
 
             msg = (
-                f"✅ Confirmation: {senior_user.name} marked their medication "
+                f"Confirmation: {senior_user.username} marked their medication "
                 f"'{med.name}' ({med.dosage}) as taken at {taken_time_ist}."
             )
 
@@ -577,5 +565,5 @@ def notify_caregiver_medication_taken(medication_id):
                 send_email(app, caregiver.email, f"Medication Taken: {med.name}", msg)
 
             print(
-                f"Sent 'medication taken' notification to caregiver {caregiver.name}."
+                f"Sent 'medication taken' notification to caregiver {caregiver.username}."
             )

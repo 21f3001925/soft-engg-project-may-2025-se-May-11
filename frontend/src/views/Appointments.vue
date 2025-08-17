@@ -20,15 +20,31 @@ const formData = ref({
   reminder_time: '', // Field is already here, which is great
 });
 
-// Helper to format date string for datetime-local input
+// // Helper to format date string for datetime-local input
+// function toInputDatetime(dateString) {
+//   if (!dateString) return '';
+//   return dateString.slice(0, 16);
+// }
+// Helper to format a UTC date string into a local datetime string for the input
 function toInputDatetime(dateString) {
   if (!dateString) return '';
-  return dateString.slice(0, 16);
+
+  const date = new Date(dateString); // Creates a date object in the user's local timezone
+
+  // Get local date and time components
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // padStart adds leading zero if needed
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  // Format them into the string the 'datetime-local' input requires
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 function isOverdue(dateString) {
   if (!dateString) return false;
-  const appointmentDate = new Date(dateString);
+  const appointmentDate = new Date(dateString + 'Z');
   const now = new Date();
   return appointmentDate < now;
 }
@@ -67,7 +83,6 @@ async function getAppointments() {
   }
 }
 
-// *** MODIFIED FUNCTION ***
 // Add or update appointment
 async function submitAppointment() {
   try {
@@ -84,11 +99,9 @@ async function submitAppointment() {
     }
 
     if (editingId.value) {
-      // **CHANGE**: Send the full payload, including reminder_time if present
       await appointmentService.updateAppointment(editingId.value, payload);
       showToast('Appointment and reminder updated');
     } else {
-      // **CHANGE**: Send the full payload for new appointments
       await appointmentService.addAppointment(payload);
       showToast('Appointment and reminder added');
     }
@@ -127,13 +140,11 @@ async function completeAppointment(item) {
   }
 }
 
-// *** MODIFIED FUNCTION ***
 // Edit appointment
 function editAppointment(item) {
   editingId.value = item.id;
   formData.value = {
     title: item.name,
-    // **CHANGE**: Use helper to format dates for the input fields
     date_time: toInputDatetime(item.date_time),
     location: item.location,
     reminder_time: toInputDatetime(item.reminder_time),
@@ -241,14 +252,14 @@ onMounted(getAppointments);
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                     <div class="flex items-center gap-2">
                       <Calendar class="w-4 h-4 text-purple-500" />
-                      <span><strong>Date:</strong> {{ new Date(item.date_time).toLocaleDateString() }}</span>
+                      <span><strong>Date:</strong> {{ new Date(item.date_time + 'Z').toLocaleDateString() }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <Clock class="w-4 h-4 text-purple-500" />
                       <span
                         ><strong>Time:</strong>
                         {{
-                          new Date(item.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          new Date(item.date_time + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }}</span
                       >
                     </div>
@@ -348,7 +359,7 @@ onMounted(getAppointments);
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Reminder Time (Optional)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Reminder Time</label>
               <input
                 v-model="formData.reminder_time"
                 type="datetime-local"

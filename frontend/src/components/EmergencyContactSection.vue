@@ -44,7 +44,7 @@ const handleEmergencyClick = async () => {
 
 <template>
   <section
-    class="emergency-section p-6 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-red-500 to-red-600 text-white overflow-hidden relative"
+    class="emergency-section p-6 rounded-3xl shadow-xl border-0 bg-gradient-to-br from-yellow-500 to-red-600 text-white overflow-hidden relative"
     aria-label="Emergency contact widget"
   >
     <div class="relative z-10 text-center">
