@@ -14,7 +14,10 @@ from utils.text_extractor import extract_text_from_file
 from utils.ai_manager import analyze_report
 
 reports_blp = Blueprint(
-    "reports", "reports", url_prefix="/api/reports", description="Operations on reports"
+    "reports",
+    "reports",
+    url_prefix="/api/reports",
+    description="This blueprint handles the management of medical reports. It includes endpoints for uploading new reports, which are then processed to extract text and generate an AI-powered summary. Users can download the summary of the analysis. This functionality is key to helping users digitize and understand their medical history.",
 )
 
 UPLOAD_FOLDER = "backend/static/uploads/reports"
@@ -31,8 +34,11 @@ def allowed_file(filename):
 @reports_blp.route("/summarize")
 class ReportUpload(MethodView):
     @jwt_required()
+    @reports_blp.doc(
+        summary="Upload a medical report for summarization",
+        description="This endpoint allows users to upload a medical report for summarization. The system processes the uploaded file to extract its text content and then uses an AI model to generate a concise and informative summary. This helps users quickly grasp the key findings of their medical reports without having to read through lengthy documents.",
+    )
     def post(self):
-        """Upload a report for summarization"""
         senior_id = get_jwt_identity()
         if "file" not in request.files:
             abort(400, message="No file part in the request.")
@@ -91,8 +97,11 @@ class ReportUpload(MethodView):
 @reports_blp.route("/<string:report_id>/download")
 class ReportDownload(MethodView):
     @jwt_required()
+    @reports_blp.doc(
+        summary="Download the AI-generated summary of a report",
+        description="This endpoint enables users to download the AI-generated summary of a specific report. The summary can be downloaded, which is ideal for digital use and easy copying of content. This provides users with flexible options for accessing and utilizing their health information.",
+    )
     def get(self, report_id):
-        """Download the summary of a report as a PDF or plain text"""
         report = Report.query.get_or_404(report_id)
 
         if not report.summary:

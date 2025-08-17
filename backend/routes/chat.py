@@ -10,13 +10,17 @@ chat_blp = Blueprint(
     "chat",
     "chat",
     url_prefix="/api/chat",
-    description="Operations for the chat feature",
+    description="This blueprint provides an AI-powered chat functionality that allows users to interact with their uploaded medical reports. Users can ask questions about a specific report, and the system will provide intelligent answers based on the report's content. This feature is designed to help users better understand complex medical information and get quick clarifications on their health data.",
 )
 
 
 @chat_blp.route("/<string:report_id>")
 class Chat(MethodView):
     @jwt_required()
+    @chat_blp.doc(
+        summary="Chat with a specific medical report",
+        description="This endpoint enables users to send a message to the chatbot for a specific medical report. By providing a report ID and a user question, the system leverages AI to analyze the report's content and generate a relevant, context-aware response. This interactive feature makes it easier for users to engage with their health documents and extract meaningful information.",
+    )
     def post(self, report_id):
         """Send a message to the chatbot for a specific report."""
         json_data = request.get_json()
