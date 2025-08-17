@@ -87,6 +87,12 @@ async function submitAppointment() {
   try {
     const payload = { ...formData.value };
 
+    // This ensures a reminder task is always created by the backend.
+    if (payload.date_time) {
+      payload.reminder_time = payload.date_time;
+    }
+    // -------------------------------------------------------------------------
+
     if (editingId.value) {
       // Update appointment
       await appointmentService.updateAppointment(editingId.value, payload);
@@ -122,9 +128,21 @@ function showToast(message) {
 }
 
 // Helper: format datetime for input type datetime-local format
-function toInputDatetime(dateTimeStr) {
-  if (!dateTimeStr) return '';
-  return dateTimeStr.slice(0, 16);
+function toInputDatetime(dateString) {
+  if (!dateString) return '';
+
+  // Create a date object. Appending 'Z' ensures it's parsed as UTC.
+  const date = new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
+
+  // Get local date and time components
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  // Format them into the string the 'datetime-local' input requires
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 </script>
 
@@ -136,7 +154,6 @@ function toInputDatetime(dateTimeStr) {
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="appointments.length === 0" class="empty">No appointments scheduled</div>
 
-    <!-- Simple appointment list without ScheduleRowItem -->
     <div v-else class="appointment-list">
       <div
         v-for="item in appointments"
@@ -147,7 +164,8 @@ function toInputDatetime(dateTimeStr) {
           <h3 class="font-semibold text-lg">{{ item.title }}</h3>
           <div class="text-sm text-gray-600">
             <strong>Date:</strong>
-            {{ new Date(item.date_time).toLocaleDateString() }} at {{ new Date(item.date_time).toLocaleTimeString() }}
+            {{ new Date(item.date_time + 'Z').toLocaleDateString() }} at
+            {{ new Date(item.date_time + 'Z').toLocaleTimeString() }}
           </div>
           <div class="text-sm text-gray-600" v-if="item.location"><strong>Location:</strong> {{ item.location }}</div>
 
@@ -169,12 +187,10 @@ function toInputDatetime(dateTimeStr) {
       </div>
     </div>
 
-    <!-- Action buttons -->
     <div class="action-bar">
       <button class="add-button" @click="openAddForm">Add Appointment</button>
     </div>
 
-    <!-- Add / Update form -->
     <div v-if="showForm" class="form-popup p-6 bg-white rounded-xl shadow-md max-w-md mx-auto">
       <h3 class="text-xl font-semibold mb-4">
         {{ editingId ? 'Edit Appointment' : 'Add Appointment' }}
@@ -184,18 +200,18 @@ function toInputDatetime(dateTimeStr) {
           v-model="formData.title"
           placeholder="Title"
           required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-white"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
         />
         <input
           v-model="formData.date_time"
           type="datetime-local"
           required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-white"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
         />
         <input
           v-model="formData.location"
           placeholder="Location (optional)"
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-white"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
         />
 
         <div class="form-actions flex justify-end space-x-3 mt-4">
@@ -216,7 +232,6 @@ function toInputDatetime(dateTimeStr) {
       </form>
     </div>
 
-    <!-- Toast -->
     <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </div>
 </template>
