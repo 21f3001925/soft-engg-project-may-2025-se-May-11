@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/v1/reminder';
+const API_URL = 'http://localhost:5001/api/v1/reminder';
 
 const scheduleReminder = (reminderData) => {
   const token = localStorage.getItem('token');
