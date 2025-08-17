@@ -160,7 +160,7 @@ function goToEmergencyContacts() {
             <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
           </div>
 
-          <div v-if="user" class="space-y-4">
+          <div class="space-y-4">
             <div v-if="!isEditing">
               <div class="space-y-3">
                 <div class="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -169,7 +169,7 @@ function goToEmergencyContacts() {
                   </div>
                   <div class="flex-1">
                     <p class="text-sm text-gray-500">Name</p>
-                    <p class="font-semibold text-gray-900">{{ user.username || 'Not set' }}</p>
+                    <p class="font-semibold text-gray-900">{{ user?.username || 'Not set' }}</p>
                   </div>
                 </div>
 
@@ -179,7 +179,7 @@ function goToEmergencyContacts() {
                   </div>
                   <div class="flex-1">
                     <p class="text-sm text-gray-500">Email</p>
-                    <p class="font-semibold text-gray-900">{{ user.email || 'Not set' }}</p>
+                    <p class="font-semibold text-gray-900">{{ user?.email || 'Not set' }}</p>
                   </div>
                 </div>
 
@@ -189,7 +189,7 @@ function goToEmergencyContacts() {
                   </div>
                   <div class="flex-1">
                     <p class="text-sm text-gray-500">Age</p>
-                    <p class="font-semibold text-gray-900">{{ user.age || 'Not set' }}</p>
+                    <p class="font-semibold text-gray-900">{{ user?.age || 'Not set' }}</p>
                   </div>
                 </div>
 
@@ -200,7 +200,7 @@ function goToEmergencyContacts() {
                   <div class="flex-1">
                     <p class="text-sm text-gray-500">Location</p>
                     <p class="font-semibold text-gray-900">
-                      {{ user.city && user.country ? `${user.city}, ${user.country}` : 'Not set' }}
+                      {{ user?.city && user?.country ? `${user.city}, ${user.country}` : 'Not set' }}
                     </p>
                   </div>
                 </div>
@@ -211,7 +211,7 @@ function goToEmergencyContacts() {
                   </div>
                   <div class="flex-1">
                     <p class="text-sm text-gray-500">Phone</p>
-                    <p class="font-semibold text-gray-900">{{ user.phone_number || 'Not set' }}</p>
+                    <p class="font-semibold text-gray-900">{{ user?.phone_number || 'Not set' }}</p>
                   </div>
                 </div>
               </div>
