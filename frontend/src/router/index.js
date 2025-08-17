@@ -15,6 +15,7 @@ import SeniorEmergencyContacts from '../views/SeniorEmergencyContacts.vue';
 import AccessibilitySettings from '../views/AccessibilitySettings.vue';
 import ServiceProviderDashboard from '../views/ServiceProviderDashboard.vue';
 import EmergencyContacts from '../views/EmergencyContacts.vue';
+import ReportAnalyzer from '../views/ReportAnalyzer.vue';
 import OAuthCallback from '../views/OAuthCallback.vue';
 
 const routes = [
@@ -119,6 +120,11 @@ const routes = [
     path: '/service-provider',
     name: ServiceProviderDashboard,
     component: ServiceProviderDashboard,
+  },
+  {
+    path: '/report-analyzer',
+    name: 'ReportAnalyzer',
+    component: ReportAnalyzer,
   },
 ];
 
