@@ -63,21 +63,27 @@ def chat_with_report(report_text: str, user_question: str) -> str:
     if not model:
         return "Error: Gemini API is not configured."
 
-    prompt = f"""
-    You are a helpful chat assistant. Your task is to answer the user's question based *only* on the content of the provided medical report. Do not, under any circumstances, provide information, opinions, or medical advice that is not explicitly stated in the report.
-
-    **Full Report Text:**
-    {report_text}
-
-    **User's Question:**
-    {user_question}
-
-    **Answer:**
-    """
-
     try:
-        response = model.generate_content(prompt)
+        # Start a chat session with the report text as context
+        chat = model.start_chat(
+            history=[
+                {
+                    "role": "user",
+                    "parts": [
+                        f"You are a helpful chat assistant. Your task is to answer my questions based *only* on the content of the provided medical report. Do not, under any circumstances, provide information, opinions, or medical advice that is not explicitly stated in the report.\n\n**Full Report Text:**\n{report_text}"
+                    ],
+                },
+                {
+                    "role": "model",
+                    "parts": [
+                        "Okay, I understand. I will only use the provided report to answer your questions."
+                    ],
+                },
+            ]
+        )
+
+        response = chat.send_message(user_question)
         return response.text
     except Exception as e:
         print(f"Error calling Gemini API for chat: {e}")
-        return f"Error getting chat response: {e}"
+        return f"Error: {e}"
