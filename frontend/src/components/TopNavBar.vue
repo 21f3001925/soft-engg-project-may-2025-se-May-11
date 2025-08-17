@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, ChevronDown, User } from 'lucide-vue-next';
-import logo from '../assets/vue.svg';
+import logo from '../assets/logo.png';
 import { useUserStore } from '../store/userStore';
 import { useAvatar } from '../composables/useAvatar';
 

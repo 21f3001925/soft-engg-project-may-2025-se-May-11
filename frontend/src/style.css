@@ -497,3 +497,68 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Simple button text override for white text */
+button.text-white {
+  color: #ffffff !important;
+}
+
+/* Dark mode card backgrounds */
+.app.dark .appointments .bg-white {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+.app.dark .medications .bg-white {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+.app.dark .events .bg-white {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+.app.dark .news .bg-white {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark mode for appointment items */
+.app.dark .appointment-item {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark mode for medication items */
+.app.dark .medication-item {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark mode for event items */
+.app.dark .event-item {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark mode for news items */
+.app.dark .news-item {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark mode for schedule items */
+.app.dark .schedule-item {
+  background-color: #1e1e1e !important;
+  border-color: #374151 !important;
+  color: #f0f0f0 !important;
+}

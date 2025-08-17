@@ -105,25 +105,116 @@ async function removeAttendeeFromEvent(senior) {
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <h1>Manage Local Events</h1>
+  <div class="dashboard service-provider-dashboard max-w-7xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+      <div class="col-span-1 md:col-span-3">
+        <div
+          class="flex items-center justify-between mb-8 p-6 rounded-2xl shadow bg-gradient-to-r from-purple-100 via-white to-pink-100 border border-purple-50"
+        >
+          <div>
+            <h2
+              class="dashboard-title text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-1"
+            >
+              Manage Local Events
+            </h2>
+            <p class="text-xs text-gray-500 hidden md:block">Create and manage events for the community</p>
+          </div>
 
-    <div v-if="providerStore.loading" class="loading">Loading events...</div>
-    <div v-else-if="providerStore.error" class="error">
-      {{ providerStore.error }}
-    </div>
-    <div v-else-if="events.length === 0" class="empty">No events scheduled. Add one below!</div>
+          <div class="flex items-center space-x-2 bg-white/80 rounded-full px-4 py-2 shadow border border-gray-100">
+            <span class="text-lg font-mono text-gray-700">{{
+              new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }}</span>
+          </div>
+        </div>
+      </div>
 
-    <div v-else class="list-container">
-      <ScheduleRowItem v-for="item in events" :key="item.event_id || item.id" :schedule="item">
-        <button class="edit-button" @click="openEditModal(item)">Edit</button>
-        <button class="cancel-button" @click="deleteEvent(item)">Delete</button>
-        <button class="attendees-button" @click="openAttendeesModal(item)">Show Attendees</button>
-      </ScheduleRowItem>
-    </div>
+      <div class="col-span-1 md:col-span-3">
+        <div v-if="providerStore.loading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <span class="ml-3 text-gray-600">Loading events...</span>
+        </div>
 
-    <div class="action-bar">
-      <button class="add-button" @click="openAddModal">Add New Event</button>
+        <div v-else-if="providerStore.error" class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div class="text-red-600 text-lg font-semibold mb-2">Error Loading Events</div>
+          <div class="text-red-500">{{ providerStore.error }}</div>
+        </div>
+
+        <div v-else-if="events.length === 0" class="text-center py-16">
+          <div
+            class="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+          >
+            <svg class="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold text-gray-900 mb-3">No Events Scheduled</h3>
+          <p class="text-gray-600 mb-8 max-w-md mx-auto">
+            You don't have any events scheduled yet. Create your first event to get started!
+          </p>
+          <button
+            @click="openAddModal"
+            class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+            Create First Event
+          </button>
+        </div>
+
+        <div v-else class="space-y-6">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-6">
+              <ScheduleRowItem
+                v-for="item in events"
+                :key="item.event_id || item.id"
+                :schedule="item"
+                class="mb-4 last:mb-0"
+              >
+                <div class="flex gap-2">
+                  <button
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                    @click="openEditModal(item)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                    @click="deleteEvent(item)"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    @click="openAttendeesModal(item)"
+                  >
+                    Show Attendees
+                  </button>
+                </div>
+              </ScheduleRowItem>
+            </div>
+          </div>
+
+          <div class="flex justify-center">
+            <button
+              @click="openAddModal"
+              class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+            >
+              Add New Event
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <EventForm
@@ -134,206 +225,83 @@ async function removeAttendeeFromEvent(senior) {
       @close="showModal = false"
     />
 
-    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+    <div v-if="toastMessage" class="fixed top-4 right-4 z-50">
+      <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+        {{ toastMessage }}
+      </div>
+    </div>
 
-    <div v-if="showAttendeesModal" class="modal-overlay" @click.self="closeAttendeesModal">
-      <div class="modal-content">
-        <h2><b>Event Information and Attendees</b></h2>
-        <div class="event-details">
-          <div>Name: {{ modalEvent?.name }}</div>
-          <div>Date: {{ formatFullDateTime(modalEvent?.date_time) }}</div>
-          <div>Location: {{ modalEvent?.location }}</div>
-          <div>Description: {{ modalEvent?.description }}</div>
+    <!-- Attendees Modal -->
+    <div
+      v-if="showAttendeesModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      @click.self="closeAttendeesModal"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">Event Information and Attendees</h3>
+            <button @click="closeAttendeesModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <h4 class="font-semibold text-gray-900 mb-3">Event Details</h4>
+            <div class="space-y-2 text-gray-700">
+              <div><strong>Name:</strong> {{ modalEvent?.name }}</div>
+              <div><strong>Date:</strong> {{ formatFullDateTime(modalEvent?.date_time) }}</div>
+              <div><strong>Location:</strong> {{ modalEvent?.location }}</div>
+              <div><strong>Description:</strong> {{ modalEvent?.description }}</div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-3">Attendees</h4>
+            <div v-if="attendeesForEvent.length === 0" class="text-gray-500 text-center py-4">No attendees yet</div>
+            <div v-else class="space-y-2">
+              <div
+                v-for="senior in attendeesForEvent"
+                :key="senior.user_id"
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
+                <span class="text-gray-700">{{ senior.name }} ({{ senior.email }})</span>
+                <button
+                  class="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors"
+                  @click="removeAttendeeFromEvent(senior)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-6">
+            <button
+              @click="closeAttendeesModal"
+              class="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
+            >
+              Close
+            </button>
+          </div>
         </div>
-        <h3><strong>Attendees:</strong></h3>
-        <ul>
-          <li
-            v-for="senior in attendeesForEvent"
-            :key="senior.user_id"
-            style="display: flex; align-items: center; gap: 0.5rem"
-          >
-            <span>{{ senior.name }} ({{ senior.email }})</span>
-            <button class="remove-attendee-btn" @click="removeAttendeeFromEvent(senior)">Remove</button>
-          </li>
-          <li v-if="attendeesForEvent.length === 0">No attendees yet</li>
-        </ul>
-        <button class="close-modal" @click="closeAttendeesModal">Close</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Scoped styles from your original file will work here */
-.dashboard-container {
+.dashboard {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-h1 {
+.dashboard-title {
   margin-bottom: 2rem;
-  color: #1480be;
+  color: #2c3e50;
   font-size: 2rem;
-  text-align: center;
-}
-
-.loading,
-.error,
-.empty {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.error {
-  color: #ed240d;
-}
-
-.list-container {
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.edit-button {
-  background-color: #6c5ce7;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 5px;
-  border: none;
-}
-
-.cancel-button {
-  background-color: #d63031;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 5px;
-  border: none;
-}
-
-.add-button {
-  background-color: #00cec9;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: none;
-  color: white;
-}
-
-.action-bar {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4caf50;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 5px;
-  z-index: 9999;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  animation:
-    fadein 0.3s ease,
-    fadeout 0.3s ease 1.7s;
-}
-
-@keyframes fadein {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes fadeout {
-  from {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-}
-
-.attendees-button {
-  background-color: #0984e3;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 2rem 2.5rem;
-  border-radius: 10px;
-  min-width: 350px;
-  max-width: 95vw;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
-  position: relative;
-}
-
-.close-modal {
-  margin-top: 1.5rem;
-  background: #d63031;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.event-details {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-.event-details > div {
-  margin-bottom: 0.3rem;
-}
-
-.remove-attendee-btn {
-  background: #d63031;
-  color: #fff;
-  border: none;
-  border-radius: 3px;
-  padding: 2px 6px;
-  margin-left: 8px;
-  cursor: pointer;
-  font-size: 0.85em;
-  line-height: 1;
-  height: 22px;
-  min-width: 48px;
 }
 </style>

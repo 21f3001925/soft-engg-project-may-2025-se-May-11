@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import logo from '../assets/vue.svg';
+import logo from '../assets/logo.png';
 
 const router = useRouter();
 
