@@ -41,9 +41,11 @@ class TestOAuthGoogleCallback:
             username = "New User"
 
             # Ensure caregiver role exists
-            role = Role.query.filter_by(name="caregiver").first()
+            role = Role.query.filter_by(name="senior_citizen").first()
             if not role:
-                role = Role(name="caregiver", description="Default caregiver role")
+                role = Role(
+                    name="senior_citizen", description="Default senior citizen role"
+                )
                 db.session.add(role)
                 db.session.commit()
 
